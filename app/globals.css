@@ -1,0 +1,147 @@
+@import 'tailwindcss';
+
+/* ─────────────────────────────────────────────────────────────
+   Soltria · Design tokens (extraídos do PDF de identidade visual)
+   Vinho #771430 · Grafite #282828 · Rosé #ffe7e5 · Branco #ffffff
+   Tipografia: Against (display) · Emitha (script) · Poppins Light
+   ───────────────────────────────────────────────────────────── */
+
+/* Fontes da marca: coloque os arquivos licenciados em /public/fonts
+   (against.woff2 e emitha.woff2). Enquanto não existirem, o sistema usa
+   alternativas Google (Bodoni Moda / Mrs Saint Delafield). */
+@font-face {
+  font-family: 'Against';
+  src: local('Against'), local('Against Regular'), url('/fonts/against.woff2') format('woff2');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Emitha';
+  src: local('Emitha'), local('Emitha Script'), url('/fonts/emitha.woff2') format('woff2');
+  font-display: swap;
+}
+
+@theme {
+  --color-wine: #771430;
+  --color-wine-dark: #5a0f24;
+  --color-ink: #282828;
+  --color-blush: #ffe7e5;
+  --color-blush-soft: #fff6f5;
+
+  --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Against', 'Bodoni Moda', 'Playfair Display', Georgia, serif;
+  --font-script: 'Emitha', 'Mrs Saint Delafield', cursive;
+
+  --radius-card: 1.5rem;
+  --ease-soft: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: var(--font-sans);
+  font-weight: 300;
+  color: var(--color-ink);
+  background: var(--color-blush-soft);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-wine);
+  color: #fff;
+}
+
+/* Microinterações */
+@layer components {
+  .label {
+    @apply text-[0.68rem] font-light uppercase tracking-[0.22em];
+  }
+  .h-display {
+    font-family: var(--font-display);
+    @apply font-normal leading-[1.05] tracking-tight;
+  }
+  .script {
+    font-family: var(--font-script);
+    @apply font-normal leading-none;
+  }
+  .card {
+    @apply rounded-[var(--radius-card)] border border-wine/15 bg-white;
+    transition:
+      border-color 0.25s var(--ease-soft),
+      transform 0.25s var(--ease-soft),
+      background-color 0.25s var(--ease-soft);
+  }
+  .card-hover:hover {
+    @apply border-wine/40;
+    transform: translateY(-2px);
+  }
+  .field {
+    @apply w-full rounded-2xl border border-wine/20 bg-white px-4 py-3 text-[0.95rem] font-light text-ink outline-none placeholder:text-ink/35;
+    transition:
+      border-color 0.2s,
+      box-shadow 0.2s;
+  }
+  .field:focus {
+    @apply border-wine;
+    box-shadow: 0 0 0 3px rgb(119 20 48 / 0.12);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-rise {
+  animation: rise 0.5s var(--ease-soft) both;
+}
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.animate-pop {
+  animation: pop 0.22s var(--ease-soft) both;
+}
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85) rotate(12deg);
+  }
+}
+.animate-twinkle {
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+
+/* Scroll horizontal sem barra (carrossel) */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
