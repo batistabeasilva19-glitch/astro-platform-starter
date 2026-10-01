@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Copy, ExternalLink, Mail, Send } from 'lucide-react';
-import { sendClientEmail } from '@/lib/actions/email';
+import { useState } from 'react';
+import { Copy, ExternalLink, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
@@ -62,11 +61,10 @@ function build(id: string, c: EmailCtx, it: EmailItem) {
   }
 }
 
-/** Escreve e envia (ou copia / abre no e-mail) um aviso ao cliente. Tudo pode ser editado antes de enviar. */
+/** Escreve (ou copia / abre no Gmail) um aviso ao cliente. Tudo pode ser editado antes de enviar. */
 export function EmailComposer({ ctx, item }: { ctx: EmailCtx; item: EmailItem }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
-  const [pending, start] = useTransition();
   const initial = (id: string) => build(id, ctx, item);
   const firstId = item.approved ? 'approved' : 'awaiting';
   const [tpl, setTpl] = useState<string>(firstId);
@@ -112,15 +110,6 @@ export function EmailComposer({ ctx, item }: { ctx: EmailCtx; item: EmailItem })
             >
               <Mail className="size-3.5" /> Outro app de e-mail
             </a>
-            <Button
-              loading={pending}
-              onClick={() => start(async () => {
-                const r = await sendClientEmail(to, subject, text);
-                if (r.ok) { toast('E-mail enviado ♡'); setOpen(false); } else toast(r.error, 'error');
-              })}
-            >
-              <Send className="size-3.5" /> Enviar agora
-            </Button>
           </div>
         </div>
       </Modal>
