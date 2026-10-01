@@ -84,7 +84,7 @@ export function ClientForm({ ownerId, newId, client, next }: { ownerId: string; 
 
       <FormMessage error={state && !state.ok ? state.error : null} />
       <div className="flex flex-wrap justify-end gap-3">
-        <Link href={client ? `/admin/clients/${client.id}` : '/admin/clients'} className={buttonClass('ghost')}>
+        <Link href={next?.startsWith('/admin/identidades') ? next.split('?')[0] : client ? `/admin/clients/${client.id}` : '/admin/clients'} className={buttonClass('ghost')}>
           Cancelar
         </Link>
         <Button type="submit" loading={pending || uploading}>

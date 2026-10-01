@@ -8,7 +8,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/data/clients';
 import { logIdentity, syncProjectStatus } from '@/lib/data/identity';
 import { removeFiles } from '@/lib/storage';
-import { HEX_RE, IDENTITY_STATUSES, STAGES, STAGE_BY_KEY, type IdentityStage, type IdentityStatus, type StageContent, type StageKey } from '@/lib/identity/types';
+import { HEX_RE, IDENTITY_STATUSES, STAGES, STAGE_BY_KEY, type IdentityStage, type IdentityStatus, type QuickLink, type StageContent, type StageKey } from '@/lib/identity/types';
 import { getFonts, getPalettes } from '@/lib/identity/color';
 import { fail, type ActionResult } from './shared';
 
@@ -599,6 +599,30 @@ export async function deleteAnnotation(annotationId: string): Promise<ActionResu
   const supabase = await createClient();
   const { error } = await supabase.from('identity_annotations').delete().eq('id', annotationId);
   if (error) return fail('Não foi possível excluir.');
+  refresh();
+  return { ok: true };
+}
+
+/** Links de acesso rápido do projeto (pasta do Drive, formulário do Google…). Só a administradora vê. */
+export async function saveIdentityLinks(projectId: string, links: QuickLink[]): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  if (links.length > 12) return fail('Máximo de 12 links.');
+  const clean: QuickLink[] = [];
+  for (const l of links) {
+    const url = l.url.trim();
+    if (!url && !l.label.trim()) continue;
+    let ok = false;
+    try {
+      const u = new URL(url);
+      ok = u.protocol === 'https:' || u.protocol === 'http:';
+    } catch {}
+    if (!ok) return fail(`O link “${l.label || url || 'sem nome'}” não parece um endereço válido (use https://…).`);
+    clean.push({ id: l.id, label: (l.label.trim() || 'Link').slice(0, 80), url: url.slice(0, 1000), kind: l.kind === 'drive' || l.kind === 'form' ? l.kind : 'other' });
+  }
+  const { error } = await supabase.from('identity_projects').update({ links: clean }).eq('id', projectId);
+  if (error) return fail('Não foi possível salvar. A migration 0005 foi aplicada no Supabase? (supabase/migrations/0005_links_identidade.sql)');
+  await logIdentity(supabase, { projectId, actorType: 'admin', action: 'links', detail: 'Links de acesso rápido atualizados' });
   refresh();
   return { ok: true };
 }

@@ -69,6 +69,14 @@ export const IDENTITY_STATUS_META: Record<IdentityStatus, { label: string; clien
 export const IDENTITY_STATUSES = Object.keys(IDENTITY_STATUS_META) as IdentityStatus[];
 
 // ─── Linhas do banco ───────────────────────────────────────────────────────
+export type QuickLinkKind = 'drive' | 'form' | 'other';
+export interface QuickLink {
+  id: string;
+  label: string;
+  url: string;
+  kind: QuickLinkKind;
+}
+
 export interface IdentityProject {
   id: string;
   client_id: string;
@@ -76,6 +84,8 @@ export interface IdentityProject {
   description: string;
   start_date: string | null;
   internal_notes: string;
+  /** atalhos privados da administradora (pode não existir antes da migration 0005) */
+  links?: QuickLink[];
   status: IdentityStatus;
   review_token: string;
   token_active: boolean;

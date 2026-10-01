@@ -64,7 +64,7 @@ export async function identityPortalDetail(s: IdentitySession): Promise<Identity
   const visibleStageIds = new Set(stages.map((st) => st.id));
 
   return {
-    project: { ...d.project, internal_notes: '', review_token: '' },
+    project: { ...d.project, internal_notes: '', review_token: '', links: [] },
     stages,
     activity: d.activity.filter((a) => CLIENT_ACTIONS.includes(a.action)),
     favorites: d.favorites,

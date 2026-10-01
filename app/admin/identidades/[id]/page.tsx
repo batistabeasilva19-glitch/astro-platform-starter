@@ -10,8 +10,10 @@ import { ProjectForm } from '@/components/identity/ProjectForm';
 import { DeleteProjectButton, FinalizeButton, IdentityLink, StageSwitch } from '@/components/identity/ProjectActions';
 import { StageWorkspace } from '@/components/identity/StageWorkspace';
 import { DecisionsPanel } from '@/components/identity/DecisionsPanel';
+import { QuickLinks } from '@/components/identity/QuickLinks';
 import { HistoryList } from '@/components/content/Thread';
 import { Avatar } from '@/components/ui/Misc';
+import { Pencil } from 'lucide-react';
 import { cn, fmtDate } from '@/lib/utils';
 
 export const metadata = { title: 'Identidade visual' };
@@ -52,8 +54,18 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
           <p className="label mb-1 text-wine/70">{client.company_name}</p>
           <h1 className="h-display text-3xl text-wine sm:text-4xl">{project.name}</h1>
         </div>
-        <ProjectStatusBadge status={project.status} />
+        <div className="flex flex-col items-end gap-2">
+          <ProjectStatusBadge status={project.status} />
+          <Link href={`/admin/clients/${client.id}/edit?next=${encodeURIComponent(base)}`} className="inline-flex items-center gap-1.5 text-xs text-wine underline-offset-4 hover:underline">
+            <Pencil className="size-3.5" /> Editar perfil do cliente
+          </Link>
+        </div>
       </header>
+
+      {/* acesso rápido: pasta do Drive, formulário do Google… (privado) */}
+      <div className="mb-8 -mt-3">
+        <QuickLinks projectId={id} links={project.links ?? []} />
+      </div>
 
       <nav className="no-scrollbar mb-8 flex gap-1.5 overflow-x-auto pb-1" aria-label="Etapas">
         {tabs.map((t) => (
