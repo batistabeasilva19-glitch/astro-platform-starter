@@ -86,6 +86,9 @@ export default async function ClientWorkspacePage({
           <div className="flex flex-wrap gap-2">
             <Link href={`/admin/clients/${id}`} className={buttonClass('primary', 'sm')}>Ver conteúdos <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/estrategia`} className={buttonClass('primary', 'sm')}>Estratégia de rede <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/mes`} className={buttonClass('primary', 'sm')}>Calendário do mês <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/roteiros`} className={buttonClass('primary', 'sm')}>Roteiros <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/stories`} className={buttonClass('primary', 'sm')}>Stories do dia <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/desempenho`} className={buttonClass('primary', 'sm')}>Desempenho <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/relatorios`} className={buttonClass('primary', 'sm')}>Relatórios <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
           </div>
