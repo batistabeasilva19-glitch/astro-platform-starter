@@ -3,7 +3,8 @@ import { notFound } from 'next/navigation';
 import { clientCards, clientFeed, resolveToken } from '@/lib/data/portal';
 import { listPublicStrategyDocs } from '@/lib/data/strategy';
 import { listReleasedReports } from '@/lib/data/perf';
-import { portalCounts } from '@/lib/data/extras';
+import { portalCounts, portalEvents } from '@/lib/data/extras';
+import { MiniAgenda } from '@/components/portal/MiniAgenda';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AWAITING } from '@/lib/constants';
 import { ContentCard } from '@/components/content/ContentCard';
@@ -28,6 +29,7 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
   const strategyCount = (await listPublicStrategyDocs(createAdminClient(), client.id)).length;
   const resultsCount = (await listReleasedReports(createAdminClient(), client.id)).length;
   const extras = await portalCounts(createAdminClient(), client.id);
+  const agenda = (await portalEvents(createAdminClient(), client.id)).filter((e) => e.status !== 'cancelled');
   const awaiting = items.filter((i) => AWAITING.includes(i.status));
   const changes = items.filter((i) => i.status === 'changes_requested');
   const approved = items.filter((i) => ['approved', 'scheduled', 'published'].includes(i.status));
@@ -50,12 +52,21 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
     <div>
       {/* Boas-vindas */}
       <section className="relative mb-10 overflow-hidden rounded-[2rem] bg-blush px-6 py-10 sm:px-12 sm:py-14">
-        <BrandElement name="sparkles" tone="wine" className="absolute right-6 top-6 w-14 opacity-70 sm:w-20" />
-        <h1 className="script text-6xl text-wine sm:text-7xl">Olá, {firstName(client.contact_name || client.company_name)} ♡</h1>
-        <p className="mt-5 max-w-xl text-[0.98rem] leading-relaxed text-ink/80">
-          Aqui você encontra todos os conteúdos que preparamos para sua marca. Analise cada publicação com calma e utilize os botões de aprovação ou alteração para enviar seu feedback.
-        </p>
-        <BrandElement name="brush-stroke" tone="wine" className="mt-6 w-44 opacity-50" />
+        <BrandElement name="sparkles" tone="wine" className="absolute right-4 top-4 w-8 opacity-60 sm:right-6 sm:top-5 sm:w-12" />
+        <div className={agenda.length ? 'flex flex-col gap-8 md:flex-row md:items-center md:justify-between' : ''}>
+          <div className="min-w-0">
+            <h1 className="script text-6xl text-wine sm:text-7xl">Olá, {firstName(client.contact_name || client.company_name)} ♡</h1>
+            <p className="mt-5 max-w-xl text-[0.98rem] leading-relaxed text-ink/80">
+              Aqui você encontra todos os conteúdos que preparamos para sua marca. Analise cada publicação com calma e utilize os botões de aprovação ou alteração para enviar seu feedback.
+            </p>
+            <BrandElement name="brush-stroke" tone="wine" className="mt-6 w-44 opacity-50" />
+          </div>
+          {agenda.length > 0 && (
+            <div className="md:mr-6 md:mt-6 md:shrink-0">
+              <MiniAgenda events={agenda.map((e) => ({ date: e.event_date, kind: e.kind, title: e.title, time: e.start_time ? e.start_time.slice(0, 5) : '' }))} href={`${base}/agenda`} today={new Date().toISOString().slice(0, 10)} />
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Contadores */}
@@ -81,13 +92,13 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
         </section>
       )}
 
-      {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0 || extras.events > 0) && (
+      {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0) && (
         <Link href={`${base}/cronograma`} className="mb-8 flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15"><CalendarCheck className="size-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="label block text-white/70">Organização</span>
             <span className="h-display text-2xl text-white">Cronograma de entregas</span>
-            <span className="block text-xs text-white/75">{[extras.scripts > 0 && 'roteiro de vídeos', extras.plans > 0 && 'calendário do mês', extras.stories > 0 && 'stories do dia', extras.events > 0 && 'agenda de gravações e reuniões'].filter(Boolean).join(' · ')}</span>
+            <span className="block text-xs text-white/75">{[extras.scripts > 0 && 'roteiro de vídeos', extras.plans > 0 && 'calendário do mês', extras.stories > 0 && 'stories do dia'].filter(Boolean).join(' · ')}</span>
           </span>
           <ArrowRight className="size-5" />
         </Link>
