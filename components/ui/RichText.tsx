@@ -71,8 +71,14 @@ export function RichText({ text, className }: { text: string; className?: string
         </blockquote>,
       );
     } else {
-      out.push(<span key={`p${i}`} className="block min-h-[1.2em]">{inline(line)}</span>);
-      i++;
+      // linhas comuns seguidas viram UM bloco: as quebras (e linhas em branco) saem exatamente como no texto colado
+      const start = i;
+      const block: string[] = [];
+      while (i < lines.length && !/^\s*- /.test(lines[i]) && !/^\s*\d+\. /.test(lines[i]) && !/^>\s?/.test(lines[i])) {
+        block.push(lines[i]);
+        i++;
+      }
+      out.push(<span key={`p${start}`} className="block">{inline(block.join('\n'))}</span>);
     }
   }
   // pre-wrap: mantém exatamente os espaços, recuos e linhas em branco do texto colado
