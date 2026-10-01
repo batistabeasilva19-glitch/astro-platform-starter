@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ExternalLink } from 'lucide-react';
@@ -75,7 +76,7 @@ export function StoriesChecklist({ token, rows, thumbs }: { token: string; rows:
               <div className="min-w-0 flex-1">
                 <p className="text-[0.7rem] uppercase tracking-[0.14em] text-wine/60">Story {i + 1}</p>
                 <h3 className={cn('text-[1.05rem] leading-snug text-ink', s.done && 'text-ink/60')}>{s.title}</h3>
-                {s.description && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink/65">{s.description}</p>}
+                {s.description && <RichText text={s.description} className="mt-1 text-sm leading-relaxed text-ink/65" />}
                 {s.link && <a href={s.link} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-sm text-wine underline-offset-4 hover:underline">Abrir arte / pasta <ExternalLink className="size-3.5" /></a>}
               </div>
             </div>

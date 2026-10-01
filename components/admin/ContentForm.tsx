@@ -1,5 +1,6 @@
 'use client';
 
+import { RichTextarea } from '@/components/ui/RichText';
 import { useActionState, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { createContent, updateContent } from '@/lib/actions/content';
@@ -91,7 +92,7 @@ export function ContentForm({ clients, clientId, defaultDate, content, version, 
           <Input name="objective" defaultValue={content?.objective} placeholder="Ex.: Gerar agendamentos / educar / engajar" />
         </Field>
         <Field label="Legenda" className="sm:col-span-2" hint={editing ? `Versão ${String(version?.version_number ?? 1).padStart(2, '0')}` : undefined}>
-          <Textarea name="caption" rows={6} defaultValue={version?.caption} disabled={!editable} placeholder="Escreva a legenda do post…" />
+          <RichTextarea name="caption" rows={6} defaultValue={version?.caption} disabled={!editable} placeholder="Escreva a legenda do post…" />
         </Field>
         <Field label="CTA (chamada para ação)">
           <Input name="cta" defaultValue={version?.cta} disabled={!editable} placeholder="Ex.: Agende pelo link da bio" />

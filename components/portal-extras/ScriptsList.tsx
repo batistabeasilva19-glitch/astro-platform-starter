@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
@@ -66,7 +67,7 @@ export function ScriptsList({ rows }: { rows: ScriptRow[] }) {
             {r.notes && <p className="mt-4 rounded-2xl bg-blush px-4 py-3 text-sm text-wine">{r.notes}</p>}
             {r.script ? (
               <>
-                <div className="mt-4 whitespace-pre-wrap rounded-2xl border border-wine/10 bg-blush-soft px-4 py-4 text-[1rem] leading-relaxed text-ink/90 select-text sm:px-5">{r.script}</div>
+                <div className="mt-4 rounded-2xl border border-wine/10 bg-blush-soft px-4 py-4 text-[1rem] leading-relaxed text-ink/90 select-text sm:px-5"><RichText text={r.script} /></div>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <Button size="lg" className="!tracking-[0.08em] max-sm:w-full max-sm:!text-[0.8rem]" onClick={() => copy(r.id, r.script, 'Roteiro copiado ♡')}>
                     {copied === r.id ? <><Check className="size-4" /> Copiado!</> : <><Copy className="size-4" /> Copiar roteiro</>}
