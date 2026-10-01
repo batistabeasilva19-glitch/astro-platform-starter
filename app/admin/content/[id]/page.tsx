@@ -19,19 +19,20 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
   const { id } = await params;
   const user = await requireUser();
   const supabase = await createClient();
-  const content = await fetchDetail(supabase, id);
-  if (!content) notFound();
-  const [client, clients] = await Promise.all([getClient(content.client_id), listClients()]);
-  if (!client) notFound();
-  const current = content.versions.find((v) => v.version_number === content.current_version) ?? content.versions[0];
-  const isNew = (await searchParams).novo === '1';
-
-  // desempenho (migration 0008): se as tabelas ainda não existem, o painel avisa em vez de quebrar a página
-  const [metaRes, snapRes, tagsRes] = await Promise.all([
+  // tudo em paralelo (cada ida ao banco custa ~100–300 ms): o detalhe, a lista de clientes e o desempenho do conteúdo
+  const [content, clients, metaRes, snapRes, query] = await Promise.all([
+    fetchDetail(supabase, id),
+    listClients(),
+    // desempenho (migration 0008): se as tabelas ainda não existem, o painel avisa em vez de quebrar a página
     supabase.from('perf_content_meta').select('tags, objectives').eq('content_id', id).maybeSingle(),
     supabase.from('perf_content_snapshots').select('*').eq('content_id', id).order('collected_on'),
-    supabase.from('perf_content_meta').select('tags').eq('client_id', content.client_id),
+    searchParams,
   ]);
+  if (!content) notFound();
+  const [client, tagsRes] = await Promise.all([getClient(content.client_id), supabase.from('perf_content_meta').select('tags').eq('client_id', content.client_id)]);
+  if (!client) notFound();
+  const current = content.versions.find((v) => v.version_number === content.current_version) ?? content.versions[0];
+  const isNew = query.novo === '1';
   const perfMissing = !!(metaRes.error || snapRes.error);
   const knownTags = [...new Set((tagsRes.data ?? []).flatMap((r) => (r.tags ?? []) as string[]))];
 
