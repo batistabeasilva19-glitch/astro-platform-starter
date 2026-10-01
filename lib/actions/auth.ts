@@ -3,7 +3,7 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
-import { requireUser } from '@/lib/data/clients';
+import { ensureProfile, requireUser } from '@/lib/data/clients';
 import { seedDemo } from '@/lib/demo-seed';
 import { fail, type ActionResult } from './shared';
 
@@ -27,6 +27,7 @@ export async function signOut() {
 export async function loadDemoData(): Promise<ActionResult<{ clientId: string }>> {
   const user = await requireUser();
   try {
+    await ensureProfile(user);
     const { clientId } = await seedDemo(user.id);
     revalidatePath('/admin', 'layout');
     return { ok: true, clientId };
