@@ -2,7 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { FileText, Pencil, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { getClient } from '@/lib/data/clients';
+import { getClient, requireUser } from '@/lib/data/clients';
+import { listProfileShots } from '@/lib/data/profile-shots';
+import { ProfileBefore } from '@/components/admin/ProfileBefore';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
@@ -26,7 +28,9 @@ export default async function ClientWorkspacePage({
   const view = parseView((await searchParams).view);
   const client = await getClient(id);
   if (!client) notFound();
+  const user = await requireUser();
   const supabase = await createClient();
+  const { shots, missing: shotsMissing } = await listProfileShots(supabase, id);
   const items = await fetchCards(supabase, { clientId: id });
   const { count: identityCount } = await supabase.from('identity_projects').select('id', { count: 'exact', head: true }).eq('client_id', id);
   const feed = view === 'feed' ? await fetchFeed(supabase, id) : null;
@@ -90,6 +94,10 @@ export default async function ClientWorkspacePage({
             <Link href={`/admin/identidades/new?client=${id}`} className="text-wine underline-offset-4 hover:underline">+ Nova identidade →</Link>
           </div>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <ProfileBefore ownerId={user.id} clientId={id} shots={shots} missing={shotsMissing} />
       </div>
 
       <div className="mb-6 mt-8 flex flex-wrap items-center justify-between gap-3">
