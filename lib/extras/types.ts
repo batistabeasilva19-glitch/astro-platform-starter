@@ -83,3 +83,36 @@ export function dayTitle(d: string): string {
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 export const shortDate = (d: string) => `${d.slice(8, 10)}/${d.slice(5, 7)}`;
+
+// ─── Agenda: gravações e reuniões de alinhamento ─────────────────────
+export const EVENT_KINDS = [
+  { id: 'recording', label: 'Gravação' },
+  { id: 'meeting', label: 'Reunião de alinhamento' },
+] as const;
+export type EventKind = (typeof EVENT_KINDS)[number]['id'];
+export type EventStatus = 'scheduled' | 'done' | 'cancelled';
+export const EVENT_STATUS_LABEL: Record<EventStatus, string> = { scheduled: 'Agendado', done: 'Realizado', cancelled: 'Cancelado' };
+export interface EventRow {
+  id: string;
+  client_id: string;
+  kind: EventKind;
+  title: string;
+  event_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  location: string;
+  link: string;
+  notes: string;
+  status: EventStatus;
+  visible: boolean;
+}
+export const hhmm = (t: string | null) => (t ? t.slice(0, 5) : '');
+/** Link "Adicionar ao Google Agenda" (abre o evento já preenchido). */
+export function googleCalendarUrl(e: Pick<EventRow, 'title' | 'event_date' | 'start_time' | 'end_time' | 'location' | 'link' | 'notes'>): string {
+  const d = e.event_date.replace(/-/g, '');
+  const fmt = (t: string) => `${d}T${t.slice(0, 2)}${t.slice(3, 5)}00`;
+  const dates = e.start_time ? `${fmt(e.start_time)}/${fmt(e.end_time || e.start_time)}` : `${d}/${d}`;
+  const details = [e.notes, e.link && `Link: ${e.link}`].filter(Boolean).join('\n');
+  const p = new URLSearchParams({ action: 'TEMPLATE', text: e.title, dates, details, location: e.location });
+  return `https://calendar.google.com/calendar/render?${p.toString()}`;
+}

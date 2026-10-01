@@ -28,6 +28,7 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 
 > **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) `0008_desempenho.sql` (Desempenho & Relatórios) `0009_perfil_antes.sql` (print do perfil “antes”) `0010_metricas_antes_depois.sql` (“antes” de cada métrica) `0011_producao.sql` (Produção / Kanban) `0012_portal_roteiros_calendario_stories.sql` (roteiros, calendário do mês e stories do cliente) e `0013_calendario_link.sql
   0014_login_cliente.sql   # login (e-mail + senha) opcional no portal do cliente` (link da arte no calendário) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+  0015_agenda_cliente.sql  # agenda: gravações e reuniões de alinhamento
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.

@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { ArrowLeft, ArrowRight, CalendarCheck, Film, Smartphone } from 'lucide-react';
+import { ArrowLeft, ArrowRight, CalendarCheck, CalendarClock, Film, Smartphone } from 'lucide-react';
 import { resolveToken } from '@/lib/data/portal';
 import { portalCounts } from '@/lib/data/extras';
 import { createAdminClient } from '@/lib/supabase/admin';
@@ -17,6 +17,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
     [c.scripts, 'roteiros', 'Gravações', 'Roteiro de vídeos', 'Os vídeos a gravar, em ordem, com o roteiro pronto para copiar.', Film],
     [c.plans, 'mes', 'Planejamento', 'Calendário do mês', 'Posts, carrosséis e Reels do mês, em ordem, para você aprovar.', CalendarCheck],
     [c.stories, 'stories', 'Publicações', 'Stories', 'Os stories de cada dia, em ordem. Marque “OK” em cada um que postar.', Smartphone],
+    [c.events, 'agenda', 'Compromissos', 'Agenda', 'Dias de gravação e reuniões de alinhamento, com horário e local.', CalendarClock],
   ] as const).filter((t) => t[0] > 0);
   return (
     <div>
