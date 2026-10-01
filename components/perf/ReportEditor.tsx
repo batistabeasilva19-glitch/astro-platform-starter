@@ -3,8 +3,9 @@
 import { useState, useTransition } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Download, Eye, FileCheck2, History, Lock, Plus, RefreshCw, RotateCcw, Save, Trash2, Unlock } from 'lucide-react';
-import { finalizeReport, refreshReportData, reopenReport, restoreReportVersion, saveReportEdits, saveReportVersion, setReportStatus, setReportVisible } from '@/lib/actions/perf';
+import { Bot, ClipboardCopy, Download, Eye, FileCheck2, History, Lock, Plus, RefreshCw, RotateCcw, Save, Sparkles, Trash2, Unlock } from 'lucide-react';
+import { autoFillReportTexts, finalizeReport, getReportAiBrief, refreshReportData, reopenReport, restoreReportVersion, saveReportEdits, saveReportVersion, setReportStatus, setReportVisible } from '@/lib/actions/perf';
+import { parseAiResponse } from '@/lib/perf/narrative';
 import { REPORT_SECTIONS, REPORT_STATUS, REPORT_STATUS_LABEL, REPORT_TEXT_FIELDS, type Insight, type ReportEdits } from '@/lib/perf/types';
 import { Button, LinkButton, buttonClass } from '@/components/ui/Button';
 import { Field, FormMessage, Input, Select, Textarea } from '@/components/ui/Fields';
@@ -31,6 +32,10 @@ export function ReportEditor({ clientId, report, label, edits: initial, versions
   const [error, setError] = useState<string | null>(null);
   const [versionModal, setVersionModal] = useState(false);
   const [versionLabel, setVersionLabel] = useState('');
+  const [aiOpen, setAiOpen] = useState(false);
+  const [brief, setBrief] = useState('');
+  const [pasted, setPasted] = useState('');
+  const [aiMsg, setAiMsg] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const toast = useToast();
   const router = useRouter();
@@ -61,6 +66,47 @@ export function ReportEditor({ clientId, report, label, edits: initial, versions
     });
 
   const save = () => act(async () => ({ ok: true }), 'Relatório salvo ♡');
+
+  const autoFill = (overwrite: boolean) =>
+    act(async () => {
+      const r = await autoFillReportTexts(report.id, overwrite);
+      if (r.ok) toast(r.filled ? `${r.filled} ${r.filled === 1 ? 'campo preenchido' : 'campos preenchidos'} com os dados ♡` : 'Nada novo para preencher: os campos já têm texto.');
+      return r;
+    }, '');
+
+  const openAi = () =>
+    start(async () => {
+      setError(null);
+      const r = await getReportAiBrief(report.id);
+      if (!r.ok) return setError(r.error);
+      setBrief(r.text);
+      setAiMsg(null);
+      setAiOpen(true);
+    });
+  const copyBrief = async () => {
+    try {
+      await navigator.clipboard.writeText(brief);
+      toast('Copiado! Cole na sua IA ♡');
+    } catch {
+      toast('Não consegui copiar automaticamente. Selecione o texto e copie.', 'error');
+    }
+  };
+  const downloadBrief = () => {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([brief], { type: 'text/plain;charset=utf-8' }));
+    a.download = `dados-relatorio-${report.month.slice(0, 7)}.txt`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+  const applyPasted = () => {
+    const r = parseAiResponse(pasted);
+    if (!r.found) return setAiMsg('Não encontrei nenhum campo. A resposta da IA precisa ter blocos começando com “### Nome do campo”.');
+    patch((e) => ({ ...e, texts: { ...e.texts, ...r.texts }, analyses: { ...e.analyses, ...r.analyses } }));
+    setAiMsg(null);
+    setAiOpen(false);
+    setPasted('');
+    toast(`${r.found} ${r.found === 1 ? 'campo preenchido' : 'campos preenchidos'} com a resposta da IA. Revise e clique em Salvar ♡`);
+  };
 
   return (
     <div className="space-y-6">
@@ -99,6 +145,17 @@ export function ReportEditor({ clientId, report, label, edits: initial, versions
           </label>
         )}
         <FormMessage error={error} />
+      </section>
+
+      <section className="card space-y-3 p-5 sm:p-6">
+        <h2 className="h-display text-2xl text-wine">Textos e análises com ajuda dos dados</h2>
+        <p className="text-sm text-ink/60">Não precisa escrever do zero: o sistema redige os textos e as análises de cada seção só com os números cadastrados (sem inventar nada), ou você leva todos os dados para a sua IA e cola a resposta de volta.</p>
+        <div className="flex flex-wrap gap-2">
+          {!locked && <Button variant="outline" loading={pending} onClick={() => autoFill(false)}><Sparkles className="size-4" /> Preencher automaticamente</Button>}
+          {!locked && <Button variant="ghost" loading={pending} onClick={() => confirm('Refazer TODOS os textos e análises com os dados? O que você escreveu nesses campos será substituído.') && autoFill(true)}><RefreshCw className="size-4" /> Refazer todos</Button>}
+          <Button variant="soft" loading={pending} onClick={openAi}><Bot className="size-4" /> Dados para a IA</Button>
+        </div>
+        <p className="text-xs text-ink/45">“Preencher automaticamente” só completa os campos vazios. Depois você pode editar tudo.</p>
       </section>
 
       <section className="card p-5 sm:p-6">
@@ -174,6 +231,27 @@ export function ReportEditor({ clientId, report, label, edits: initial, versions
           ))}
         </ul>
       </section>
+
+      {aiOpen && (
+        <Modal open onClose={() => setAiOpen(false)} title="Dados para a IA" className="sm:!max-w-3xl">
+          <p className="mb-3 text-sm text-ink/65">1) Copie o texto abaixo (ele já tem o pedido e todos os dados do mês) e cole na sua IA. 2) Cole aqui a resposta dela para preencher os campos.</p>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Button onClick={copyBrief}><ClipboardCopy className="size-4" /> Copiar tudo</Button>
+            <Button variant="outline" onClick={downloadBrief}><Download className="size-4" /> Baixar .txt</Button>
+          </div>
+          <textarea readOnly value={brief} rows={9} className="field w-full resize-y font-mono !text-xs leading-relaxed" onFocus={(e) => e.currentTarget.select()} />
+          {!locked && (
+            <div className="mt-5">
+              <Field label="2) Resposta da IA" hint="Cole aqui. Os blocos precisam começar com “### Nome do campo” (o pedido já ensina a IA a responder assim)."><Textarea rows={7} value={pasted} onChange={(e) => setPasted(e.target.value)} placeholder="### Resumo do mês&#10;..." /></Field>
+              {aiMsg && <p className="mt-2 text-sm text-wine">{aiMsg}</p>}
+              <div className="mt-4 flex justify-end gap-2">
+                <Button variant="ghost" onClick={() => setAiOpen(false)}>Fechar</Button>
+                <Button onClick={applyPasted} disabled={!pasted.trim()}>Preencher os campos</Button>
+              </div>
+            </div>
+          )}
+        </Modal>
+      )}
 
       {versionModal && (
         <Modal open onClose={() => setVersionModal(false)} title="Salvar versão do relatório" className="sm:!max-w-md">

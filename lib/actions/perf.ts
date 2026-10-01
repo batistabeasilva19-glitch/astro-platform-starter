@@ -7,6 +7,7 @@ import { getClient } from '@/lib/data/clients';
 import { getReport, loadPerfRaw, loadReportClient, reportData } from '@/lib/data/perf';
 import { daysBetween, monthStart, todayBR } from '@/lib/perf/calc';
 import { buildReportData, mergeInsights, normalizeEdits, type ReportData } from '@/lib/perf/report';
+import { aiBrief, autoTexts } from '@/lib/perf/narrative';
 import { CONTENT_FIELDS, EMPTY_EDITS, PAID_DECIMAL, PAID_FIELDS, PROFILE_FIELDS, isSource, toFormatGroup, type Insight, type ReportEdits, type SnapshotLabel } from '@/lib/perf/types';
 import { isIsoDate, parseMetrics } from '@/lib/perf/validate';
 import { fail, logActivity, type ActionResult } from './shared';
@@ -397,3 +398,46 @@ export async function deleteReport(reportId: string): Promise<ActionResult> {
   return { ok: true };
 }
 
+
+/** Preenche textos e análises de seção automaticamente, só com os dados cadastrados. `overwrite=false` só completa os campos vazios. */
+export async function autoFillReportTexts(reportId: string, overwrite: boolean): Promise<ActionResult<{ filled: number }>> {
+  await requireUser();
+  const { supabase, row } = await openReport(reportId);
+  if (!row) return fail('Relatório não encontrado.');
+  if (row.status === 'final' || row.status === 'sent') return fail('Este relatório está finalizado. Reabra o relatório para preencher os textos.');
+  const client = await clientForReport(row.client_id);
+  if (!client) return fail('Cliente não encontrado.');
+  const [{ raw }, info] = await Promise.all([loadPerfRaw(supabase, row.client_id), loadReportClient(supabase, client)]);
+  const data = buildReportData(raw, row.month, info);
+  if (!data.hasData) return fail('Ainda não há métricas cadastradas neste mês para gerar os textos.');
+  const gen = autoTexts(data);
+  const edits = normalizeEdits(row.edits);
+  let filled = 0;
+  for (const [k, v] of Object.entries(gen.texts)) {
+    if (overwrite || !edits.texts[k]?.trim()) {
+      edits.texts[k] = v;
+      filled++;
+    }
+  }
+  for (const [k, v] of Object.entries(gen.analyses)) {
+    if (overwrite || !edits.analyses[k]?.trim()) {
+      edits.analyses[k] = v;
+      filled++;
+    }
+  }
+  const { error } = await supabase.from('perf_reports').update({ edits }).eq('id', reportId);
+  if (error) return fail('Não foi possível salvar os textos.');
+  refresh();
+  return { ok: true, filled };
+}
+
+/** Pacote completo (pedido + todos os dados do mês) para colar em uma IA. Não inclui observações internas. */
+export async function getReportAiBrief(reportId: string): Promise<ActionResult<{ text: string }>> {
+  await requireUser();
+  const { supabase, row } = await openReport(reportId);
+  if (!row) return fail('Relatório não encontrado.');
+  const client = await clientForReport(row.client_id);
+  if (!client) return fail('Cliente não encontrado.');
+  const { data } = await reportData(supabase, client, row as never, row.month);
+  return { ok: true, text: aiBrief(data, normalizeEdits(row.edits)) };
+}

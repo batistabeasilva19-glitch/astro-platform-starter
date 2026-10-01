@@ -46,6 +46,7 @@ Dentro de cada cliente de Social Mídia: **Desempenho** (`/admin/clients/<id>/de
 - **Filtros:** este mês, mês anterior, 3 e 6 meses, ano e período personalizado; aba *Comparar períodos*.
 - **Relatório mensal:** “Gerar relatório do mês” monta tudo; você revisa, escreve a análise, salva versões (V1, V2…), visualiza (A4), **exporta PDF** (`Relatorio_Soltria_Cliente_Setembro_2026.pdf`), **finaliza** (congela os dados: mudar métricas depois não altera o relatório; dá para reabrir) e **disponibiliza para o cliente**.
 - **Portal do cliente:** cartão **Resultados** em `/review/<token>` — só aparece com relatórios finalizados e liberados; mostra gráficos, melhores conteúdos e análises e permite baixar o PDF. Observações internas e rascunhos nunca saem do painel.
+- **Textos com ajuda dos dados:** no editor do relatório, *Preencher automaticamente* redige resumo, resultados, o que funcionou/melhorar, aprendizados, recomendações, próximo mês e a análise de cada seção só com os números cadastrados (sem inventar), e *Dados para a IA* gera um pacote com o pedido + todos os dados do mês para colar na sua IA — a resposta (blocos `### Nome do campo`) volta para os campos com um clique.
 - Os dados são inseridos manualmente; a estrutura (origem dos dados por registro) já está pronta para integrar Instagram Graph API / Meta Ads / Google Analytics no futuro.
 
 ## Formulário da marca (1ª etapa da Identidade Visual)
