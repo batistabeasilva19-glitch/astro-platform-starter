@@ -10,6 +10,16 @@ import { cn, toDateKey } from '@/lib/utils';
 
 const WEEK = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
+function Thumb({ item, className }: { item: ContentCardData; className?: string }) {
+  return item.thumb ? (
+    <img src={item.thumb} alt="" loading="lazy" className={cn('shrink-0 bg-blush object-cover', className)} />
+  ) : (
+    <span className={cn('flex shrink-0 items-center justify-center bg-blush text-wine', className)}>
+      <FormatIcon format={item.format} className="size-1/2" />
+    </span>
+  );
+}
+
 /** Calendário editorial mensal. Cada conteúdo aparece no seu dia, com ícone por formato. */
 export function MonthCalendar({
   items,
@@ -89,10 +99,10 @@ export function MonthCalendar({
             return (
               <div
                 key={i}
-                onClick={() => list.length && setSelected(key === selected ? null : key)}
+                onClick={() => (list.length || newHrefFor) && setSelected(key)}
                 className={cn(
                   'group/day relative min-h-16 border-b border-r border-wine/10 p-1 sm:min-h-32 sm:p-2',
-                  list.length && 'cursor-pointer sm:cursor-default',
+                  (list.length || newHrefFor) && 'cursor-pointer sm:cursor-default',
                   key === selected && 'bg-blush/60 sm:bg-transparent',
                 )}
               >
@@ -116,22 +126,24 @@ export function MonthCalendar({
                     <Link
                       key={it.id}
                       href={hrefFor(it)}
-                      className={cn('flex items-center gap-1.5 truncate rounded-lg border px-1.5 py-1 text-[0.7rem] leading-tight transition hover:brightness-95', STATUS_META[it.status].chip)}
+                      className={cn('flex items-center gap-1.5 overflow-hidden rounded-lg border p-1 pr-1.5 text-[0.7rem] leading-tight transition hover:brightness-95', STATUS_META[it.status].chip)}
                     >
-                      <FormatIcon format={it.format} className="size-3 shrink-0" />
-                      <span className="truncate">{it.title}</span>
+                      <Thumb item={it} className="size-8 rounded-md" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate">{it.title}</span>
+                        <FormatIcon format={it.format} className="mt-0.5 size-3" />
+                      </span>
                     </Link>
                   ))}
                   {list.length > 3 && <p className="px-1 text-[0.68rem] text-wine">+{list.length - 3} mais</p>}
                 </div>
 
-                {/* mobile: só os ícones; toque abre a lista do dia */}
-                <div className="mt-1 flex flex-wrap gap-0.5 sm:hidden">
+                {/* mobile: miniaturas; toque no dia abre a lista */}
+                <div className="mt-1 grid grid-cols-2 gap-0.5 sm:hidden">
                   {list.slice(0, 4).map((it) => (
-                    <span key={it.id} className={cn('inline-flex size-5 items-center justify-center rounded-full border', STATUS_META[it.status].chip)}>
-                      <FormatIcon format={it.format} className="size-3" />
-                    </span>
+                    <Thumb key={it.id} item={it} className={'aspect-square w-full rounded-md ring-1 ring-wine/15'} />
                   ))}
+                  {list.length > 4 && <span className="col-span-2 text-center text-[0.6rem] text-wine">+{list.length - 4}</span>}
                 </div>
               </div>
             );
@@ -139,16 +151,30 @@ export function MonthCalendar({
         </div>
       </div>
 
-      {selected && selectedItems.length > 0 && (
-        <div className="card animate-rise mt-4 space-y-2 p-4 sm:hidden">
-          <p className="label text-wine">{new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' }).format(new Date(`${selected}T12:00:00`))}</p>
-          {selectedItems.map((it) => (
-            <Link key={it.id} href={hrefFor(it)} className="flex items-center gap-3 rounded-2xl border border-wine/15 p-3">
-              <FormatIcon format={it.format} className="size-5 text-wine" />
-              <span className="min-w-0 flex-1 truncate text-sm">{it.title}</span>
-              <span className="text-[0.7rem] text-wine">{STATUS_META[it.status].label}</span>
-            </Link>
-          ))}
+      {selected && (selectedItems.length > 0 || newHrefFor) && (
+        <div className="fixed inset-0 z-50 flex items-end sm:hidden" role="dialog" aria-modal="true">
+          <button aria-label="Fechar" className="absolute inset-0 bg-ink/40" onClick={() => setSelected(null)} />
+          <div className="animate-rise relative max-h-[80vh] w-full space-y-2 overflow-y-auto rounded-t-3xl bg-white p-4 pb-8 shadow-2xl">
+            <div className="mb-1 flex items-center justify-between">
+              <p className="label text-wine">{new Intl.DateTimeFormat('pt-BR', { day: 'numeric', month: 'long' }).format(new Date(`${selected}T12:00:00`))}</p>
+              <button onClick={() => setSelected(null)} className="rounded-full px-3 py-1 text-xs text-wine hover:bg-blush">Fechar</button>
+            </div>
+            {selectedItems.map((it) => (
+              <Link key={it.id} href={hrefFor(it)} className="flex items-center gap-3 rounded-2xl border border-wine/15 p-2 active:bg-blush">
+                <Thumb item={it} className="size-16 rounded-xl" />
+                <span className="min-w-0 flex-1">
+                  <span className="flex items-center gap-1.5 text-sm"><FormatIcon format={it.format} className="size-3.5 shrink-0 text-wine" /><span className="line-clamp-2">{it.title}</span></span>
+                  <span className={cn('mt-1 inline-block rounded-full border px-2 py-0.5 text-[0.65rem]', STATUS_META[it.status].chip)}>{STATUS_META[it.status].label}</span>
+                </span>
+                <ChevronRight className="size-4 shrink-0 text-wine/50" />
+              </Link>
+            ))}
+            {newHrefFor && (
+              <Link href={newHrefFor(selected)} className="flex items-center justify-center gap-1.5 rounded-2xl border border-dashed border-wine/30 p-3 text-sm text-wine">
+                <Plus className="size-4" /> Novo conteúdo neste dia
+              </Link>
+            )}
+          </div>
         </div>
       )}
 
