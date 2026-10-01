@@ -1,7 +1,7 @@
 'use server';
 
 import { requireUser } from '@/lib/data/clients';
-import { escapeHtml, sendEmail } from '@/lib/notifications';
+import { escapeHtml, sendEmailDetailed } from '@/lib/notifications';
 import { fail, type ActionResult } from './shared';
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -23,6 +23,10 @@ export async function sendClientEmail(to: string, subject: string, text: string)
   if (!process.env.RESEND_API_KEY || !process.env.NOTIFICATIONS_FROM) {
     return fail('O envio automático ainda não está configurado (RESEND_API_KEY e NOTIFICATIONS_FROM no Vercel). Use “Abrir no meu e-mail” ou “Copiar”.');
   }
-  const ok = await sendEmail(dest, subject.trim().slice(0, 200), toHtml(text.slice(0, 8000)), process.env.ADMIN_NOTIFICATION_EMAIL || undefined);
-  return ok ? { ok: true } : fail('O provedor recusou o envio. Confira o remetente (NOTIFICATIONS_FROM) e a chave no Vercel.');
+  const r = await sendEmailDetailed(dest, subject.trim().slice(0, 200), toHtml(text.slice(0, 8000)), process.env.ADMIN_NOTIFICATION_EMAIL || undefined);
+  if (r.ok) return { ok: true };
+  const hint = /only send testing emails|own email|verify a domain/i.test(r.error)
+    ? ' → Com o remetente de teste (onboarding@resend.dev) o Resend só entrega para o e-mail da sua conta do Resend. Verifique um domínio em resend.com/domains ou envie para o e-mail da conta.'
+    : '';
+  return fail(`O Resend recusou o envio: ${r.error}${hint}`);
 }
