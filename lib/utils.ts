@@ -75,3 +75,8 @@ export function fmtDuration(sec: number | null): string {
 export function pluralize(n: number, one: string, many: string) {
   return `${n} ${n === 1 ? one : many}`;
 }
+
+/** ISO → '28/09/2026' (fuso de São Paulo). */
+export function fmtFullDate(iso: string): string {
+  return new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', timeZone: TZ }).format(new Date(iso));
+}

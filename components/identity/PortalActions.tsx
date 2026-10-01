@@ -99,7 +99,8 @@ export function IdentityApproval({ token, stageId, stageKey, versionId, versionN
       </div>
 
       <Modal open={modal === 'approve'} onClose={() => setModal(null)} title={APPROVE_LABEL[stageKey]}>
-        <p className="mb-2 text-[0.95rem]">Tem certeza que deseja aprovar {stageKey === 'final' ? 'a identidade visual completa' : `esta etapa (${label})`}?</p>
+        <p className="mb-2 text-[0.95rem]">{stageKey === 'final' ? 'Tem certeza que deseja aprovar a identidade visual completa?' : 'Tem certeza que deseja aprovar esta etapa?'}</p>
+        {stageKey !== 'final' && <p className="mb-1 text-sm text-ink/60">Etapa: <strong className="font-normal text-wine">{label}</strong></p>}
         <p className="mb-6 text-sm text-ink/60">Você está aprovando a <strong className="font-normal text-wine">Versão {v} (versão atual)</strong>.</p>
         <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <Button variant="ghost" onClick={() => setModal(null)}>Voltar</Button>

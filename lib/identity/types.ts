@@ -45,7 +45,7 @@ export const STAGES: StageMeta[] = [
   { key: 'typography', number: '05', label: 'Tipografia', short: 'Tipografia', icon: Type, approvable: true, hint: 'Fontes e hierarquia de texto.' },
   { key: 'elements', number: '06', label: 'Elementos', short: 'Elementos', icon: Shapes, approvable: true, hint: 'Padrões, ícones e elementos gráficos.' },
   { key: 'applications', number: '07', label: 'Aplicações', short: 'Aplicações', icon: Layers, approvable: true, hint: 'A identidade aplicada em peças reais.' },
-  { key: 'final', number: '08', label: 'Aprovação final', short: 'Final', icon: Check, approvable: true, hint: 'A aprovação de toda a identidade.' },
+  { key: 'final', number: '08', label: 'Aprovação final', short: 'Finalização', icon: Check, approvable: true, hint: 'A aprovação de toda a identidade.' },
   { key: 'files', number: '09', label: 'Arquivos', short: 'Arquivos', icon: FileArchive, approvable: false, hint: 'Entregáveis para download.' },
 ];
 
@@ -117,21 +117,43 @@ export interface ColorItem {
   id: string;
   name: string;
   hex: string;
-  role: string; // Principal, Secundária, Apoio, Neutra…
+  /** vazio = calculado automaticamente a partir do HEX; preenchido = edição manual */
+  cmyk: string;
+  pantone: string;
 }
+export interface Palette {
+  id: string;
+  label: string; // Paleta 01, Paleta 02…
+  description: string;
+  colors: ColorItem[];
+}
+
+export type FontRole = 'main' | 'secondary' | 'support';
+export const FONT_ROLES: [FontRole, string][] = [
+  ['main', 'Fonte principal'],
+  ['secondary', 'Fonte secundária'],
+  ['support', 'Fonte de apoio'],
+];
+export const FONT_CATEGORIES = ['Serifada', 'Sem serifa', 'Display', 'Manuscrita', 'Monoespaçada'];
 export interface FontItem {
   id: string;
+  role: FontRole;
   name: string;
-  role: string; // Títulos, Texto, Destaque…
+  category: string;
+  /** link de referência (ex.: Google Fonts) — o arquivo da fonte pode ser enviado à parte */
+  reference: string;
+  usage: string;
   sample: string;
-  note: string;
 }
+
 export type StageContent = {
   title?: string;
   description?: string;
   message?: string;
-  colors?: ColorItem[];
+  palettes?: Palette[];
   fonts?: FontItem[];
+  /** formato antigo (lista simples) — convertido para Paleta 01 ao abrir */
+  colors?: { id: string; name: string; hex: string; role?: string }[];
 } & Partial<Record<ConceptField, string>>;
 
 export interface IdentityVersion {
@@ -156,13 +178,29 @@ export const LOGO_SLOTS = [
 ] as const;
 export type LogoSlot = (typeof LOGO_SLOTS)[number][0];
 
+export const ELEMENT_CATEGORIES = ['Símbolos', 'Ícones', 'Patterns', 'Ilustrações', 'Grafismos', 'Texturas', 'Molduras', 'Elementos decorativos', 'Fotografias de referência'];
+export const APPLICATION_CATEGORIES = ['Cartão de visita', 'Papelaria', 'Sacola', 'Uniforme', 'Embalagem', 'Fachada', 'Placa', 'Instagram', 'Site', 'Assinatura de e-mail', 'Pasta', 'Tag', 'Adesivo', 'Outros'];
+export const FILE_CATEGORIES: [string, string][] = [
+  ['logos', 'Logos (PNG, SVG, PDF, JPG)'],
+  ['paleta', 'Paleta'],
+  ['tipografia', 'Tipografia'],
+  ['papelaria', 'Papelaria'],
+  ['manual', 'Manual da marca'],
+  ['outros', 'Outros'],
+];
+
 export interface IdentityAsset {
   id: string;
   project_id: string;
   stage_id: string;
   version_id: string;
   proposal_id: string | null;
+  logo_version_id: string | null;
   slot: string;
+  name: string;
+  description: string;
+  category: string;
+  released: boolean;
   caption: string;
   storage_path: string;
   file_name: string;
@@ -174,25 +212,66 @@ export interface SignedAsset extends IdentityAsset {
   url: string;
 }
 
+export interface LogoVersionData {
+  id: string;
+  proposal_id: string;
+  version_number: number;
+  changes: string;
+  internal_notes: string;
+  created_at: string;
+  assets: SignedAsset[];
+}
 export interface LogoProposal {
   id: string;
   stage_id: string;
-  version_id: string;
   label: string;
   description: string;
   position: number;
-  is_favorite: boolean;
   is_chosen: boolean;
   chosen_at: string | null;
 }
 export interface ProposalData extends LogoProposal {
+  /** V1, V2, V3… em ordem crescente; a última é a versão atual */
+  versions: LogoVersionData[];
+}
+export const latestLogoVersion = (p: ProposalData) => p.versions[p.versions.length - 1];
+
+export interface VersionData extends IdentityVersion {
+  /** arquivos da etapa (exceto variações de logo) */
   assets: SignedAsset[];
 }
 
-export interface VersionData extends IdentityVersion {
-  /** arquivos da etapa que não pertencem a uma proposta de logo */
-  assets: SignedAsset[];
-  proposals: ProposalData[];
+export type FavKind = 'logo' | 'palette' | 'color' | 'font' | 'application';
+export interface IdentityFavorite {
+  id: string;
+  project_id: string;
+  stage_id: string | null;
+  kind: FavKind;
+  ref_id: string;
+  label: string;
+  created_at: string;
+}
+export interface IdentitySelection {
+  id: string;
+  project_id: string;
+  stage_id: string | null;
+  kind: 'colors';
+  payload: { colorIds?: string[] };
+  client_name: string;
+  created_at: string;
+}
+export interface IdentityAnnotation {
+  id: string;
+  project_id: string;
+  stage_id: string;
+  asset_id: string;
+  x: number | null;
+  y: number | null;
+  number: number | null;
+  message: string;
+  author_type: 'admin' | 'client';
+  author_name: string;
+  created_at: string;
 }
 
 export interface IdentityComment {
@@ -206,6 +285,13 @@ export interface IdentityComment {
   is_change_request: boolean;
   created_at: string;
 }
+export interface ApprovalSnapshot {
+  logo?: { proposalId: string; label: string; versionNumber: number };
+  palette?: { id: string; label: string; colors: { name: string; hex: string }[] } | null;
+  colors?: { name: string; hex: string }[];
+  fonts?: { role: FontRole; name: string }[];
+  stages?: { key: StageKey; label: string; status: StageStatus }[];
+}
 export interface IdentityApproval {
   id: string;
   stage_id: string;
@@ -213,6 +299,7 @@ export interface IdentityApproval {
   action: 'approved' | 'changes_requested';
   client_name: string;
   note: string | null;
+  snapshot: ApprovalSnapshot | null;
   created_at: string;
 }
 export interface IdentityActivity {
@@ -228,6 +315,8 @@ export interface IdentityActivity {
 
 export interface StageData extends IdentityStage {
   versions: VersionData[];
+  /** só na etapa Logo: propostas (cada uma com suas versões) */
+  proposals: ProposalData[];
   comments: IdentityComment[];
   approvals: IdentityApproval[];
 }
@@ -236,6 +325,11 @@ export interface IdentityDetail {
   project: IdentityProject;
   stages: StageData[];
   activity: IdentityActivity[];
+  favorites: IdentityFavorite[];
+  selections: IdentitySelection[];
+  annotations: IdentityAnnotation[];
+  /** downloads por arquivo (id → quantidade) */
+  downloads: Record<string, number>;
 }
 
 // ─── Progresso ─────────────────────────────────────────────────────────────
@@ -263,6 +357,19 @@ export function deriveProjectStatus(current: IdentityStatus, stages: StageLike[]
 
 export const newId = () => (typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : Math.random().toString(36).slice(2));
 export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
+
+/** Etapa → subpasta no Storage (brands/<cliente>/<projeto>/…). */
+export const STAGE_FOLDER: Record<StageKey, string> = {
+  concept: 'concept',
+  moodboard: 'moodboard',
+  logo: 'logos',
+  colors: 'colors',
+  typography: 'typography',
+  elements: 'elements',
+  applications: 'mockups',
+  final: 'final',
+  files: 'final',
+};
 
 /** Mesmo formato de `CommentRow` do módulo de conteúdo (reutiliza o componente CommentThread). */
 export interface CommentRowLike {

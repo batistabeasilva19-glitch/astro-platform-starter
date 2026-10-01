@@ -9,11 +9,12 @@ import { requireUser } from '@/lib/data/clients';
 import { logIdentity, syncProjectStatus } from '@/lib/data/identity';
 import { removeFiles } from '@/lib/storage';
 import { HEX_RE, IDENTITY_STATUSES, STAGES, STAGE_BY_KEY, type IdentityStage, type IdentityStatus, type StageContent, type StageKey } from '@/lib/identity/types';
+import { getFonts, getPalettes } from '@/lib/identity/color';
 import { fail, type ActionResult } from './shared';
 
 const refresh = () => {
   revalidatePath('/admin', 'layout');
-  revalidatePath('/identidade', 'layout');
+  revalidatePath('/brand', 'layout');
 };
 const pad = (n: number) => String(n).padStart(2, '0');
 const newToken = () => randomBytes(32).toString('hex');
@@ -182,8 +183,10 @@ export async function saveStageContent(stageId: string, content: StageContent): 
   const { supabase, stage } = await ownedStage(stageId);
   if (!stage) return fail('Etapa não encontrada.');
   if (JSON.stringify(content).length > 120_000) return fail('Conteúdo muito grande.');
-  for (const c of content.colors ?? []) {
-    if (!HEX_RE.test(c.hex)) return fail(`Cor inválida: "${c.hex}". Use o formato #RRGGBB.`);
+  for (const pal of content.palettes ?? []) {
+    for (const c of pal.colors) {
+      if (!HEX_RE.test(c.hex)) return fail(`Cor inválida: "${c.hex}" (${pal.label}). Use o formato #RRGGBB.`);
+    }
   }
   const v = await currentVersion(supabase, stage);
   if (!v) return fail('Versão atual não encontrada.');
@@ -203,18 +206,28 @@ export async function sendStageForApproval(stageId: string): Promise<ActionResul
   const v = await currentVersion(supabase, stage);
   if (!v) return fail('Versão atual não encontrada.');
 
-  const [{ data: assets }, { data: proposals }] = await Promise.all([
-    supabase.from('identity_assets').select('id, proposal_id').eq('version_id', v.id),
-    supabase.from('identity_logo_proposals').select('id').eq('version_id', v.id),
-  ]);
+  const { data: assets } = await supabase.from('identity_assets').select('id, proposal_id').eq('version_id', v.id);
   const c = v.content;
   const hasText = Object.entries(c).some(([k, val]) => typeof val === 'string' && val.trim() && k !== 'title');
+  let logoOk = false;
+  if (stage.stage_key === 'logo') {
+    const { data: props } = await supabase.from('identity_logo_proposals').select('id').eq('stage_id', stage.id);
+    const ids = (props ?? []).map((p) => p.id);
+    if (ids.length) {
+      const { data: lvs } = await supabase.from('identity_logo_versions').select('id, proposal_id, version_number').in('proposal_id', ids);
+      const latest = new Map<string, { id: string; n: number }>();
+      for (const lv of lvs ?? []) if (!latest.has(lv.proposal_id) || latest.get(lv.proposal_id)!.n < lv.version_number) latest.set(lv.proposal_id, { id: lv.id, n: lv.version_number });
+      const latestIds = [...latest.values()].map((x) => x.id);
+      const { count } = latestIds.length ? await supabase.from('identity_assets').select('id', { count: 'exact', head: true }).in('logo_version_id', latestIds) : { count: 0 };
+      logoOk = (count ?? 0) > 0;
+    }
+  }
   const missing: Record<StageKey, string | null> = {
     concept: hasText || (assets?.length ?? 0) > 0 ? null : 'Preencha ao menos um campo do conceito.',
     moodboard: (assets?.length ?? 0) > 0 ? null : 'Adicione imagens ao moodboard.',
-    logo: (proposals?.length ?? 0) > 0 && (assets ?? []).some((a) => a.proposal_id) ? null : 'Crie ao menos uma proposta com um arquivo de logo.',
-    colors: (c.colors?.length ?? 0) > 0 ? null : 'Adicione ao menos uma cor.',
-    typography: (c.fonts?.length ?? 0) > 0 ? null : 'Adicione ao menos uma fonte.',
+    logo: logoOk ? null : 'Crie ao menos uma proposta com um arquivo de logo.',
+    colors: getPalettes(c).some((p) => p.colors.length) ? null : 'Adicione ao menos uma paleta com cores.',
+    typography: getFonts(c).some((f) => f.name.trim()) ? null : 'Adicione ao menos uma fonte.',
     elements: (assets?.length ?? 0) > 0 ? null : 'Adicione ao menos um elemento.',
     applications: (assets?.length ?? 0) > 0 ? null : 'Adicione ao menos uma aplicação.',
     final: null,
@@ -251,6 +264,7 @@ export async function sendStageForApproval(stageId: string): Promise<ActionResul
 export async function createStageVersion(stageId: string, note: string): Promise<ActionResult> {
   const { supabase, stage } = await ownedStage(stageId);
   if (!stage) return fail('Etapa não encontrada.');
+  if (stage.stage_key === 'logo') return fail('No logo, crie a nova versão dentro de cada proposta.');
   const cur = await currentVersion(supabase, stage);
   if (!cur) return fail('Versão atual não encontrada.');
   const next = stage.current_version + 1;
@@ -262,27 +276,18 @@ export async function createStageVersion(stageId: string, note: string): Promise
     .single();
   if (error || !nv) return fail('Não foi possível criar a nova versão.');
 
-  const [{ data: proposals }, { data: assets }] = await Promise.all([
-    supabase.from('identity_logo_proposals').select('*').eq('version_id', cur.id).order('position'),
-    supabase.from('identity_assets').select('*').eq('version_id', cur.id).order('position'),
-  ]);
-  const idMap = new Map<string, string>();
-  for (const p of proposals ?? []) {
-    const { data: np } = await supabase
-      .from('identity_logo_proposals')
-      .insert({ stage_id: stageId, version_id: nv.id, label: p.label, description: p.description, position: p.position, is_favorite: p.is_favorite })
-      .select('id')
-      .single();
-    if (np) idMap.set(p.id, np.id);
-  }
+  const { data: assets } = await supabase.from('identity_assets').select('*').eq('version_id', cur.id).is('proposal_id', null).order('position');
   if (assets?.length) {
     await supabase.from('identity_assets').insert(
       assets.map((a) => ({
         project_id: a.project_id,
         stage_id: stageId,
         version_id: nv.id,
-        proposal_id: a.proposal_id ? (idMap.get(a.proposal_id) ?? null) : null,
         slot: a.slot,
+        name: a.name,
+        description: a.description,
+        category: a.category,
+        released: a.released,
         caption: a.caption,
         storage_path: a.storage_path, // mesmo arquivo; só é apagado quando nenhuma versão o usa
         file_name: a.file_name,
@@ -310,36 +315,51 @@ export async function registerIdentityAsset(input: {
   stageId: string;
   versionId: string;
   proposalId?: string | null;
+  logoVersionId?: string | null;
   slot?: string;
   path: string;
   mime: string;
   fileName: string;
-  /** substitui o arquivo existente no mesmo slot (variantes de logo). */
+  /** substitui o arquivo existente no mesmo slot (variações de logo). */
   replaceSlot?: boolean;
+  name?: string;
+  category?: string;
 }): Promise<ActionResult> {
   const user = await requireUser();
   const { supabase, stage } = await ownedStage(input.stageId);
   if (!stage) return fail('Etapa não encontrada.');
   if (!input.path.startsWith(`${user.id}/`)) return fail('Caminho de arquivo inválido.');
-  const v = await currentVersion(supabase, stage);
-  if (!v || v.id !== input.versionId) return fail('Só é possível editar a versão atual.');
-
   const slot = input.slot ?? 'image';
-  const { data: existing } = await supabase.from('identity_assets').select('id, storage_path, position, proposal_id, slot').eq('version_id', v.id);
-  const sameProposal = (a: { proposal_id: string | null }) => (a.proposal_id ?? null) === (input.proposalId ?? null);
 
-  if (input.replaceSlot) {
-    await dropAssets(supabase, (existing ?? []).filter((a) => sameProposal(a) && a.slot === slot));
+  let versionId = input.versionId;
+  if (input.logoVersionId) {
+    // variação de logo: só a versão mais recente da proposta pode ser editada
+    const { data: lv } = await supabase.from('identity_logo_versions').select('id, proposal_id, version_number').eq('id', input.logoVersionId).maybeSingle();
+    if (!lv || lv.proposal_id !== input.proposalId) return fail('Versão do logo não encontrada.');
+    const { data: all } = await supabase.from('identity_logo_versions').select('version_number').eq('proposal_id', lv.proposal_id);
+    if (Math.max(...(all ?? []).map((x) => x.version_number)) !== lv.version_number) return fail('Só a versão mais recente pode ser editada. Use “Nova versão”.');
+    const cur = await currentVersion(supabase, stage);
+    if (!cur) return fail('Versão da etapa não encontrada.');
+    versionId = cur.id;
+  } else {
+    const v = await currentVersion(supabase, stage);
+    if (!v || v.id !== input.versionId) return fail('Só é possível editar a versão atual.');
   }
-  const position = Math.max(-1, ...(existing ?? []).filter(sameProposal).map((a) => a.position)) + 1;
-  const { data: project } = await supabase.from('identity_projects').select('id').eq('id', stage.project_id).single();
+
+  const q = supabase.from('identity_assets').select('id, storage_path, position, slot');
+  const { data: existing } = input.logoVersionId ? await q.eq('logo_version_id', input.logoVersionId) : await q.eq('version_id', versionId).is('proposal_id', null);
+  if (input.replaceSlot) await dropAssets(supabase, (existing ?? []).filter((a) => a.slot === slot));
+  const position = Math.max(-1, ...(existing ?? []).filter((a) => !input.replaceSlot || a.slot !== slot).map((a) => a.position)) + 1;
 
   const { error } = await supabase.from('identity_assets').insert({
-    project_id: project!.id,
+    project_id: stage.project_id,
     stage_id: stage.id,
-    version_id: v.id,
+    version_id: versionId,
     proposal_id: input.proposalId ?? null,
+    logo_version_id: input.logoVersionId ?? null,
     slot,
+    name: input.name ?? '',
+    category: input.category ?? '',
     storage_path: input.path,
     file_name: input.fileName.slice(0, 200),
     mime_type: input.mime,
@@ -369,26 +389,51 @@ export async function reorderIdentityAssets(versionId: string, orderedIds: strin
   return { ok: true };
 }
 
-export async function updateIdentityAssetCaption(assetId: string, caption: string): Promise<ActionResult> {
+/** Nome, descrição, categoria e legenda de um arquivo (elementos, aplicações, arquivos finais). */
+export async function updateIdentityAsset(assetId: string, patch: { name?: string; description?: string; category?: string; caption?: string }): Promise<ActionResult> {
   await requireUser();
   const supabase = await createClient();
-  const { error } = await supabase.from('identity_assets').update({ caption: caption.slice(0, 300) }).eq('id', assetId);
-  if (error) return fail('Não foi possível salvar a legenda.');
+  const row: Record<string, string> = {};
+  if (patch.name !== undefined) row.name = patch.name.slice(0, 160);
+  if (patch.description !== undefined) row.description = patch.description.slice(0, 1000);
+  if (patch.category !== undefined) row.category = patch.category.slice(0, 80);
+  if (patch.caption !== undefined) row.caption = patch.caption.slice(0, 300);
+  const { error } = await supabase.from('identity_assets').update(row).eq('id', assetId);
+  if (error) return fail('Não foi possível salvar.');
+  refresh();
   return { ok: true };
 }
 
-// ─── Propostas de logo ─────────────────────────────────────────────────────
+/** "Disponibilizar para cliente [ON/OFF]" — arquivos de trabalho nunca ficam liberados automaticamente. */
+export async function setAssetReleased(assetId: string, released: boolean): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  const { data: a } = await supabase.from('identity_assets').select('project_id, file_name, name').eq('id', assetId).maybeSingle();
+  if (!a) return fail('Arquivo não encontrado.');
+  const { error } = await supabase.from('identity_assets').update({ released }).eq('id', assetId);
+  if (error) return fail('Não foi possível alterar a liberação.');
+  await logIdentity(supabase, { projectId: a.project_id, actorType: 'admin', action: 'release', detail: `Arquivo “${a.name || a.file_name}” ${released ? 'liberado' : 'bloqueado'} para o cliente` });
+  refresh();
+  return { ok: true };
+}
+
+// ─── Propostas de logo e suas versões ──────────────────────────────────────
 export async function addLogoProposal(stageId: string): Promise<ActionResult> {
   const { supabase, stage } = await ownedStage(stageId);
   if (!stage) return fail('Etapa não encontrada.');
   const v = await currentVersion(supabase, stage);
   if (!v) return fail('Versão atual não encontrada.');
-  const { count } = await supabase.from('identity_logo_proposals').select('id', { count: 'exact', head: true }).eq('version_id', v.id);
+  const { count } = await supabase.from('identity_logo_proposals').select('id', { count: 'exact', head: true }).eq('stage_id', stageId);
   const n = count ?? 0;
-  const { error } = await supabase
+  const { data: p, error } = await supabase
     .from('identity_logo_proposals')
-    .insert({ stage_id: stageId, version_id: v.id, label: `Proposta ${String.fromCharCode(65 + (n % 26))}`, position: n });
-  if (error) return fail('Não foi possível criar a proposta.');
+    .insert({ stage_id: stageId, version_id: v.id, label: `Proposta ${String.fromCharCode(65 + (n % 26))}`, position: n })
+    .select('id, label')
+    .single();
+  if (error || !p) return fail('Não foi possível criar a proposta.');
+  const { error: vErr } = await supabase.from('identity_logo_versions').insert({ proposal_id: p.id, version_number: 1 });
+  if (vErr) return fail('Proposta criada, mas a V1 falhou. A migration 0003 foi aplicada?');
+  await logIdentity(supabase, { projectId: stage.project_id, stageId, actorType: 'admin', action: 'new_version', detail: `Logo: ${p.label} criada (V1)` });
   refresh();
   return { ok: true };
 }
@@ -397,10 +442,7 @@ export async function updateLogoProposal(proposalId: string, label: string, desc
   await requireUser();
   const supabase = await createClient();
   if (!label.trim()) return fail('Dê um nome à proposta.');
-  const { error } = await supabase
-    .from('identity_logo_proposals')
-    .update({ label: label.trim().slice(0, 80), description: description.slice(0, 1000) })
-    .eq('id', proposalId);
+  const { error } = await supabase.from('identity_logo_proposals').update({ label: label.trim().slice(0, 80), description: description.slice(0, 1000) }).eq('id', proposalId);
   if (error) return fail('Não foi possível salvar a proposta.');
   refresh();
   return { ok: true };
@@ -416,6 +458,85 @@ export async function removeLogoProposal(proposalId: string): Promise<ActionResu
     const { count } = await supabase.from('identity_assets').select('id', { count: 'exact', head: true }).eq('storage_path', a.storage_path);
     if (!count) await removeFiles([a.storage_path]);
   }
+  refresh();
+  return { ok: true };
+}
+
+/** Cria a versão N+1 da proposta, copiando os arquivos da base. As versões antigas nunca são alteradas. */
+async function newLogoVersion(proposalId: string, opts: { baseVersionId?: string; changes: string; internalNotes: string; date?: string }): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  const { data: proposal } = await supabase.from('identity_logo_proposals').select('id, stage_id, label').eq('id', proposalId).maybeSingle();
+  if (!proposal) return fail('Proposta não encontrada.');
+  const { data: stageRow } = await supabase.from('identity_stages').select('*').eq('id', proposal.stage_id).maybeSingle();
+  const stage = stageRow as IdentityStage | null;
+  if (!stage) return fail('Etapa não encontrada.');
+
+  const { data: versions } = await supabase.from('identity_logo_versions').select('id, version_number').eq('proposal_id', proposalId).order('version_number');
+  const list = versions ?? [];
+  const latest = list[list.length - 1];
+  const base = list.find((v) => v.id === opts.baseVersionId) ?? latest;
+  if (!base) return fail('Versão base não encontrada.');
+  const next = (latest?.version_number ?? 0) + 1;
+  const createdAt = opts.date && /^\d{4}-\d{2}-\d{2}$/.test(opts.date) ? `${opts.date}T12:00:00-03:00` : new Date().toISOString();
+
+  const { data: nv, error } = await supabase
+    .from('identity_logo_versions')
+    .insert({ proposal_id: proposalId, version_number: next, changes: opts.changes.trim().slice(0, 3000), internal_notes: opts.internalNotes.trim().slice(0, 3000), created_at: createdAt })
+    .select('id')
+    .single();
+  if (error || !nv) return fail('Não foi possível criar a nova versão.');
+
+  const { data: assets } = await supabase.from('identity_assets').select('*').eq('logo_version_id', base.id).order('position');
+  if (assets?.length) {
+    await supabase.from('identity_assets').insert(
+      assets.map((a) => ({
+        project_id: a.project_id,
+        stage_id: a.stage_id,
+        version_id: a.version_id,
+        proposal_id: proposalId,
+        logo_version_id: nv.id,
+        slot: a.slot,
+        storage_path: a.storage_path,
+        file_name: a.file_name,
+        mime_type: a.mime_type,
+        position: a.position,
+      })),
+    );
+  }
+  // a etapa volta a "em criação": o cliente só vê a nova versão quando você reenviar
+  if (stage.status !== 'draft') await supabase.from('identity_stages').update({ status: 'draft', approved_at: null, approved_by: null }).eq('id', stage.id);
+  await syncProjectStatus(supabase, stage.project_id);
+  const restored = base.id !== latest?.id || opts.changes.startsWith('Restaurada');
+  await logIdentity(supabase, {
+    projectId: stage.project_id,
+    stageId: stage.id,
+    actorType: 'admin',
+    action: restored ? 'restore' : 'new_version',
+    detail: restored ? `Logo ${proposal.label}: V${base.version_number} usada novamente como V${next}` : `Logo ${proposal.label}: V${next} adicionada`,
+  });
+  refresh();
+  return { ok: true };
+}
+
+export async function createLogoVersion(proposalId: string, input: { changes: string; internalNotes: string; date?: string; baseVersionId?: string }): Promise<ActionResult> {
+  return newLogoVersion(proposalId, input);
+}
+
+/** Somente ADMIN: "Usar esta versão novamente" cria uma NOVA versão baseada na antiga (nada é excluído). */
+export async function restoreLogoVersion(proposalId: string, fromVersionId: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  const { data: from } = await supabase.from('identity_logo_versions').select('version_number').eq('id', fromVersionId).eq('proposal_id', proposalId).maybeSingle();
+  if (!from) return fail('Versão não encontrada.');
+  return newLogoVersion(proposalId, { baseVersionId: fromVersionId, changes: `Restaurada a partir da V${from.version_number}.`, internalNotes: '' });
+}
+
+export async function updateLogoVersion(logoVersionId: string, changes: string, internalNotes: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from('identity_logo_versions').update({ changes: changes.slice(0, 3000), internal_notes: internalNotes.slice(0, 3000) }).eq('id', logoVersionId);
+  if (error) return fail('Não foi possível salvar.');
   refresh();
   return { ok: true };
 }
@@ -437,28 +558,47 @@ export async function addAdminIdentityComment(stageId: string, message: string):
     message: text,
   });
   if (error) return fail('Não foi possível enviar o comentário.');
-  await logIdentity(supabase, {
-    projectId: stage.project_id,
-    stageId,
-    actorType: 'admin',
-    actorName: prof?.name || 'Soltria',
-    action: 'comment',
-    detail: `${STAGE_BY_KEY[stage.stage_key].label}: respondeu no chat`,
-  });
+  await logIdentity(supabase, { projectId: stage.project_id, stageId, actorType: 'admin', actorName: prof?.name || 'Soltria', action: 'comment', detail: `${STAGE_BY_KEY[stage.stage_key].label}: respondeu no chat` });
   refresh();
   return { ok: true };
 }
 
-/** "Arquivos" não tem aprovação: a administradora só publica/despublica para o cliente. */
-export async function setFilesPublished(stageId: string, published: boolean): Promise<ActionResult> {
-  const { supabase, stage } = await ownedStage(stageId);
-  if (!stage || stage.stage_key !== 'files') return fail('Etapa não encontrada.');
-  const { error } = await supabase
-    .from('identity_stages')
-    .update({ status: published ? 'approved' : 'draft', sent_at: published ? new Date().toISOString() : null })
-    .eq('id', stageId);
-  if (error) return fail('Não foi possível alterar a publicação.');
-  await logIdentity(supabase, { projectId: stage.project_id, stageId, actorType: 'admin', action: 'sent', detail: published ? 'Arquivos publicados para o cliente' : 'Arquivos despublicados' });
+/** Comentário (com ou sem marcador) em uma imagem — resposta da administradora. */
+export async function addAdminAnnotation(input: { assetId: string; x?: number | null; y?: number | null; message: string }): Promise<ActionResult> {
+  const user = await requireUser();
+  const supabase = await createClient();
+  const text = input.message.trim();
+  if (!text) return fail('Escreva o comentário.');
+  const { data: asset } = await supabase.from('identity_assets').select('id, project_id, stage_id').eq('id', input.assetId).maybeSingle();
+  if (!asset) return fail('Imagem não encontrada.');
+  const hasPoint = typeof input.x === 'number' && typeof input.y === 'number';
+  let number: number | null = null;
+  if (hasPoint) {
+    const { count } = await supabase.from('identity_annotations').select('id', { count: 'exact', head: true }).eq('asset_id', asset.id).not('x', 'is', null);
+    number = (count ?? 0) + 1;
+  }
+  const { data: prof } = await supabase.from('users').select('name').eq('id', user.id).maybeSingle();
+  const { error } = await supabase.from('identity_annotations').insert({
+    project_id: asset.project_id,
+    stage_id: asset.stage_id,
+    asset_id: asset.id,
+    x: hasPoint ? Math.max(0, Math.min(100, input.x!)) : null,
+    y: hasPoint ? Math.max(0, Math.min(100, input.y!)) : null,
+    number,
+    message: text.slice(0, 2000),
+    author_type: 'admin',
+    author_name: prof?.name || 'Soltria',
+  });
+  if (error) return fail('Não foi possível salvar o comentário.');
+  refresh();
+  return { ok: true };
+}
+
+export async function deleteAnnotation(annotationId: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  const { error } = await supabase.from('identity_annotations').delete().eq('id', annotationId);
+  if (error) return fail('Não foi possível excluir.');
   refresh();
   return { ok: true };
 }
