@@ -45,17 +45,27 @@ export function escapeHtml(s: string) {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 }
 
-/** Provedor de e-mail. Troque aqui para SES, Postmark etc. */
-export async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<boolean> {
+/** Provedor de e-mail. Troque aqui para SES, Postmark etc. Devolve o motivo quando o provedor recusa. */
+export async function sendEmailDetailed(to: string, subject: string, html: string, replyTo?: string): Promise<{ ok: true } | { ok: false; error: string }> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.NOTIFICATIONS_FROM;
-  if (!key || !from) return false;
-  const res = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
-  });
-  return res.ok;
+  if (!key || !from) return { ok: false, error: 'Envio não configurado.' };
+  try {
+    const res = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
+    });
+    if (res.ok) return { ok: true };
+    const j = (await res.json().catch(() => null)) as { message?: string } | null;
+    return { ok: false, error: j?.message || `HTTP ${res.status}` };
+  } catch (e) {
+    return { ok: false, error: e instanceof Error ? e.message : 'Falha de rede.' };
+  }
+}
+
+export async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<boolean> {
+  return (await sendEmailDetailed(to, subject, html, replyTo)).ok;
 }
 
 /** Nunca lança erro: notificação não pode quebrar o fluxo de aprovação. */
