@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { Bookmark, Heart, MessageCircle, Send } from 'lucide-react';
 import type { ContentFormat, VersionWithMedia } from '@/lib/types';
 import { Avatar } from '@/components/ui/Misc';
@@ -73,8 +74,8 @@ function CaptionBlock({ version, handle, compact }: { version: VersionWithMedia;
     <div className={compact ? 'card mt-4 p-4' : 'px-4 pb-5 pt-2'}>
       <p className="whitespace-pre-line text-[0.88rem] font-light leading-relaxed">
         <span className="mr-1.5 font-normal">@{handle}</span>
-        {version.caption}
       </p>
+      {version.caption && <RichText text={version.caption} className="text-[0.88rem] font-light leading-relaxed" />}
       {version.cta && <p className="mt-2 whitespace-pre-line text-[0.88rem] font-normal leading-relaxed text-wine">{version.cta}</p>}
       {version.hashtags && <p className="mt-2 text-[0.85rem] leading-relaxed text-wine/80">{version.hashtags}</p>}
     </div>

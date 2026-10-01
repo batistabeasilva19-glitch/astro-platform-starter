@@ -1,5 +1,6 @@
 'use client';
 
+import { RichTextarea } from '@/components/ui/RichText';
 import { useState } from 'react';
 import { ArrowDownUp, ExternalLink, Pencil, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
 import { createPlan, deletePlan, deletePlanItem, movePlanItem, resetPlanItem, savePlanItem, sendPlan, sortPlanByDate, unsendPlan, updatePlan } from '@/lib/actions/extras';
@@ -116,7 +117,7 @@ function ItemForm({ clientId, month, plan, item, defaultFormat, contents, onClos
           <Field label="Data de publicação (opcional)"><Input type="date" value={f.publish_date} onChange={(e) => setF({ ...f, publish_date: e.target.value })} /></Field>
         </div>
         <Field label="Título / tema"><Input autoFocus value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Ex.: Carrossel — 5 sinais de pele desidratada" maxLength={200} /></Field>
-        <Field label="Descrição / ideia / legenda (opcional)"><Textarea rows={5} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></Field>
+        <Field label="Descrição / ideia / legenda (opcional)"><RichTextarea rows={5} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></Field>
         <Field label="Link da arte (opcional)" hint="Drive, Canva, Figma… O cliente abre para ver a arte antes de aprovar."><Input value={f.link} onChange={(e) => setF({ ...f, link: e.target.value })} placeholder="https://…" inputMode="url" /></Field>
         <Field label="Mostrar a arte de um conteúdo já cadastrado (opcional)" hint="O cliente vê a miniatura da arte junto com o item.">
           <Select value={f.content_id} onChange={(e) => setF({ ...f, content_id: e.target.value })}><option value="">Sem arte</option>{options.map((c) => <option key={c.id} value={c.id}>{c.title}{c.date ? ` · ${shortDate(c.date)}` : ''}</option>)}</Select>

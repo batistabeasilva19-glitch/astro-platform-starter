@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, ExternalLink, MessageSquare, Pencil, Undo2 } from 'lucide-react';
@@ -74,7 +75,7 @@ export function PlanReview({ token, plans, thumbs }: { token: string; plans: Pla
                   {it.client_status !== 'pending' && <span className={cn('rounded-full px-3 py-0.5 text-xs', it.client_status === 'approved' ? 'bg-wine text-white' : 'border border-dashed border-wine text-wine')}>{ITEM_STATUS_LABEL[it.client_status]}</span>}
                 </div>
                 <h3 className="mt-1 text-[1.05rem] leading-snug text-ink">{it.title}</h3>
-                {it.description && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink/65">{it.description}</p>}
+                {it.description && <RichText text={it.description} className="mt-1 text-sm leading-relaxed text-ink/65" />}
                 {it.link && <a href={it.link} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-sm text-wine underline-offset-4 hover:underline">Ver arte <ExternalLink className="size-3.5" /></a>}
                 {it.client_note && <p className="mt-2 rounded-xl bg-blush px-3 py-2 text-sm text-wine"><span className="label mr-1 text-[0.6rem]">Sua consideração:</span>“{it.client_note}”</p>}
               </div>

@@ -1,5 +1,6 @@
 'use client';
 
+import { RichTextarea } from '@/components/ui/RichText';
 import { useState } from 'react';
 import { Pencil, Plus, RotateCcw, Trash2, ListPlus } from 'lucide-react';
 import { addStories, deleteStory, moveStory, resetStory, saveStory } from '@/lib/actions/extras';
@@ -85,7 +86,7 @@ function StoryForm({ clientId, day, row, contents, onClose }: { clientId: string
       <div className="space-y-4">
         <Field label="Dia"><Input type="date" value={f.story_date} onChange={(e) => setF({ ...f, story_date: e.target.value })} /></Field>
         <Field label="Título"><Input autoFocus value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Ex.: Enquete sobre skincare" maxLength={200} /></Field>
-        <Field label="O que fazer / texto do story (opcional)"><Textarea rows={4} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></Field>
+        <Field label="O que fazer / texto do story (opcional)"><RichTextarea rows={4} value={f.description} onChange={(e) => setF({ ...f, description: e.target.value })} /></Field>
         <Field label="Link (opcional)" hint="Ex.: pasta do Drive com a arte."><Input value={f.link} onChange={(e) => setF({ ...f, link: e.target.value })} placeholder="https://…" /></Field>
         <Field label="Mostrar a arte de um conteúdo já cadastrado (opcional)"><Select value={f.content_id} onChange={(e) => setF({ ...f, content_id: e.target.value })}><option value="">Sem arte</option>{contents.map((c) => <option key={c.id} value={c.id}>{c.title}{c.date ? ` · ${shortDate(c.date)}` : ''}</option>)}</Select></Field>
         <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="size-4 accent-[#771430]" checked={f.visible} onChange={(e) => setF({ ...f, visible: e.target.checked })} /> Visível para o cliente</label>

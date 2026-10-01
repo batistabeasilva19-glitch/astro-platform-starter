@@ -1,5 +1,6 @@
 'use client';
 
+import { RichTextarea } from '@/components/ui/RichText';
 import { useState } from 'react';
 import { Eye, EyeOff, Pencil, Plus, Trash2 } from 'lucide-react';
 import { deleteScript, moveScript, saveScript, setScriptVisible } from '@/lib/actions/extras';
@@ -74,7 +75,7 @@ function ScriptForm({ clientId, month, row, onClose }: { clientId: string; month
           <Field label="Mês"><Input type="month" value={f.month} onChange={(e) => setF({ ...f, month: e.target.value })} /></Field>
           <Field label="Data para gravar (opcional)"><Input type="date" value={f.shoot_date} onChange={(e) => setF({ ...f, shoot_date: e.target.value })} /></Field>
         </div>
-        <Field label="Roteiro" hint="O cliente copia o texto exatamente como está aqui (as quebras de linha são mantidas)."><Textarea rows={12} value={f.script} onChange={(e) => setF({ ...f, script: e.target.value })} placeholder={'Abertura: …\nDesenvolvimento: …\nFechamento / chamada para ação: …'} /></Field>
+        <Field label="Roteiro" hint="O cliente copia o texto exatamente como está aqui (as quebras de linha são mantidas)."><RichTextarea rows={12} value={f.script} onChange={(e) => setF({ ...f, script: e.target.value })} placeholder={'Abertura: …\nDesenvolvimento: …\nFechamento / chamada para ação: …'} /></Field>
         <Field label="Observações para o cliente (opcional)"><Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} placeholder="Ex.: gravar na clínica, com jaleco branco." /></Field>
         <label className="flex items-center gap-3 text-sm"><input type="checkbox" className="size-4 accent-[#771430]" checked={f.visible} onChange={(e) => setF({ ...f, visible: e.target.checked })} /> Visível para o cliente</label>
         <FormMessage error={error} />
