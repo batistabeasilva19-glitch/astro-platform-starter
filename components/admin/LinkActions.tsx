@@ -9,7 +9,25 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 
 /** "Copiar link de aprovação" + abrir, gerar novo e revogar. */
-export function LinkActions({ clientId, url, active }: { clientId: string; url: string; active: boolean }) {
+type LinkResult = { ok: boolean; error?: string };
+
+/**
+ * `regenerate` / `setActive` são opcionais: sem eles, atua sobre o link de aprovação de conteúdo do cliente
+ * (comportamento original). O módulo Identidade Visual passa as próprias ações.
+ */
+export function LinkActions({
+  clientId,
+  url,
+  active,
+  regenerate = () => regenerateLink(clientId),
+  setActive = (v: boolean) => setLinkActive(clientId, v),
+}: {
+  clientId: string;
+  url: string;
+  active: boolean;
+  regenerate?: () => Promise<LinkResult>;
+  setActive?: (active: boolean) => Promise<LinkResult>;
+}) {
   const [copied, setCopied] = useState(false);
   const [confirm, setConfirm] = useState<'regen' | 'revoke' | null>(null);
   const [pending, start] = useTransition();
@@ -62,7 +80,7 @@ export function LinkActions({ clientId, url, active }: { clientId: string; url: 
       ) : (
         <>
           <span className="rounded-full border border-dashed border-wine px-4 py-2 text-xs text-wine">Link revogado — o cliente não consegue acessar</span>
-          <Button onClick={() => run(() => setLinkActive(clientId, true), 'Link reativado')} loading={pending}>
+          <Button onClick={() => run(() => setActive(true), 'Link reativado')} loading={pending}>
             Reativar link
           </Button>
           <Button variant="outline" onClick={() => setConfirm('regen')}>
@@ -75,14 +93,14 @@ export function LinkActions({ clientId, url, active }: { clientId: string; url: 
         <p className="mb-6 text-sm text-ink/70">O link anterior deixa de funcionar imediatamente. Você precisará enviar o novo link para o cliente.</p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirm(null)}>Cancelar</Button>
-          <Button onClick={() => run(() => regenerateLink(clientId), 'Novo link gerado')} loading={pending}>Gerar novo link</Button>
+          <Button onClick={() => run(() => regenerate(), 'Novo link gerado')} loading={pending}>Gerar novo link</Button>
         </div>
       </Modal>
       <Modal open={confirm === 'revoke'} onClose={() => setConfirm(null)} title="Revogar o link?">
         <p className="mb-6 text-sm text-ink/70">O cliente não conseguirá mais abrir o portal com este link. Você pode reativá-lo quando quiser.</p>
         <div className="flex justify-end gap-2">
           <Button variant="ghost" onClick={() => setConfirm(null)}>Cancelar</Button>
-          <Button onClick={() => run(() => setLinkActive(clientId, false), 'Link revogado')} loading={pending}>Revogar link</Button>
+          <Button onClick={() => run(() => setActive(false), 'Link revogado')} loading={pending}>Revogar link</Button>
         </div>
       </Modal>
     </div>

@@ -73,6 +73,9 @@ export async function saveClient(_prev: ActionResult | null, fd: FormData): Prom
   await logActivity(supabase, { clientId: id, actorType: 'admin', action: 'client_created', detail: 'Cliente criado' });
 
   revalidatePath('/admin', 'layout');
+  // vindo do módulo Identidade Visual: volta para lá já com o cliente selecionado
+  const next = String(fd.get('next') || '');
+  if (next.startsWith('/admin/identidades')) redirect(`${next.split('?')[0]}?client=${id}`);
   redirect(`/admin/clients/${id}`);
 }
 

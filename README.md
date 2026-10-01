@@ -15,6 +15,19 @@ Sistema completo para cadastrar conteúdos por cliente, gerar um **link exclusiv
 
 > **Fontes:** Against e Emitha são licenciadas e não estão no Google Fonts. Enquanto não forem adicionadas, o sistema usa *Bodoni Moda* e *Mrs Saint Delafield* como substitutas. Para usar as originais, coloque `against.woff2` e `emitha.woff2` em `public/fonts/` (já referenciadas em `globals.css`).
 
+## Módulos
+
+O sistema tem dois módulos **independentes**, que compartilham clientes, login, Supabase e o visual da Soltria:
+
+| Módulo | Admin | Link público do cliente | Tabelas |
+|---|---|---|---|
+| **Aprovação de conteúdo** (posts, carrosséis, Reels, Stories, calendário, feed) | `/admin/content`, `/admin/clients` | `/review/<token>` | `content_*`, `comments`, `approvals`, … |
+| **Identidade Visual** (conceito, moodboard, logo, cores, tipografia, elementos, aplicações, aprovação final, arquivos) | `/admin/identidades` | `/identidade/<token>` | `identity_*` |
+
+Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
+
+> **Atualizando um projeto que já está no ar:** rode também `supabase/migrations/0002_identidade_visual.sql` no SQL Editor do Supabase (é só aditiva: cria tabelas novas e não altera nada do módulo de conteúdo).
+
 ## Estrutura
 
 ```
@@ -32,7 +45,13 @@ lib/
   data/                       consultas (content, clients, portal)
   notifications.ts            fila/envio de e-mails (estrutura pronta)
   demo-seed.ts                dados de demonstração
-supabase/migrations/0001_init.sql
+supabase/migrations/0001_init.sql          módulo de conteúdo
+supabase/migrations/0002_identidade_visual.sql   módulo Identidade Visual
+
+app/admin/identidades/…       lista, nova, projeto (etapas)
+app/identidade/[token]/…      portal público da identidade
+components/identity/          editores, visualizações e ações
+lib/identity/ lib/data/identity*.ts lib/actions/identity*.ts
 ```
 
 ## Banco de dados (Supabase)
@@ -48,7 +67,7 @@ Tabelas: `users, clients, projects, content_items, content_versions, content_med
 
 1. `npm install`
 2. Crie um projeto em [supabase.com](https://supabase.com).
-3. **SQL Editor** → cole `supabase/migrations/0001_init.sql` → Run.
+3. **SQL Editor** → cole e rode, nesta ordem, `supabase/migrations/0001_init.sql` e depois `supabase/migrations/0002_identidade_visual.sql`.
 4. **Authentication → Users → Add user** (e-mail + senha, marque *Auto Confirm*). Desative “Allow new users to sign up” em *Authentication → Sign In / Providers*.
 5. `cp .env.example .env.local` e preencha (Project Settings → API):
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
