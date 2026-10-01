@@ -26,7 +26,7 @@ O sistema tem dois módulos **independentes**, que compartilham clientes, login,
 
 Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
 
-> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) e `0007_formulario_marca.sql` (etapa “Formulário da marca”) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) e `0008_desempenho.sql` (Desempenho & Relatórios) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.
@@ -36,6 +36,17 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 - **Decisões do cliente** (admin): logo favorita/aprovada (e versão), paleta favorita, cores escolhidas, tipografias, alterações solicitadas e favoritos.
 - **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
 - **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
+
+## Desempenho & Relatórios (Redes sociais)
+
+Dentro de cada cliente de Social Mídia: **Desempenho** (`/admin/clients/<id>/desempenho`) e **Relatórios** (`/admin/clients/<id>/relatorios`).
+
+- **Durante o mês** você cadastra: métricas do perfil por período (aba *Dados do perfil*), o desempenho de cada publicação (seção **Desempenho** dentro do conteúdo, com coletas de 24h/7 dias/30 dias que nunca se sobrescrevem, pilares/tags e objetivo) e, se houver, campanhas de tráfego pago.
+- O sistema calcula sozinho: crescimento líquido e %, taxas de engajamento (fórmula sempre visível), CTR/CPC/CPM/CPL/CPA/ROAS (— quando falta dado), variação vs. período anterior, rankings por indicador (sem “vencedor único”), comparação por formato/pilar/objetivo, funil, orgânico × pago e análises automáticas (só com dados existentes, todas editáveis).
+- **Filtros:** este mês, mês anterior, 3 e 6 meses, ano e período personalizado; aba *Comparar períodos*.
+- **Relatório mensal:** “Gerar relatório do mês” monta tudo; você revisa, escreve a análise, salva versões (V1, V2…), visualiza (A4), **exporta PDF** (`Relatorio_Soltria_Cliente_Setembro_2026.pdf`), **finaliza** (congela os dados: mudar métricas depois não altera o relatório; dá para reabrir) e **disponibiliza para o cliente**.
+- **Portal do cliente:** cartão **Resultados** em `/review/<token>` — só aparece com relatórios finalizados e liberados; mostra gráficos, melhores conteúdos e análises e permite baixar o PDF. Observações internas e rascunhos nunca saem do painel.
+- Os dados são inseridos manualmente; a estrutura (origem dos dados por registro) já está pronta para integrar Instagram Graph API / Meta Ads / Google Analytics no futuro.
 
 ## Formulário da marca (1ª etapa da Identidade Visual)
 

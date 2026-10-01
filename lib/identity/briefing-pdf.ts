@@ -26,7 +26,7 @@ export interface BriefingPdfInput {
 const fmtDate = (iso: string) => new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', timeZone: 'America/Sao_Paulo' }).format(new Date(iso));
 
 /** Baixa uma imagem e a converte (se possível) para JPEG leve; PNG/JPEG simples entram como estão. */
-async function loadImage(doc: PDFDocument, url: string): Promise<PDFImage | null> {
+export async function loadImage(doc: PDFDocument, url: string): Promise<PDFImage | null> {
   try {
     const res = await fetch(url);
     if (!res.ok) return null;
