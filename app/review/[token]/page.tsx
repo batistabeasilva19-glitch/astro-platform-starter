@@ -43,7 +43,6 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
       {/* Boas-vindas */}
       <section className="relative mb-10 overflow-hidden rounded-[2rem] bg-blush px-6 py-10 sm:px-12 sm:py-14">
         <BrandElement name="sparkles" tone="wine" className="absolute right-6 top-6 w-14 opacity-70 sm:w-20" />
-        <BrandElement name="paintbrush" tone="wine" className="absolute -bottom-3 right-6 hidden w-28 opacity-20 sm:block" />
         <h1 className="script text-6xl text-wine sm:text-7xl">Olá, {firstName(client.contact_name || client.company_name)} ♡</h1>
         <p className="mt-5 max-w-xl text-[0.98rem] leading-relaxed text-ink/80">
           Aqui você encontra todos os conteúdos que preparamos para sua marca. Analise cada publicação com calma e utilize os botões de aprovação ou alteração para enviar seu feedback.
