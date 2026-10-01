@@ -106,7 +106,7 @@ export default async function Dashboard() {
             ) : (
               <div className="space-y-3">
                 {attention.map((i) => (
-                  <ContentRow key={i.id} item={i} href={`/admin/content/${i.id}`} clientName={clientName.get(i.client_id)} />
+                  <ContentRow deletable key={i.id} item={i} href={`/admin/content/${i.id}`} clientName={clientName.get(i.client_id)} />
                 ))}
               </div>
             )}
