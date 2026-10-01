@@ -168,7 +168,7 @@ function ClientHead({ c }: { c: ClientWithProject }) {
 function SectionTitle({ icon, title, count, hint }: { icon?: React.ReactNode; title: string; count: number; hint: string }) {
   return (
     <header className="mb-5 border-b border-wine/15 pb-4">
-      <h2 className="h-display flex items-center gap-3 text-3xl text-wine">
+      <h2 className="flex items-center gap-3 text-2xl font-medium tracking-tight text-wine sm:text-3xl">
         {icon && <span className="flex size-10 items-center justify-center rounded-2xl bg-blush">{icon}</span>}
         {title} <span className="label align-middle text-ink/40">{count}</span>
       </h2>
