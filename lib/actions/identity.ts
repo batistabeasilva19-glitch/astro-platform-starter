@@ -179,6 +179,32 @@ export async function setStageEnabled(stageId: string, enabled: boolean): Promis
   return { ok: true };
 }
 
+/** Troca manual de status da etapa (para corrigir ou registrar algo feito fora do sistema). */
+export async function setStageStatus(stageId: string, status: string): Promise<ActionResult> {
+  const { supabase, stage } = await ownedStage(stageId);
+  if (!stage) return fail('Etapa não encontrada.');
+  if (!['draft', 'awaiting', 'changes_requested', 'approved'].includes(status)) return fail('Status inválido.');
+  const meta = STAGE_BY_KEY[stage.stage_key];
+  if (!meta.approvable) return fail('Esta etapa não tem status.');
+  if (status === stage.status) return { ok: true };
+  const patch: Record<string, unknown> = { status };
+  if (status === 'approved') Object.assign(patch, { approved_at: new Date().toISOString(), approved_by: 'Soltria (alterado manualmente)' });
+  else Object.assign(patch, { approved_at: null, approved_by: null });
+  if (status === 'awaiting') patch.sent_at = new Date().toISOString();
+  const { error } = await supabase.from('identity_stages').update(patch).eq('id', stageId);
+  if (error) return fail('Não foi possível alterar o status.');
+  await syncProjectStatus(supabase, stage.project_id);
+  await logIdentity(supabase, {
+    projectId: stage.project_id,
+    stageId,
+    actorType: 'admin',
+    action: 'status',
+    detail: `Status de ${meta.label} alterado manualmente para ${{ draft: 'Em criação', awaiting: 'Aguardando aprovação', changes_requested: 'Alteração solicitada', approved: 'Aprovado' }[status]}`,
+  });
+  refresh();
+  return { ok: true };
+}
+
 export async function saveStageContent(stageId: string, content: StageContent): Promise<ActionResult> {
   const { supabase, stage } = await ownedStage(stageId);
   if (!stage) return fail('Etapa não encontrada.');
