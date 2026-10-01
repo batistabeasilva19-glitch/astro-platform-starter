@@ -22,11 +22,20 @@ O sistema tem dois módulos **independentes**, que compartilham clientes, login,
 | Módulo | Admin | Link público do cliente | Tabelas |
 |---|---|---|---|
 | **Aprovação de conteúdo** (posts, carrosséis, Reels, Stories, calendário, feed) | `/admin/content`, `/admin/clients` | `/review/<token>` | `content_*`, `comments`, `approvals`, … |
-| **Identidade Visual** (conceito, moodboard, logo, cores, tipografia, elementos, aplicações, aprovação final, arquivos) | `/admin/identidades` | `/identidade/<token>` | `identity_*` |
+| **Identidade Visual** (conceito, moodboard, logo, cores, tipografia, elementos, aplicações, aprovação final, arquivos) | `/admin/identidades` | `/brand/review/<token>` | `identity_*` |
 
 Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
 
-> **Atualizando um projeto que já está no ar:** rode também `supabase/migrations/0002_identidade_visual.sql` no SQL Editor do Supabase (é só aditiva: cria tabelas novas e não altera nada do módulo de conteúdo).
+> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+
+**O que o módulo de Identidade Visual inclui**
+- **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.
+- **Cores:** Paleta 01, 02, 03…; color picker ⇄ HEX, RGB e CMYK automáticos (editáveis), Pantone opcional; no portal: copiar HEX (“Cor copiada ♡”), “♡ Minha favorita”, **Monte sua paleta** (seleção enviada ao admin), **Testar combinação** (fundo/texto/destaque) com contraste WCAG.
+- **Tipografia:** fonte principal/secundária/de apoio, arquivo da fonte ou nome do Google Fonts, “Digite algo para testar”, aplicações (título, subtítulo, texto, botão, legenda), comparar Fonte A × B, favoritar e aprovar separadamente.
+- **Elementos e Aplicações:** galerias por categoria, imagem em tamanho grande com **zoom** (botões, roda do mouse e pinça) e **comentário em um ponto da imagem** (marcador numerado).
+- **Decisões do cliente** (admin): logo favorita/aprovada (e versão), paleta favorita, cores escolhidas, tipografias, alterações solicitadas e favoritos.
+- **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
+- **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
 
 ## Estrutura
 
@@ -47,9 +56,10 @@ lib/
   demo-seed.ts                dados de demonstração
 supabase/migrations/0001_init.sql          módulo de conteúdo
 supabase/migrations/0002_identidade_visual.sql   módulo Identidade Visual
+supabase/migrations/0003_identidade_completa.sql  versões de logo, favoritos, comentários na imagem, downloads
 
 app/admin/identidades/…       lista, nova, projeto (etapas)
-app/identidade/[token]/…      portal público da identidade
+app/brand/review/[token]/…    portal público da identidade (+ favoritos e download)
 components/identity/          editores, visualizações e ações
 lib/identity/ lib/data/identity*.ts lib/actions/identity*.ts
 ```

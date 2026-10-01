@@ -1,5 +1,6 @@
-import { resolveIdentityToken } from '@/lib/data/identity-portal';
+import { portalNav, resolveIdentityToken } from '@/lib/data/identity-portal';
 import { BrandElement, Logo, Sparkle } from '@/components/brand/Brand';
+import { PortalNav } from '@/components/identity/PortalNav';
 import { Avatar } from '@/components/ui/Misc';
 
 export const dynamic = 'force-dynamic';
@@ -19,6 +20,8 @@ export default async function IdentityPortalLayout({ children, params }: { child
       </main>
     );
   }
+  const stages = await portalNav(session);
+  const approved = session.project.status === 'approved' || session.project.status === 'finalized';
 
   return (
     <div className="min-h-dvh">
@@ -35,6 +38,7 @@ export default async function IdentityPortalLayout({ children, params }: { child
           </div>
         </div>
       </header>
+      <PortalNav token={token} stages={stages} projectApproved={approved} />
       <main className="mx-auto max-w-5xl px-5 py-10 sm:py-14">{children}</main>
       <footer className="pb-12 pt-6 text-center">
         <Sparkle className="size-3 text-wine/50" />

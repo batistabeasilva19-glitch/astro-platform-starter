@@ -18,19 +18,21 @@ const FILTERS: { label: string; status?: IdentityStatus }[] = [
   { label: 'Finalizados', status: 'finalized' },
 ];
 
-export default async function IdentitiesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
+export default async function IdentitiesPage({ searchParams }: { searchParams: Promise<{ status?: string; cliente?: string }> }) {
   const sp = await searchParams;
   const filter = (IDENTITY_STATUSES as string[]).includes(sp.status ?? '') ? (sp.status as IdentityStatus) : undefined;
-  const all = await listIdentities();
+  const everything = await listIdentities();
+  const all = sp.cliente ? everything.filter((p) => p.client_id === sp.cliente) : everything;
+  const clientName = sp.cliente ? everything.find((p) => p.client_id === sp.cliente)?.client.company_name : undefined;
   const items = filter ? all.filter((p) => p.status === filter) : all;
 
   return (
     <div className="mx-auto max-w-6xl">
       <PageTitle
         eyebrow="Branding"
-        title="Identidades visuais"
+        title={clientName ? `Identidades · ${clientName}` : 'Identidades visuais'}
         actions={
-          <LinkButton href="/admin/identidades/new">
+          <LinkButton href={`/admin/identidades/new${sp.cliente ? `?client=${sp.cliente}` : ''}`}>
             <Plus className="size-4" /> Nova identidade visual
           </LinkButton>
         }
@@ -41,7 +43,7 @@ export default async function IdentitiesPage({ searchParams }: { searchParams: P
           const count = f.status ? all.filter((p) => p.status === f.status).length : all.length;
           const active = f.status === filter;
           return (
-            <Link key={f.label} href={f.status ? `/admin/identidades?status=${f.status}` : '/admin/identidades'} className={cn('rounded-full border px-4 py-1.5 text-xs transition', active ? 'border-wine bg-wine text-white' : 'border-wine/30 text-wine hover:bg-blush')}>
+            <Link key={f.label} href={`/admin/identidades${f.status || sp.cliente ? '?' : ''}${[f.status && `status=${f.status}`, sp.cliente && `cliente=${sp.cliente}`].filter(Boolean).join('&')}`} className={cn('rounded-full border px-4 py-1.5 text-xs transition', active ? 'border-wine bg-wine text-white' : 'border-wine/30 text-wine hover:bg-blush')}>
               {f.label} <span className={active ? 'text-white/70' : 'text-ink/40'}>{count}</span>
             </Link>
           );

@@ -9,6 +9,7 @@ import { ProgressBar, ProjectStatusBadge, StageStatusBadge } from '@/components/
 import { ProjectForm } from '@/components/identity/ProjectForm';
 import { DeleteProjectButton, FinalizeButton, IdentityLink, StageSwitch } from '@/components/identity/ProjectActions';
 import { StageWorkspace } from '@/components/identity/StageWorkspace';
+import { DecisionsPanel } from '@/components/identity/DecisionsPanel';
 import { HistoryList } from '@/components/content/Thread';
 import { Avatar } from '@/components/ui/Misc';
 import { cn, fmtDate } from '@/lib/utils';
@@ -27,9 +28,9 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
   if (!client) notFound();
 
   const base = `/admin/identidades/${id}`;
-  const url = `${await getSiteUrl()}/identidade/${project.review_token}`;
+  const url = `${await getSiteUrl()}/brand/review/${project.review_token}`;
   const activeStage = isStageKey(etapa) ? stages.find((s) => s.stage_key === etapa) : undefined;
-  const tab = etapa === 'historico' ? 'historico' : activeStage ? activeStage.stage_key : 'geral';
+  const tab = etapa === 'historico' || etapa === 'decisoes' ? etapa : activeStage ? activeStage.stage_key : 'geral';
 
   const tabs = [
     { key: 'geral', label: 'Visão geral', href: base, muted: false },
@@ -37,6 +38,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
       const st = stages.find((s) => s.stage_key === m.key);
       return { key: m.key as string, label: `${m.number} ${m.label}`, href: `${base}?etapa=${m.key}`, muted: !!st && !st.enabled };
     }),
+    { key: 'decisoes', label: 'Decisões do cliente', href: `${base}?etapa=decisoes`, muted: false },
     { key: 'historico', label: 'Histórico', href: `${base}?etapa=historico`, muted: false },
   ];
 
@@ -117,9 +119,11 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
       {activeStage && tab !== 'geral' && tab !== 'historico' && (
         <div>
           <p className="mb-5 text-sm text-ink/60">{STAGE_BY_KEY[activeStage.stage_key].hint}</p>
-          <StageWorkspace key={activeStage.id} stage={activeStage} ctx={{ ownerId: user.id, clientId: client.id, projectId: id }} />
+          <StageWorkspace key={activeStage.id} stage={activeStage} detail={detail} ctx={{ ownerId: user.id, clientId: client.id, projectId: id }} />
         </div>
       )}
+
+      {tab === 'decisoes' && <DecisionsPanel detail={detail} />}
 
       {tab === 'historico' && (
         <section className="card p-5 sm:p-7">

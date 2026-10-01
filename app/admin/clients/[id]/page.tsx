@@ -28,6 +28,7 @@ export default async function ClientWorkspacePage({
   if (!client) notFound();
   const supabase = await createClient();
   const items = await fetchCards(supabase, { clientId: id });
+  const { count: identityCount } = await supabase.from('identity_projects').select('id', { count: 'exact', head: true }).eq('client_id', id);
   const feed = view === 'feed' ? await fetchFeed(supabase, id) : null;
 
   const c = (f: (s: string) => boolean) => items.filter((i) => f(i.status)).length;
@@ -68,6 +69,23 @@ export default async function ClientWorkspacePage({
           ))}
         </div>
       </header>
+
+      {/* dois módulos independentes: cada um abre a sua própria página */}
+      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+        <div className="card p-5">
+          <p className="label mb-2 text-wine/70">Conteúdo</p>
+          <p className="mb-3 text-sm text-ink/65">Posts, carrosséis, Reels, Stories, calendário e feed.</p>
+          <Link href={`/admin/clients/${id}`} className="text-sm text-wine underline-offset-4 hover:underline">Ver conteúdos →</Link>
+        </div>
+        <div className="card p-5">
+          <p className="label mb-2 text-wine/70">Identidade Visual</p>
+          <p className="mb-3 text-sm text-ink/65">{identityCount ? `${identityCount} ${identityCount === 1 ? 'projeto' : 'projetos'} de branding.` : 'Nenhum projeto de branding ainda.'}</p>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <Link href={`/admin/identidades?cliente=${id}`} className="text-wine underline-offset-4 hover:underline">Ver projetos →</Link>
+            <Link href={`/admin/identidades/new?client=${id}`} className="text-wine underline-offset-4 hover:underline">+ Nova identidade →</Link>
+          </div>
+        </div>
+      </div>
 
       <div className="mb-6 mt-8 flex flex-wrap items-center justify-between gap-3">
         <ViewTabs basePath={`/admin/clients/${id}`} current={view} />
