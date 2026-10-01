@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { LogOut } from 'lucide-react';
-import { requireUser } from '@/lib/data/clients';
+import { getProfile, requireUser } from '@/lib/data/clients';
+import { Avatar } from '@/components/ui/Misc';
 import { signOut } from '@/lib/actions/auth';
 import { Logo } from '@/components/brand/Brand';
 import { NavLinks } from '@/components/admin/NavLinks';
@@ -9,6 +10,7 @@ export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
+  const profile = await getProfile();
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
       {/* Desktop: barra lateral vinho, como o fundo da identidade */}
@@ -20,7 +22,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <NavLinks orientation="vertical" />
         </div>
         <div className="relative mt-auto pt-10">
-          <p className="mb-3 truncate text-xs text-white/60">{user.email}</p>
+          <div className="mb-4 flex items-center gap-3">
+            <Avatar name={profile.name} src={profile.avatarUrl} className="size-10 shrink-0 text-xs ring-2 ring-white/30" />
+            <div className="min-w-0 leading-tight">
+              <p className="truncate text-sm text-white">{profile.hasName ? profile.name : 'Meu perfil'}</p>
+              <p className="truncate text-xs text-white/60">{user.email}</p>
+            </div>
+          </div>
           <form action={signOut}>
             <button className="flex items-center gap-2 text-sm text-white/80 transition hover:text-white">
               <LogOut className="size-4" /> Sair

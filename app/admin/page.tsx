@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { ArrowUpRight } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
-import { listClients, requireUser } from '@/lib/data/clients';
+import { getProfile, listClients, requireUser } from '@/lib/data/clients';
+import { ProfileEditor } from '@/components/admin/ProfileEditor';
 import { fetchCards } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
 import { ContentRow } from '@/components/content/ContentCard';
 import { DemoButton } from '@/components/admin/DemoButton';
 import { BrandElement } from '@/components/brand/Brand';
-import { EmptyState, PageTitle } from '@/components/ui/Misc';
+import { EmptyState } from '@/components/ui/Misc';
 import { LinkButton } from '@/components/ui/Button';
 import { firstName } from '@/lib/utils';
 import type { ContentStatus } from '@/lib/types';
@@ -17,11 +18,7 @@ export const metadata = { title: 'Dashboard' };
 export default async function Dashboard() {
   const user = await requireUser();
   const supabase = await createClient();
-  const [clients, items, { data: profile }] = await Promise.all([
-    listClients(),
-    fetchCards(supabase),
-    supabase.from('users').select('name').eq('id', user.id).maybeSingle(),
-  ]);
+  const [clients, items, profile] = await Promise.all([listClients(), fetchCards(supabase), getProfile()]);
 
   const count = (...s: ContentStatus[]) => items.filter((i) => s.includes(i.status)).length;
   const stats = [
@@ -42,7 +39,16 @@ export default async function Dashboard() {
 
   return (
     <div className="mx-auto max-w-6xl">
-      <PageTitle eyebrow="Dashboard" title={<>Olá, <span className="script text-5xl sm:text-6xl">{firstName(profile?.name || 'Bia')}</span> ♡</>} />
+      <div className="mb-8 flex flex-wrap items-center gap-5">
+        <ProfileEditor ownerId={user.id} name={profile.name} hasName={profile.hasName} avatarUrl={profile.avatarUrl} avatarPath={profile.avatarPath} />
+        <header>
+          <p className="label mb-2 text-wine/70">Dashboard</p>
+          <h1 className="h-display text-4xl text-wine sm:text-5xl">
+            Olá{profile.hasName && <>, <span className="script text-5xl sm:text-6xl">{firstName(profile.name)}</span></>} ♡
+          </h1>
+          {!profile.hasName && <p className="mt-1 text-xs text-ink/55">Clique na sua foto para adicionar seu nome e uma imagem.</p>}
+        </header>
+      </div>
 
       {clients.length === 0 ? (
         <EmptyState title="Vamos começar?">
