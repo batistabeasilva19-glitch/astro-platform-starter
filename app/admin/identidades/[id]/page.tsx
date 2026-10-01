@@ -99,7 +99,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
             <IdentityLink projectId={id} clientId={client.id} url={url} active={project.token_active} />
           </section>
 
-          <PortalAccess clientId={client.id} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
+          <PortalAccess clientId={client.id} clientName={client.contact_name || client.company_name} url={url} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
 
           <section className="card p-5 sm:p-7">
             <h2 className="h-display mb-1 text-2xl text-wine">Etapas</h2>
