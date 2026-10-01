@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { getClient, requireUser } from '@/lib/data/clients';
 import { adminStories, contentOptions } from '@/lib/data/extras';
 import { Avatar } from '@/components/ui/Misc';
-import { SocialNav } from '@/components/perf/SocialNav';
 import { MissingNotice } from '@/components/extras/MissingNotice';
 import { StoriesManager } from '@/components/extras/StoriesManager';
 
@@ -29,7 +28,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <p className="mt-1 text-sm text-ink/60">Os stories de cada dia em ordem (1, 2, 3…). O cliente marca “OK” em cada um que postou.</p>
         </div>
       </header>
-      <SocialNav clientId={id} current="stories" />
       {missing ? <MissingNotice /> : <StoriesManager clientId={id} rows={rows} contents={contents} />}
     </div>
   );

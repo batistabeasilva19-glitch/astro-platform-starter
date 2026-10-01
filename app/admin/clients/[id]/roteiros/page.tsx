@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { getClient, requireUser } from '@/lib/data/clients';
 import { adminScripts } from '@/lib/data/extras';
 import { Avatar } from '@/components/ui/Misc';
-import { SocialNav } from '@/components/perf/SocialNav';
 import { MissingNotice } from '@/components/extras/MissingNotice';
 import { ScriptsManager } from '@/components/extras/ScriptsManager';
 
@@ -28,7 +27,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <p className="mt-1 text-sm text-ink/60">Os vídeos que precisam ser gravados, em ordem, com o roteiro. O cliente vê e copia pelo link dele.</p>
         </div>
       </header>
-      <SocialNav clientId={id} current="roteiros" />
       {missing ? <MissingNotice /> : <ScriptsManager clientId={id} rows={rows} />}
     </div>
   );

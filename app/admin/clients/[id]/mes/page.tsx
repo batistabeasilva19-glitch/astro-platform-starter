@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server';
 import { getClient, requireUser } from '@/lib/data/clients';
 import { adminPlans, contentOptions } from '@/lib/data/extras';
 import { Avatar } from '@/components/ui/Misc';
-import { SocialNav } from '@/components/perf/SocialNav';
 import { MissingNotice } from '@/components/extras/MissingNotice';
 import { PlanManager } from '@/components/extras/PlanManager';
 
@@ -29,7 +28,6 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
           <p className="mt-1 text-sm text-ink/60">Monte o mês em ordem (posts, carrosséis e Reels) e envie para o cliente aprovar.</p>
         </div>
       </header>
-      <SocialNav clientId={id} current="mes" />
       {missing ? <MissingNotice /> : <PlanManager clientId={id} plans={plans} thumbs={thumbs} contents={contents} />}
     </div>
   );
