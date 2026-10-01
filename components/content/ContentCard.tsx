@@ -5,6 +5,7 @@ import { FORMAT_META } from '@/lib/constants';
 import { fmtDate, fmtTime } from '@/lib/utils';
 import { FormatIcon, StatusBadge } from './Badges';
 import { LightImage } from './LightImage';
+import { RowDelete } from '@/components/admin/RowDelete';
 
 export function Thumb({ item, className = '' }: { item: ContentCardData; className?: string }) {
   return (
@@ -42,13 +43,16 @@ export function ContentCard({
   href,
   audience = 'admin',
   clientName,
+  deletable,
 }: {
   item: ContentCardData;
   href: string;
   audience?: 'admin' | 'client';
   clientName?: string;
+  /** admin: mostra o botão de excluir direto da lista. */
+  deletable?: boolean;
 }) {
-  return (
+  const card = (
     <Link href={href} className="group card card-hover block overflow-hidden focus-visible:outline-2 focus-visible:outline-wine">
       <Thumb item={item} />
       <div className="space-y-2.5 p-4">
@@ -62,6 +66,7 @@ export function ContentCard({
       </div>
     </Link>
   );
+  return deletable ? <div className="relative">{card}<RowDelete id={item.id} title={item.title} /></div> : card;
 }
 
 /** Linha compacta para a visão em lista. */
@@ -70,16 +75,18 @@ export function ContentRow({
   href,
   audience = 'admin',
   clientName,
+  deletable,
 }: {
   item: ContentCardData;
   href: string;
   audience?: 'admin' | 'client';
   clientName?: string;
+  deletable?: boolean;
 }) {
   const Icon = item.format === 'carousel' ? GalleryHorizontal : Clapperboard;
   void Icon;
-  return (
-    <Link href={href} className="group card card-hover flex items-center gap-4 p-3 pr-5 focus-visible:outline-2 focus-visible:outline-wine">
+  const row = (
+    <Link href={href} className={`group card card-hover flex items-center gap-4 p-3 ${deletable ? 'pr-14' : 'pr-5'} focus-visible:outline-2 focus-visible:outline-wine`}>
       <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-blush sm:size-20">
         {item.thumb ? <LightImage src={item.thumb} alt="" width={360} className="size-full object-cover" /> : <div className="flex size-full items-center justify-center"><ImageOff className="size-5 text-wine/40" /></div>}
       </div>
@@ -94,5 +101,13 @@ export function ContentRow({
       <StatusBadge status={item.status} audience={audience} className="hidden shrink-0 sm:inline-flex" />
       <span className="size-2 shrink-0 rounded-full bg-wine sm:hidden" aria-label={item.status} />
     </Link>
+  );
+  return deletable ? (
+    <div className="relative">
+      {row}
+      <RowDelete id={item.id} title={item.title} className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full p-2 text-wine/70 transition hover:bg-wine hover:text-white" />
+    </div>
+  ) : (
+    row
   );
 }

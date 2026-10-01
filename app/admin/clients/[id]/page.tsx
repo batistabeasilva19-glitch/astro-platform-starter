@@ -147,7 +147,7 @@ export default async function ClientWorkspacePage({
         ) : (
           <div className="space-y-3">
             {items.map((i) => (
-              <ContentRow key={i.id} item={i} href={`/admin/content/${i.id}`} />
+              <ContentRow deletable key={i.id} item={i} href={`/admin/content/${i.id}`} />
             ))}
           </div>
         ))}

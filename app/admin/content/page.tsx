@@ -88,7 +88,7 @@ export default async function ContentList({ searchParams }: { searchParams: Prom
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4">
           {items.map((i) => (
-            <ContentCard key={i.id} item={i} href={`/admin/content/${i.id}`} clientName={name.get(i.client_id)} />
+            <ContentCard deletable key={i.id} item={i} href={`/admin/content/${i.id}`} clientName={name.get(i.client_id)} />
           ))}
         </div>
       )}
