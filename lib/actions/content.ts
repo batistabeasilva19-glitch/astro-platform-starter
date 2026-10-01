@@ -7,7 +7,8 @@ import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/data/clients';
 import { removeFiles } from '@/lib/storage';
 import { notify } from '@/lib/notifications';
-import { FORMATS, SITE_URL, STATUSES } from '@/lib/constants';
+import { FORMATS, STATUSES } from '@/lib/constants';
+import { getSiteUrl } from '@/lib/site-url';
 import type { ContentFormat, ContentItem, ContentStatus, MediaKind } from '@/lib/types';
 import { fail, logActivity, type ActionResult } from './shared';
 
@@ -189,7 +190,7 @@ export async function sendForApproval(contentId: string): Promise<ActionResult> 
     contentTitle: item.title,
     clientName: client?.company_name ?? '',
     clientEmail: client?.contact_email,
-    reviewUrl: project ? `${SITE_URL}/review/${project.review_token}` : undefined,
+    reviewUrl: project ? `${await getSiteUrl()}/review/${project.review_token}` : undefined,
   });
   refresh();
   return { ok: true };

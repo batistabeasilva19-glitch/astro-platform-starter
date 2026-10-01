@@ -4,7 +4,8 @@ import { revalidatePath } from 'next/cache';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { resolveToken } from '@/lib/data/portal';
-import { AWAITING, SITE_URL } from '@/lib/constants';
+import { AWAITING } from '@/lib/constants';
+import { getSiteUrl } from '@/lib/site-url';
 import { notify } from '@/lib/notifications';
 import { fail, logActivity, type ActionResult } from './shared';
 import type { ContentItem } from '@/lib/types';
@@ -38,7 +39,7 @@ async function currentVersion(db: SupabaseClient, item: ContentItem) {
   return data as { id: string; version_number: number } | null;
 }
 
-const reviewUrl = (token: string) => `${SITE_URL}/review/${token}`;
+const reviewUrl = async (token: string) => `${await getSiteUrl()}/review/${token}`;
 
 export async function approveContent(
   token: string,
@@ -237,7 +238,7 @@ export async function approveAll(token: string): Promise<ActionResult<{ count: n
       contentId: item.id,
       contentTitle: item.title,
       clientName: session.signerName,
-      reviewUrl: reviewUrl(token),
+      reviewUrl: await reviewUrl(token),
     });
   }
 

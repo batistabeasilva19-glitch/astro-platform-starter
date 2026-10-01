@@ -4,7 +4,8 @@ import { Pencil, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getClient } from '@/lib/data/clients';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
-import { AWAITING, SITE_URL } from '@/lib/constants';
+import { AWAITING } from '@/lib/constants';
+import { getSiteUrl } from '@/lib/site-url';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { ContentRow } from '@/components/content/ContentCard';
 import { ProfileFeed } from '@/components/feed/ProfileFeed';
@@ -32,7 +33,7 @@ export default async function ClientWorkspacePage({
   const c = (f: (s: string) => boolean) => items.filter((i) => f(i.status)).length;
   const drafts = c((s) => s === 'draft');
   const project = client.project;
-  const url = project ? `${SITE_URL}/review/${project.review_token}` : '';
+  const url = project ? `${await getSiteUrl()}/review/${project.review_token}` : '';
 
   return (
     <div className="mx-auto max-w-6xl">
