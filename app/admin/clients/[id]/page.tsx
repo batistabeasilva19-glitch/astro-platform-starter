@@ -60,14 +60,14 @@ export default async function ClientWorkspacePage({
         {project && <LinkActions clientId={id} url={url} active={project.token_active} />}
         <div className="flex flex-wrap gap-2 text-xs">
           {[
-            ['Rascunhos', drafts],
-            ['Aguardando', c((s) => AWAITING.includes(s as never))],
-            ['Aprovados', c((s) => s === 'approved')],
-            ['Alteração', c((s) => s === 'changes_requested')],
-            ['Programados', c((s) => s === 'scheduled')],
-            ['Publicados', c((s) => s === 'published')],
-          ].map(([l, n]) => (
-            <span key={l as string} className="rounded-full bg-blush px-3 py-1 text-wine">
+            ['Rascunhos', drafts, 'bg-zinc-100 text-zinc-700 ring-zinc-300'],
+            ['Aguardando', c((s) => AWAITING.includes(s as never)), 'bg-amber-100 text-amber-800 ring-amber-300'],
+            ['Aprovados', c((s) => s === 'approved'), 'bg-sky-100 text-sky-800 ring-sky-300'],
+            ['Alteração', c((s) => s === 'changes_requested'), 'bg-red-100 text-red-700 ring-red-300'],
+            ['Programados', c((s) => s === 'scheduled'), 'bg-violet-100 text-violet-800 ring-violet-300'],
+            ['Publicados', c((s) => s === 'published'), 'bg-emerald-100 text-emerald-800 ring-emerald-300'],
+          ].map(([l, n, cls]) => (
+            <span key={l as string} className={`rounded-full px-3 py-1 ring-1 ring-inset ${cls} ${n ? '' : 'opacity-60'}`}>
               {n} {l}
             </span>
           ))}
