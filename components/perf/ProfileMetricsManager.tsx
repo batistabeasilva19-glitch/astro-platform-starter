@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/Button';
 import { Field, FormMessage, Input } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
-import { MetricGroup, NotesField, SourceFields } from './forms';
+import { BeforeAfterGroup, MetricGroup, NotesField, SourceFields } from './forms';
 
 const DEFAULT_START = () => `${todayBR().slice(0, 8)}01`;
 
@@ -78,6 +78,9 @@ function ProfileForm({ clientId, row, onClose }: { clientId: string; row: Profil
     if (row) for (const g of PROFILE_FIELDS) for (const f of g.fields) if (row[f.key as keyof ProfileRow] != null) v[f.key] = String(row[f.key as keyof ProfileRow]);
     return v;
   });
+  const [bStart, setBStart] = useState(row?.before_start ?? '');
+  const [bEnd, setBEnd] = useState(row?.before_end ?? '');
+  const [before, setBefore] = useState<Record<string, string>>(() => Object.fromEntries(Object.entries(row?.before ?? {}).map(([k, v]) => [k, String(v)])));
   const [error, setError] = useState<string | null>(null);
   const [pending, startT] = useTransition();
   const toast = useToast();
@@ -100,7 +103,7 @@ function ProfileForm({ clientId, row, onClose }: { clientId: string; row: Profil
   const submit = () =>
     startT(async () => {
       setError(null);
-      const res = await saveProfileMetrics(clientId, { id: row?.id, period_start: start, period_end: end, source, source_note: sourceNote, notes, values });
+      const res = await saveProfileMetrics(clientId, { id: row?.id, period_start: start, period_end: end, source, source_note: sourceNote, notes, values, before, before_start: bStart, before_end: bEnd });
       if (!res.ok) return setError(res.error);
       toast('Métricas salvas ♡');
       onClose();
@@ -114,9 +117,21 @@ function ProfileForm({ clientId, row, onClose }: { clientId: string; row: Profil
           <Field label="Data inicial"><Input type="date" value={start} onChange={(e) => setStart(e.target.value)} /></Field>
           <Field label="Data final"><Input type="date" value={end} max={todayBR()} onChange={(e) => setEnd(e.target.value)} /></Field>
         </div>
-        {PROFILE_FIELDS.map((g) => (
-          <MetricGroup key={g.group} title={g.group} defs={g.fields} values={values} onChange={(k, v) => setValues((s) => ({ ...s, [k]: v }))} />
-        ))}
+        <div className="rounded-2xl border border-wine/15 p-4">
+          <p className="label mb-1 text-wine">Período de antes (opcional)</p>
+          <p className="mb-3 text-xs text-ink/55">Os números de “Antes” de cada métrica abaixo servem de base de comparação (por exemplo, o perfil antes de começar o trabalho). Se deixar em branco, o sistema compara com o período anterior já cadastrado.</p>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <Field label="Antes — data inicial"><Input type="date" value={bStart} max={start || undefined} onChange={(e) => setBStart(e.target.value)} /></Field>
+            <Field label="Antes — data final"><Input type="date" value={bEnd} max={start || undefined} onChange={(e) => setBEnd(e.target.value)} /></Field>
+          </div>
+        </div>
+        {PROFILE_FIELDS.map((g) =>
+          g.group === 'Seguidores' ? (
+            <MetricGroup key={g.group} title="Seguidores (início = antes · final = depois)" defs={g.fields} values={values} onChange={(k, v) => setValues((s) => ({ ...s, [k]: v }))} />
+          ) : (
+            <BeforeAfterGroup key={g.group} title={g.group} defs={g.fields} before={before} after={values} onBefore={(k, v) => setBefore((s) => ({ ...s, [k]: v }))} onAfter={(k, v) => setValues((s) => ({ ...s, [k]: v }))} />
+          ),
+        )}
         <div className="rounded-2xl bg-blush px-4 py-3 text-sm text-wine">
           <p className="label mb-1">Calculado automaticamente</p>
           <p>Crescimento líquido: <strong className="font-normal">{fmtSigned(live.net)}</strong> <span className="text-wine/60">(seguidores finais − iniciais)</span></p>

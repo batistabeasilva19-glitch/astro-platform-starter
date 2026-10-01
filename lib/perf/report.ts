@@ -4,6 +4,7 @@
  */
 import {
   aggregateProfile,
+  aggregatePrev,
   autoInsights,
   contentResults,
   formatStats,
@@ -65,7 +66,9 @@ export interface ReportData {
 export function buildReportData(raw: PerfRaw, month: string, client: ReportClientInfo): ReportData {
   const { range, prev } = monthRange(month);
   const cur = aggregateProfile(raw.profile, range);
-  const prevAgg = aggregateProfile(raw.profile, prev);
+  const pr = aggregatePrev(raw.profile, range, prev);
+  const prevAgg = pr.agg;
+  const prevRangeOut = pr.usedBefore ? { ...prev, label: pr.beforeLabel ?? 'Antes' } : prev;
   const contents = contentResults(raw, range);
   const formats = formatStats(contents);
   const pillars = pillarStats(contents);
@@ -78,7 +81,7 @@ export function buildReportData(raw: PerfRaw, month: string, client: ReportClien
     generatedAt: new Date().toISOString(),
     client,
     range,
-    prevRange: prev,
+    prevRange: prevRangeOut,
     hasData,
     profile: { cur, prev: prevAgg, series: profileSeries(raw.profile, range), prevSeries: profileSeries(raw.profile, prev) },
     published: { total: contents.length, byFormat },

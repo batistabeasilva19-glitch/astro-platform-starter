@@ -212,6 +212,52 @@ export function aggregateProfile(rows: ProfileRow[], range: Range): ProfileAgg {
   };
 }
 
+/** Campo do banco → campo do ProfileAgg (usado para trazer o "antes" informado à mão). */
+const BEFORE_MAP: [string, keyof ProfileAgg][] = [
+  ['reach', 'reach'], ['impressions', 'impressions'], ['views', 'views'], ['profile_visits', 'visits'], ['link_clicks', 'linkClicks'], ['contact_clicks', 'contactClicks'],
+  ['messages', 'messages'], ['likes', 'likes'], ['comments', 'comments'], ['shares', 'shares'], ['saves', 'saves'], ['replies', 'replies'], ['sticker_taps', 'stickerTaps'],
+];
+
+export interface PrevResult {
+  agg: ProfileAgg;
+  /** true quando pelo menos uma métrica de comparação veio do "antes" informado */
+  usedBefore: boolean;
+  beforeLabel: string | null;
+}
+
+/**
+ * Base de comparação: para cada métrica usa o "antes" informado no cadastro (se houver) e, na falta dele,
+ * o período anterior cadastrado.
+ */
+export function aggregatePrev(rows: ProfileRow[], range: Range, prevRange: Range): PrevResult {
+  const base = aggregateProfile(rows, prevRange);
+  const list = rows.filter((r) => inRange(r.period_start, range) && r.before && Object.keys(r.before).length).sort((a, b) => a.period_start.localeCompare(b.period_start));
+  if (!list.length) return { agg: base, usedBefore: false, beforeLabel: null };
+  const agg: ProfileAgg = { ...base };
+  let used = false;
+  for (const [dbKey, aggKey] of BEFORE_MAP) {
+    const vals = list.map((r) => r.before[dbKey]).filter((v): v is number => typeof v === 'number');
+    if (vals.length) {
+      (agg as unknown as Record<string, Num>)[aggKey] = vals[0];
+      used = true;
+    }
+  }
+  const bi = list.map((r) => r.before.interactions).find((v) => typeof v === 'number');
+  const parts = ['likes', 'comments', 'shares', 'saves', 'replies'].map((k) => list[0].before[k]).filter((v): v is number => typeof v === 'number');
+  if (bi != null) {
+    agg.interactions = bi;
+    used = true;
+  } else if (parts.length) {
+    agg.interactions = parts.reduce((a, b) => a + b, 0);
+    used = true;
+  }
+  if (!used) return { agg: base, usedBefore: false, beforeLabel: null };
+  agg.erReach = div(agg.interactions, agg.reach, 100);
+  const first = list[0];
+  const beforeLabel = first.before_start && first.before_end ? `${dayMonth(first.before_start)}/${first.before_start.slice(0, 4)} a ${dayMonth(first.before_end)}/${first.before_end.slice(0, 4)}` : 'Antes';
+  return { agg, usedBefore: true, beforeLabel };
+}
+
 export interface SeriesPoint {
   label: string;
   value: number | null;

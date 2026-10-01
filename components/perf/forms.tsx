@@ -52,3 +52,31 @@ export const NotesField = ({ value, onChange, label = 'Observações' }: { value
 );
 
 export const toStrings = (rec: Record<string, number | null | undefined> | undefined): Record<string, string> => Object.fromEntries(Object.entries(rec ?? {}).filter(([, v]) => v != null).map(([k, v]) => [k, String(v).replace('.', ',')]));
+
+/** Cada métrica com dois campos lado a lado: "Antes" (base de comparação) e "Depois" (o período que está sendo cadastrado). */
+export function BeforeAfterGroup({ title, defs, before, after, onBefore, onAfter }: { title: string; defs: MetricDef[]; before: Record<string, string>; after: Record<string, string>; onBefore: (key: string, v: string) => void; onAfter: (key: string, v: string) => void }) {
+  const clean = (v: string) => v.replace(/[^\d.,]/g, '');
+  return (
+    <fieldset>
+      <legend className="label mb-3 text-wine">{title}</legend>
+      <div className="space-y-4">
+        {defs.map((d) => (
+          <div key={d.key}>
+            <p className="label mb-2 text-wine">{d.label}</p>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="mb-1 block text-xs text-ink/50">Antes</span>
+                <Input inputMode="decimal" autoComplete="off" aria-label={`${d.label} — antes`} value={before[d.key] ?? ''} onChange={(e) => onBefore(d.key, clean(e.target.value))} placeholder="–" />
+              </label>
+              <label className="block">
+                <span className="mb-1 block text-xs text-ink/50">Depois</span>
+                <Input inputMode="decimal" autoComplete="off" aria-label={`${d.label} — depois`} value={after[d.key] ?? ''} onChange={(e) => onAfter(d.key, clean(e.target.value))} placeholder="–" />
+              </label>
+            </div>
+            {d.hint && <p className="mt-1.5 text-xs text-ink/50">{d.hint}</p>}
+          </div>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
