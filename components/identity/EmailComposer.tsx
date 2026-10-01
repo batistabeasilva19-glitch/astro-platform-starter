@@ -1,9 +1,8 @@
 'use client';
 
-import { useMemo, useState, useTransition } from 'react';
+import { useState, useTransition } from 'react';
 import { Copy, ExternalLink, Mail, Send } from 'lucide-react';
 import { sendClientEmail } from '@/lib/actions/email';
-import { STAGES, type StageKey } from '@/lib/identity/types';
 import { Button } from '@/components/ui/Button';
 import { Field, Input, Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
@@ -13,53 +12,63 @@ export interface EmailCtx {
   clientName: string;
   clientEmail: string;
   url: string;
-  stages: { stage_key: StageKey; enabled: boolean; status: string }[];
+}
+
+/** O que o e-mail comenta: uma etapa, uma postagem ou os conteúdos em geral. */
+export interface EmailItem {
+  /** Ex.: a etapa “Logo” · a postagem “Título” · os conteúdos do mês. */
+  thing: string;
+  /** Ex.: “Logo” · “Título” · Conteúdos (usado no assunto). */
+  short: string;
+  /** Próxima etapa (se houver). */
+  next?: string | null;
+  /** Já aprovado? (escolhe o modelo inicial) */
+  approved?: boolean;
+  /** Plural ("os conteúdos") muda a conjugação. */
+  plural?: boolean;
 }
 
 const TEMPLATES = [
-  { id: 'awaiting', label: 'Etapa aguardando aprovação' },
+  { id: 'awaiting', label: 'Aguardando aprovação' },
   { id: 'next', label: 'Aguardando envio da próxima etapa' },
   { id: 'changes', label: 'Alteração feita — aprove novamente' },
-  { id: 'approved', label: 'Etapa aprovada — agradecimento' },
+  { id: 'approved', label: 'Aprovado — agradecimento' },
   { id: 'reminder', label: 'Lembrete gentil' },
+  { id: 'access', label: 'Acesso ao portal (link, e-mail e senha)' },
   { id: 'custom', label: 'Em branco (escrever do zero)' },
 ] as const;
 
-function build(id: string, c: EmailCtx, stageLabel: string, nextLabel: string | null) {
+function build(id: string, c: EmailCtx, it: EmailItem) {
   const hi = `Olá, ${c.clientName}! ♡\n\n`;
   const bye = '\n\nQualquer dúvida, é só me chamar por aqui.\nCom carinho,\nEquipe Soltria';
   const link = `\n\n🔗 Acesse o portal: ${c.url}`;
+  const cap = it.thing.charAt(0).toUpperCase() + it.thing.slice(1);
+  const [is, are] = it.plural ? ['estão', 'estão'] : ['está', 'está'];
   switch (id) {
     case 'awaiting':
-      return { subject: `${stageLabel} aguardando a sua aprovação`, text: `${hi}A etapa “${stageLabel}” já está pronta e esperando a sua aprovação. Dê uma olhada com calma e me conte o que achou — se quiser ajustar algo, é só pedir alteração pelo portal.${link}${bye}` };
+      return { subject: `${it.short}: aguardando a sua aprovação`, text: `${hi}${cap} ${is} pronto${it.plural ? 's' : ''} e esperando a sua aprovação. Dê uma olhada com calma e me conte o que achou — se quiser ajustar algo, é só pedir alteração pelo portal.${link}${bye}` };
     case 'next':
-      return { subject: 'Próxima etapa em andamento', text: `${hi}A etapa “${stageLabel}” foi concluída e já estamos preparando ${nextLabel ? `a próxima: “${nextLabel}”` : 'a próxima etapa'}. Assim que estiver pronta, aviso você por aqui para fazer a aprovação.${link}${bye}` };
+      return { subject: 'Próxima etapa em andamento', text: `${hi}${cap} ${it.plural ? 'foram concluídos' : 'foi concluída'} e já estamos preparando ${it.next ? `a próxima etapa: “${it.next}”` : 'a próxima etapa'}. Assim que estiver pronta, aviso você por aqui para fazer a aprovação.${link}${bye}` };
     case 'changes':
-      return { subject: `Ajustes feitos em ${stageLabel}`, text: `${hi}Fiz os ajustes que você pediu na etapa “${stageLabel}”. A nova versão já está no portal para você conferir e aprovar.${link}${bye}` };
+      return { subject: `Ajustes feitos: ${it.short}`, text: `${hi}Fiz os ajustes que você pediu em ${it.thing}. A nova versão já está no portal para você conferir e aprovar.${link}${bye}` };
     case 'approved':
-      return { subject: `${stageLabel} aprovada ♡`, text: `${hi}Obrigada por aprovar a etapa “${stageLabel}”! ${nextLabel ? `Seguimos agora para “${nextLabel}” e te aviso quando estiver pronta.` : 'Estamos quase lá!'}${link}${bye}` };
+      return { subject: `${it.short}: aprovado ♡`, text: `${hi}Obrigada por aprovar ${it.thing}! ${it.next ? `Seguimos agora para “${it.next}” e te aviso quando estiver pronta.` : 'Seguimos com o projeto e te aviso das próximas novidades.'}${link}${bye}` };
     case 'reminder':
-      return { subject: `Lembrete: ${stageLabel} aguardando você`, text: `${hi}Passando para lembrar que a etapa “${stageLabel}” está aguardando a sua aprovação. Quando puder, dê uma olhada — assim seguimos com o projeto sem atrasos.${link}${bye}` };
+      return { subject: `Lembrete: ${it.short} aguardando você`, text: `${hi}Passando para lembrar que ${it.thing} ${are} aguardando a sua aprovação. Quando puder, dê uma olhada — assim seguimos sem atrasos.${link}${bye}` };
+    case 'access':
+      return { subject: 'Seu acesso ao portal da Soltria', text: `${c.clientName}, esse link vai te acompanhar durante todo o nosso processo. Por ele, você poderá acessar tudo o que está sendo desenvolvido, acompanhar as informações do projeto, visualizar as alterações realizadas e fazer as aprovações de forma mais organizada.\n\n🔗 Link de acesso: ${c.url}\n📧 E-mail para login: ${c.clientEmail || '[inserir e-mail]'}\n🔒 Senha: [inserir senha]\n\nSempre que houver alguma atualização ou alteração, ela ficará registrada por aqui para você acompanhar com facilidade.\n\nGuarde esse acesso, porque será o nosso espaço principal para aprovações e acompanhamento do projeto. ✨` };
     default:
       return { subject: '', text: `${hi}${link}${bye}` };
   }
 }
 
 /** Escreve e envia (ou copia / abre no e-mail) um aviso ao cliente. Tudo pode ser editado antes de enviar. */
-export function EmailComposer({ ctx, stageKey }: { ctx: EmailCtx; stageKey: StageKey }) {
+export function EmailComposer({ ctx, item }: { ctx: EmailCtx; item: EmailItem }) {
   const toast = useToast();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
-  const stageLabel = STAGES.find((s) => s.key === stageKey)?.label ?? '';
-  const nextLabel = useMemo(() => {
-    const order = STAGES.map((s) => s.key);
-    const i = order.indexOf(stageKey);
-    const n = STAGES.slice(i + 1).find((s) => ctx.stages.some((x) => x.stage_key === s.key && x.enabled && s.approvable));
-    return n?.label ?? null;
-  }, [ctx.stages, stageKey]);
-
-  const initial = (id: string) => build(id, ctx, stageLabel, nextLabel);
-  const firstId = ctx.stages.find((s) => s.stage_key === stageKey)?.status === 'approved' ? 'approved' : 'awaiting';
+  const initial = (id: string) => build(id, ctx, item);
+  const firstId = item.approved ? 'approved' : 'awaiting';
   const [tpl, setTpl] = useState<string>(firstId);
   const [to, setTo] = useState(ctx.clientEmail);
   const [subject, setSubject] = useState(initial(firstId).subject);
