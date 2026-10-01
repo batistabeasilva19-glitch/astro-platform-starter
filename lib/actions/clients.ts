@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
-import { requireUser } from '@/lib/data/clients';
+import { ensureProfile, requireUser } from '@/lib/data/clients';
 import { removeFiles } from '@/lib/storage';
 import { cleanHandle, slugify } from '@/lib/utils';
 import { fail, logActivity, type ActionResult } from './shared';
@@ -56,6 +56,7 @@ export async function saveClient(_prev: ActionResult | null, fd: FormData): Prom
   }
 
   // ── criar ──
+  await ensureProfile(user);
   const id = v.id ?? crypto.randomUUID();
   const base = slugify(v.company_name) || 'cliente';
   const { data: taken } = await supabase.from('clients').select('slug').like('slug', `${base}%`);

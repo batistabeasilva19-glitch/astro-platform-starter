@@ -5,17 +5,23 @@ import { createClient } from '@/lib/supabase/server';
 import { signPaths } from '@/lib/storage';
 import type { Client, ClientWithProject, Project } from '@/lib/types';
 
-/** Garante sessão da administradora; senão manda para /login. */
+/**
+ * Garante sessão da administradora; senão manda para /login.
+ * Usa getClaims(): valida o JWT localmente (sem ir ao servidor de Auth a cada página).
+ */
 export const requireUser = cache(async () => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect('/login');
-  // Garante o perfil (caso o usuário tenha sido criado antes da migration).
-  await supabase.from('users').upsert({ id: user.id, email: user.email }, { onConflict: 'id', ignoreDuplicates: true });
-  return user;
+  const { data } = await supabase.auth.getClaims();
+  const claims = data?.claims;
+  if (!claims?.sub) redirect('/login');
+  return { id: claims.sub, email: (claims.email as string | undefined) ?? null };
 });
+
+/** Garante a linha em `users` (caso o login tenha sido criado antes da migration). */
+export async function ensureProfile(user: { id: string; email: string | null }) {
+  const supabase = await createClient();
+  await supabase.from('users').upsert({ id: user.id, email: user.email }, { onConflict: 'id', ignoreDuplicates: true });
+}
 
 async function withProjects(rows: Client[]): Promise<ClientWithProject[]> {
   if (!rows.length) return [];
