@@ -86,11 +86,20 @@ export async function createIdentityProject(_prev: ActionResult | null, fd: Form
     .single();
   if (error || !project) return fail('Não foi possível criar o projeto. A migration 0002 foi aplicada no Supabase?');
 
-  const { data: stages, error: sErr } = await supabase
-    .from('identity_stages')
-    .insert(STAGES.map((s) => ({ project_id: project.id, stage_key: s.key, ...(s.key === 'briefing' ? { status: 'awaiting', sent_at: new Date().toISOString() } : {}) })))
-    .select('id');
-  if (sErr || !stages) return fail('Projeto criado, mas as etapas falharam.');
+  const insertStages = (list: typeof STAGES) =>
+    supabase
+      .from('identity_stages')
+      .insert(list.map((s) => ({ project_id: project.id, stage_key: s.key, ...(s.key === 'briefing' ? { status: 'awaiting', sent_at: new Date().toISOString() } : {}) })))
+      .select('id');
+  let { data: stages, error: sErr } = await insertStages(STAGES);
+  if (sErr || !stages) {
+    // banco sem a migration 0007 (etapa "Formulário da marca"): cria as demais etapas para o projeto funcionar
+    ({ data: stages, error: sErr } = await insertStages(STAGES.filter((s) => s.key !== 'briefing')));
+  }
+  if (sErr || !stages) {
+    await supabase.from('identity_projects').delete().eq('id', project.id); // não deixa projeto vazio para trás
+    return fail('Não foi possível criar as etapas do projeto. Confira se as migrations 0002, 0003 e 0007 foram rodadas no Supabase.');
+  }
   await supabase.from('identity_versions').insert(stages.map((s) => ({ stage_id: s.id, version_number: 1, content: {} })));
   await logIdentity(supabase, { projectId: project.id, actorType: 'admin', action: 'created', detail: 'Projeto de identidade visual criado' });
 
