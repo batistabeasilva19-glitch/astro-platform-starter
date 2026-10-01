@@ -11,6 +11,7 @@ import { DeleteProjectButton, FinalizeButton, IdentityLink, StageSwitch } from '
 import { StageWorkspace } from '@/components/identity/StageWorkspace';
 import { DecisionsPanel } from '@/components/identity/DecisionsPanel';
 import { QuickLinks } from '@/components/identity/QuickLinks';
+import { StageTabs } from '@/components/identity/StageTabs';
 import { HistoryList } from '@/components/content/Thread';
 import { Avatar } from '@/components/ui/Misc';
 import { Pencil } from 'lucide-react';
@@ -26,7 +27,9 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
   const detail = await fetchIdentityDetail(supabase, id);
   if (!detail) notFound();
   const { project, stages, activity } = detail;
-  const [client, clients] = await Promise.all([getClient(project.client_id), listClients()]);
+  // a lista de clientes só é usada no formulário da Visão geral: nas outras etapas não precisa carregar
+  const needsClients = !etapa || etapa === 'geral' || !(isStageKey(etapa) || etapa === 'historico' || etapa === 'decisoes');
+  const [client, clients] = await Promise.all([getClient(project.client_id), needsClients ? listClients() : Promise.resolve([])]);
   if (!client) notFound();
 
   const base = `/admin/identidades/${id}`;
@@ -67,13 +70,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
         <QuickLinks projectId={id} links={project.links ?? []} />
       </div>
 
-      <nav className="no-scrollbar mb-8 flex gap-1.5 overflow-x-auto pb-1" aria-label="Etapas">
-        {tabs.map((t) => (
-          <Link key={t.key} href={t.href} scroll={false} aria-current={tab === t.key ? 'page' : undefined} className={cn('shrink-0 rounded-full border px-4 py-2 text-[0.8rem] transition', tab === t.key ? 'border-wine bg-wine text-white' : 'border-wine/25 text-wine hover:bg-blush', t.muted && tab !== t.key && 'opacity-45')}>
-            {t.label}
-          </Link>
-        ))}
-      </nav>
+      <StageTabs tabs={tabs} current={tab} />
 
       {tab === 'geral' && (
         <div className="space-y-8">
