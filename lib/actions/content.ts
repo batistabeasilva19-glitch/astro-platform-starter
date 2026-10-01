@@ -10,6 +10,7 @@ import { notify } from '@/lib/notifications';
 import { FORMATS, STATUSES } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
 import type { ContentFormat, ContentItem, ContentStatus, MediaKind } from '@/lib/types';
+import { autoCreateTaskForContent, syncTasksForContent } from '@/lib/data/production';
 import { fail, logActivity, type ActionResult } from './shared';
 
 const contentSchema = z.object({
@@ -87,6 +88,7 @@ export async function createContent(_prev: ActionResult | null, fd: FormData): P
     action: 'created',
     detail: 'Conteúdo criado',
   });
+  await autoCreateTaskForContent(supabase, { id: item.id, client_id: v.client_id, title: v.title, format: v.format, scheduled_date: v.scheduled_date || null });
   refresh();
   redirect(`/admin/content/${item.id}?novo=1`);
 }
@@ -192,6 +194,7 @@ export async function sendForApproval(contentId: string): Promise<ActionResult> 
     clientEmail: client?.contact_email,
     reviewUrl: project ? `${await getSiteUrl()}/review/${project.review_token}` : undefined,
   });
+  await syncTasksForContent(supabase, contentId, 'awaiting_client');
   refresh();
   return { ok: true };
 }
@@ -232,6 +235,8 @@ export async function changeStatus(contentId: string, status: ContentStatus): Pr
     action: 'status',
     detail: `Status alterado para ${status}`,
   });
+  const kind = ({ approved: 'approved', scheduled: 'scheduled', published: 'published', changes_requested: 'changes' } as const)[status as 'approved'];
+  if (kind) await syncTasksForContent(supabase, contentId, kind);
   refresh();
   return { ok: true };
 }

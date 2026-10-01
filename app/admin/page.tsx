@@ -4,6 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { getProfile, listClients, requireUser } from '@/lib/data/clients';
 import { ProfileEditor } from '@/components/admin/ProfileEditor';
 import { fetchCards } from '@/lib/data/content';
+import { loadAllTasks } from '@/lib/data/production';
+import { productionStats } from '@/lib/production/stats';
 import { AWAITING } from '@/lib/constants';
 import { ContentRow } from '@/components/content/ContentCard';
 import { DemoButton } from '@/components/admin/DemoButton';
@@ -18,7 +20,8 @@ export const metadata = { title: 'Dashboard' };
 export default async function Dashboard() {
   const user = await requireUser();
   const supabase = await createClient();
-  const [clients, items, profile] = await Promise.all([listClients(), fetchCards(supabase), getProfile()]);
+  const [clients, items, profile, prod] = await Promise.all([listClients(), fetchCards(supabase), getProfile(), loadAllTasks(supabase)]);
+  const prodStats = prod.missing ? null : productionStats(prod.tasks, prod.columns);
 
   const count = (...s: ContentStatus[]) => items.filter((i) => s.includes(i.status)).length;
   const stats = [
@@ -74,6 +77,21 @@ export default async function Dashboard() {
               </Link>
             ))}
           </section>
+
+          {prodStats && (
+            <section className="card mt-8 flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6">
+              <div>
+                <p className="label mb-1 text-wine/70">Produção</p>
+                <h2 className="h-display text-2xl text-wine sm:text-3xl">Tarefas de hoje</h2>
+                <p className="mt-1 text-sm text-ink/65">
+                  {prodStats.today === 0 && prodStats.overdue === 0
+                    ? 'Nada vence hoje. ♡'
+                    : <>{prodStats.today} {prodStats.today === 1 ? 'tarefa' : 'tarefas'}{prodStats.urgentToday > 0 && <> · <strong className="font-normal text-wine">{prodStats.urgentToday} {prodStats.urgentToday === 1 ? 'urgente' : 'urgentes'}</strong></>}{prodStats.overdue > 0 && <> · <strong className="font-normal text-red-700">{prodStats.overdue} {prodStats.overdue === 1 ? 'atrasada' : 'atrasadas'}</strong></>}</>}
+                </p>
+              </div>
+              <LinkButton href="/admin/producao">Ver produção</LinkButton>
+            </section>
+          )}
 
           <section className="relative mt-12">
             <div className="mb-5 flex items-end justify-between gap-3">

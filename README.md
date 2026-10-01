@@ -26,7 +26,7 @@ O sistema tem dois módulos **independentes**, que compartilham clientes, login,
 
 Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
 
-> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) `0008_desempenho.sql` (Desempenho & Relatórios) `0009_perfil_antes.sql` (print do perfil “antes”) e `0010_metricas_antes_depois.sql` (“antes” de cada métrica) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) `0008_desempenho.sql` (Desempenho & Relatórios) `0009_perfil_antes.sql` (print do perfil “antes”) `0010_metricas_antes_depois.sql` (“antes” de cada métrica) e `0011_producao.sql` (Produção / Kanban) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.
@@ -36,6 +36,19 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 - **Decisões do cliente** (admin): logo favorita/aprovada (e versão), paleta favorita, cores escolhidas, tipografias, alterações solicitadas e favoritos.
 - **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
 - **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
+
+## Produção (Kanban interno)
+
+`/admin/producao` — organização do fluxo de trabalho da Soltria (área **interna**: o cliente nunca vê nada daqui).
+
+- **Quadros** (criar, renomear, duplicar, arquivar, excluir, favoritar) com o **modelo de produção**: Ideias → A fazer → Em produção → Em revisão → Aguardando cliente → Alteração solicitada → Aprovado → Agendado → Publicado → Concluído. Colunas editáveis (renomear, adicionar, remover, reordenar).
+- **Arrastar e soltar** cards entre colunas e dentro da coluna (salva sozinho; funciona no celular com toque longo). Cards compactos: categoria, título, cliente, prazo (ATRASADO / HOJE / AMANHÃ), prioridade, checklist e responsável.
+- **Card completo**: cliente, projeto, responsáveis, datas, prioridade, categoria, tags coloridas, descrição, **várias checklists** (com modelos Post/Reel/Carrossel/Identidade…), subtarefas, comentários internos, anexos (arquivos e links Drive/Canva/Figma/Instagram), histórico (nunca apagado), duplicar, arquivar.
+- **Vínculos sem duplicar**: a tarefa referencia cliente, conteúdo, identidade visual, relatório e campanha já existentes (“Abrir conteúdo”).
+- **Visões**: Quadro, Calendário, Lista (ordenar e agrupar), Minha semana e Atividades; filtros (cliente, responsável, status, categoria, prioridade, prazo, tag, atrasadas, hoje, semana, sem responsável), busca, filtros salvos e “ocultar concluídos”.
+- **Integração com o fluxo** (configurável por quadro, desligada por padrão): *sincronizar status* (enviou para aprovação → Aguardando cliente; cliente pediu alteração → Alteração solicitada; aprovou → Aprovado; programado/publicado → Agendado/Publicado) e *criar card automaticamente* ao criar um conteúdo.
+- **Tarefas recorrentes** (diária, semanal, mensal, personalizada), **modelos de card**, **Minhas tarefas**, **métricas** (concluídas no mês, atrasadas, tempo médio, por cliente e por categoria), atalho global **+ Nova tarefa**, cartão “Tarefas de hoje” no dashboard e “Ver quadro do cliente” em cada cliente.
+- Equipe estruturada para vários membros (hoje só a administradora). Notificações internas e menções (@nome) ficam para uma próxima etapa.
 
 ## Desempenho & Relatórios (Redes sociais)
 

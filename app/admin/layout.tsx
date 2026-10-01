@@ -5,6 +5,7 @@ import { Avatar } from '@/components/ui/Misc';
 import { signOut } from '@/lib/actions/auth';
 import { Logo } from '@/components/brand/Brand';
 import { NavLinks } from '@/components/admin/NavLinks';
+import { QuickTask } from '@/components/production/QuickTask';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,6 +54,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       </header>
 
       <main className="min-w-0 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">{children}</main>
+      <QuickTask />
     </div>
   );
 }
