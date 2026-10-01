@@ -17,7 +17,8 @@ export function PortalStage({ token, stage, detail }: { token: string; stage: St
   const pad = (n: number) => String(n).padStart(2, '0');
   const comments: CommentRowLike[] = stage.comments.map((c) => ({ ...c, content_id: c.project_id, slide_index: null }));
   const versionNumbers = Object.fromEntries(stage.versions.map((v) => [v.id, v.version_number]));
-  const showComments = meta.approvable;
+  const isBriefing = stage.stage_key === 'briefing';
+  const showComments = meta.approvable && !isBriefing;
   const isLogo = stage.stage_key === 'logo';
   const ctx: ViewCtx = { mode: 'client', token, stage, allStages: detail.stages, favorites: detail.favorites, selections: detail.selections, annotations: detail.annotations };
 
@@ -72,7 +73,7 @@ export function PortalStage({ token, stage, detail }: { token: string; stage: St
 
       <StageView ctx={ctx} version={selected} />
 
-      {meta.approvable && (
+      {meta.approvable && !isBriefing && (
         <IdentityApproval
           token={token}
           stageId={stage.id}

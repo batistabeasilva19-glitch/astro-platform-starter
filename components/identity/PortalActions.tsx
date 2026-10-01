@@ -13,6 +13,7 @@ import { Sparkle } from '@/components/brand/Brand';
 import { fmtStamp } from '@/lib/utils';
 
 const APPROVE_LABEL: Record<StageKey, string> = {
+  briefing: 'Enviar respostas',
   concept: 'Aprovar conceito',
   moodboard: 'Aprovar moodboard',
   logo: 'Aprovar logo',

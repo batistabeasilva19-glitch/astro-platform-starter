@@ -29,7 +29,7 @@ export const resolveIdentityToken = cache(async (token: string): Promise<Identit
   };
 });
 
-const CLIENT_ACTIONS = ['created', 'sent', 'approved', 'changes_requested', 'new_version', 'comment', 'favorite', 'chosen', 'selection', 'annotation', 'restore', 'download'];
+const CLIENT_ACTIONS = ['created', 'sent', 'approved', 'changes_requested', 'new_version', 'comment', 'favorite', 'chosen', 'selection', 'annotation', 'restore', 'download', 'briefing'];
 
 /**
  * Detalhe do projeto para o cliente. NUNCA inclui: observações internas, notas internas de versões,

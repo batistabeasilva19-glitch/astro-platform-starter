@@ -29,7 +29,7 @@ export default async function IdentityStagePage({ params }: { params: Promise<{ 
         <h1 className="h-display text-5xl text-wine sm:text-6xl">{etapa === 'files' ? 'Arquivos da sua marca' : meta.label}</h1>
         {!isFiles && (
           <div className="mt-4">
-            <StageStatusBadge status={stage.status} audience="client" version={stage.current_version} />
+            <StageStatusBadge status={stage.status} audience="client" version={stage.current_version} stageKey={etapa} />
           </div>
         )}
       </header>

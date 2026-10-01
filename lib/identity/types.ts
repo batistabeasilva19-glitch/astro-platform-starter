@@ -1,7 +1,9 @@
 /** Tipos e constantes do módulo IDENTIDADE VISUAL (independente do módulo de conteúdo). */
+import type { Answers } from './briefing';
 import {
   BookOpenText,
   Check,
+  ClipboardList,
   FileArchive,
   Fingerprint,
   Layers,
@@ -13,6 +15,7 @@ import {
 } from 'lucide-react';
 
 export type StageKey =
+  | 'briefing'
   | 'concept'
   | 'moodboard'
   | 'logo'
@@ -38,19 +41,28 @@ export interface StageMeta {
 }
 
 export const STAGES: StageMeta[] = [
-  { key: 'concept', number: '01', label: 'Conceito', short: 'Conceito', icon: BookOpenText, approvable: true, hint: 'A apresentação textual da marca.' },
-  { key: 'moodboard', number: '02', label: 'Moodboard', short: 'Moodboard', icon: LayoutGrid, approvable: true, hint: 'Referências visuais da direção criativa.' },
-  { key: 'logo', number: '03', label: 'Logo', short: 'Logo', icon: Fingerprint, approvable: true, hint: 'Propostas de logo, favoritos e escolha.' },
-  { key: 'colors', number: '04', label: 'Cores', short: 'Cores', icon: Palette, approvable: true, hint: 'A paleta oficial da marca.' },
-  { key: 'typography', number: '05', label: 'Tipografia', short: 'Tipografia', icon: Type, approvable: true, hint: 'Fontes e hierarquia de texto.' },
-  { key: 'elements', number: '06', label: 'Elementos', short: 'Elementos', icon: Shapes, approvable: true, hint: 'Padrões, ícones e elementos gráficos.' },
-  { key: 'applications', number: '07', label: 'Aplicações', short: 'Aplicações', icon: Layers, approvable: true, hint: 'A identidade aplicada em peças reais.' },
-  { key: 'final', number: '08', label: 'Aprovação final', short: 'Finalização', icon: Check, approvable: true, hint: 'A aprovação de toda a identidade.' },
-  { key: 'files', number: '09', label: 'Arquivos', short: 'Arquivos', icon: FileArchive, approvable: false, hint: 'Entregáveis para download.' },
+  { key: 'briefing', number: '01', label: 'Formulário da marca', short: 'Formulário', icon: ClipboardList, approvable: true, hint: 'Perguntas sobre a marca e fotos de referência.' },
+  { key: 'concept', number: '02', label: 'Conceito', short: 'Conceito', icon: BookOpenText, approvable: true, hint: 'A apresentação textual da marca.' },
+  { key: 'moodboard', number: '03', label: 'Moodboard', short: 'Moodboard', icon: LayoutGrid, approvable: true, hint: 'Referências visuais da direção criativa.' },
+  { key: 'logo', number: '04', label: 'Logo', short: 'Logo', icon: Fingerprint, approvable: true, hint: 'Propostas de logo, favoritos e escolha.' },
+  { key: 'colors', number: '05', label: 'Cores', short: 'Cores', icon: Palette, approvable: true, hint: 'A paleta oficial da marca.' },
+  { key: 'typography', number: '06', label: 'Tipografia', short: 'Tipografia', icon: Type, approvable: true, hint: 'Fontes e hierarquia de texto.' },
+  { key: 'elements', number: '07', label: 'Elementos', short: 'Elementos', icon: Shapes, approvable: true, hint: 'Padrões, ícones e elementos gráficos.' },
+  { key: 'applications', number: '08', label: 'Aplicações', short: 'Aplicações', icon: Layers, approvable: true, hint: 'A identidade aplicada em peças reais.' },
+  { key: 'final', number: '09', label: 'Aprovação final', short: 'Finalização', icon: Check, approvable: true, hint: 'A aprovação de toda a identidade.' },
+  { key: 'files', number: '10', label: 'Arquivos', short: 'Arquivos', icon: FileArchive, approvable: false, hint: 'Entregáveis para download.' },
 ];
 
 export const STAGE_BY_KEY = Object.fromEntries(STAGES.map((s) => [s.key, s])) as Record<StageKey, StageMeta>;
 export const isStageKey = (k: string): k is StageKey => k in STAGE_BY_KEY;
+
+/** O formulário da marca usa palavras próprias para os mesmos status. */
+export const BRIEFING_STATUS_LABEL: Record<StageStatus, { admin: string; client: string }> = {
+  draft: { admin: 'Em criação', client: 'Em preparo' },
+  awaiting: { admin: 'Aguardando respostas', client: 'Preencha o formulário' },
+  changes_requested: { admin: 'Alteração solicitada', client: 'Alteração solicitada' },
+  approved: { admin: 'Respondido', client: 'Respondido ♡' },
+};
 
 export const STAGE_STATUS_META: Record<StageStatus, { label: string; client: string; chip: string; symbol: '✓' | '●' | '○' }> = {
   draft: { label: 'Em criação', client: 'Em preparo', chip: 'bg-ink/5 text-ink/70 border-ink/15', symbol: '○' },
@@ -162,6 +174,8 @@ export type StageContent = {
   message?: string;
   palettes?: Palette[];
   fonts?: FontItem[];
+  /** formulário da marca: respostas por id de pergunta */
+  answers?: Answers;
   /** formato antigo (lista simples) — convertido para Paleta 01 ao abrir */
   colors?: { id: string; name: string; hex: string; role?: string }[];
 } & Partial<Record<ConceptField, string>>;
@@ -370,6 +384,7 @@ export const HEX_RE = /^#[0-9a-fA-F]{6}$/;
 
 /** Etapa → subpasta no Storage (brands/<cliente>/<projeto>/…). */
 export const STAGE_FOLDER: Record<StageKey, string> = {
+  briefing: 'briefing',
   concept: 'concept',
   moodboard: 'moodboard',
   logo: 'logos',
@@ -396,6 +411,7 @@ export interface CommentRowLike {
 
 /** Frases de status por etapa, com a concordância certa (ex.: "Cores aprovadas"). */
 const GENDER: Record<StageKey, { f: boolean; pl: boolean }> = {
+  briefing: { f: false, pl: false },
   concept: { f: false, pl: false },
   moodboard: { f: false, pl: false },
   logo: { f: false, pl: false },
@@ -407,6 +423,7 @@ const GENDER: Record<StageKey, { f: boolean; pl: boolean }> = {
   files: { f: false, pl: true },
 };
 export function stageSentence(key: StageKey, status: StageStatus): string {
+  if (key === 'briefing') return status === 'approved' ? 'Formulário respondido' : status === 'awaiting' ? 'Formulário aguardando respostas' : 'Formulário ainda não enviado';
   const g = GENDER[key];
   const label = STAGE_BY_KEY[key].label;
   const adj = (base: string) => `${base.slice(0, -1)}${g.f ? 'a' : 'o'}${g.pl ? 's' : ''}`; // aprovado → aprovada/aprovados…

@@ -109,7 +109,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
                       <span className="block text-sm">{m.number} · {st.enabled ? (m.approvable ? stageSentence(m.key, st.status) : st.status === 'approved' ? 'Arquivos publicados' : 'Arquivos ainda não publicados') : `${m.label} (desativada)`}</span>
                       <span className="block text-xs text-ink/50">{m.hint}</span>
                     </Link>
-                    {st.enabled && m.approvable && <StageStatusBadge status={st.status} version={st.current_version} className="hidden sm:inline-flex" />}
+                    {st.enabled && m.approvable && <StageStatusBadge status={st.status} version={st.current_version} stageKey={m.key} className="hidden sm:inline-flex" />}
                     <StageSwitch stageId={st.id} enabled={st.enabled} label={m.label} />
                   </li>
                 );

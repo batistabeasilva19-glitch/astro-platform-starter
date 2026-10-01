@@ -51,8 +51,11 @@ export default async function IdentityPortalHome({ params }: { params: Promise<{
           const meta = STAGE_BY_KEY[s.stage_key];
           const Icon = meta.icon;
           const open = s.status !== 'draft';
+          const brief = s.stage_key === 'briefing';
           const state =
-            s.status === 'approved' ? { sym: '✓', text: 'Aprovado', cls: 'text-wine' }
+            brief && s.status === 'approved' ? { sym: '✓', text: 'Respondido', cls: 'text-wine' }
+            : brief && s.status === 'awaiting' ? { sym: '●', text: 'Aguardando suas respostas', cls: 'text-wine' }
+            : s.status === 'approved' ? { sym: '✓', text: 'Aprovado', cls: 'text-wine' }
             : s.status === 'awaiting' ? { sym: '●', text: s.stage_key === 'final' ? 'Pronta para sua aprovação' : 'Aguardando sua opinião', cls: 'text-wine' }
             : s.status === 'changes_requested' ? { sym: '●', text: 'Alteração solicitada', cls: 'text-wine' }
             : { sym: '○', text: nextUp?.id === s.id ? 'Próxima etapa' : 'Em breve', cls: 'text-ink/45' };
