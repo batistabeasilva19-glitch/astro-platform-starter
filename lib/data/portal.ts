@@ -2,6 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { signOne } from '@/lib/storage';
+import { hasPortalSession } from '@/lib/portal-auth';
 import { CLIENT_VISIBLE } from '@/lib/constants';
 import { fetchCards, fetchDetail, fetchFeed } from '@/lib/data/content';
 import type { Client, ContentCardData, ContentDetail, Project } from '@/lib/types';
@@ -18,7 +19,7 @@ export interface PortalSession {
  * Valida o token do link. Retorna null se não existir ou se o link foi revogado.
  * É a ÚNICA porta de entrada do portal do cliente.
  */
-export const resolveToken = cache(async (token: string): Promise<PortalSession | null> => {
+export const resolveTokenGate = cache(async (token: string): Promise<{ session: PortalSession; locked: boolean } | null> => {
   if (!token || token.length < 20 || token.length > 200) return null;
   const db = createAdminClient();
   const { data: project } = await db
@@ -30,13 +31,25 @@ export const resolveToken = cache(async (token: string): Promise<PortalSession |
   if (!project) return null;
   const { data: client } = await db.from('clients').select('*').eq('id', project.client_id).maybeSingle();
   if (!client) return null;
+  const c = client as Client & { portal_login_required?: boolean };
+  // cliente com "exigir login" ligado: só entra com a sessão do login (o link sozinho não basta)
+  const locked = !!c.portal_login_required && !(await hasPortalSession(c.id));
   return {
-    project: project as Project,
-    client: client as Client,
-    avatarUrl: await signOne((client as Client).avatar_path),
-    signerName: (client as Client).contact_name || (client as Client).company_name,
+    session: {
+      project: project as Project,
+      client: c,
+      avatarUrl: await signOne(c.avatar_path),
+      signerName: c.contact_name || c.company_name,
+    },
+    locked,
   };
 });
+
+/** Sessão do portal. Retorna null se o link não existe, foi revogado OU se o login ainda não foi feito. */
+export const resolveToken = async (token: string): Promise<PortalSession | null> => {
+  const r = await resolveTokenGate(token);
+  return r && !r.locked ? r.session : null;
+};
 
 // ─── Dados do portal (sem campos internos) ────────────────────────────────
 
