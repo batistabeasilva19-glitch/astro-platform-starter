@@ -4,7 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/data/clients';
 import { isIsoDate } from '@/lib/perf/validate';
-import { PLAN_FORMATS } from '@/lib/extras/types';
+import { EVENT_KINDS, PLAN_FORMATS } from '@/lib/extras/types';
 import { fail, logActivity, type ActionResult } from './shared';
 
 const MISSING = 'Não foi possível salvar. A migration 0012 foi aplicada no Supabase? (supabase/migrations/0012_portal_roteiros_calendario_stories.sql)';
@@ -243,6 +243,41 @@ export async function sortPlanByDate(planId: string): Promise<ActionResult> {
     return da < db ? -1 : da > db ? 1 : (a.position as number) - (b.position as number);
   });
   await Promise.all(sorted.map((r, i) => supabase.from('client_plan_items').update({ position: i }).eq('id', r.id)));
+  refresh();
+  return { ok: true };
+}
+
+// ─── agenda: gravações e reuniões ────────────────────────────────────
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+export async function saveEvent(input: { id?: string; clientId: string; kind: string; title: string; event_date: string; start_time?: string; end_time?: string; location?: string; link?: string; notes?: string; status?: string; visible?: boolean }): Promise<ActionResult> {
+  const supabase = await ctx();
+  const title = trim(input.title, 200);
+  if (!title) return fail('Dê um título ao compromisso.');
+  if (!EVENT_KINDS.some((k) => k.id === input.kind)) return fail('Escolha o tipo.');
+  if (!isIsoDate(input.event_date)) return fail('Escolha a data.');
+  if (input.start_time && !TIME.test(input.start_time)) return fail('Horário inicial inválido.');
+  if (input.end_time && !TIME.test(input.end_time)) return fail('Horário final inválido.');
+  if (input.start_time && input.end_time && input.end_time < input.start_time) return fail('O horário final precisa ser depois do inicial.');
+  const link = trim(input.link, 500);
+  if (link && !/^https?:\/\/\S+$/i.test(link)) return fail('O link precisa começar com https://');
+  const status = ['scheduled', 'done', 'cancelled'].includes(input.status ?? '') ? input.status : 'scheduled';
+  const row = { client_id: input.clientId, kind: input.kind, title, event_date: input.event_date, start_time: input.start_time || null, end_time: input.end_time || null, location: trim(input.location, 300), link, notes: trim(input.notes, 3000), status, visible: input.visible !== false };
+  const { error } = input.id ? await supabase.from('client_events').update(row).eq('id', input.id).eq('client_id', input.clientId) : await supabase.from('client_events').insert(row);
+  if (error) return fail('Não foi possível salvar. A migration 0015 foi aplicada no Supabase? (supabase/migrations/0015_agenda_cliente.sql)');
+  refresh();
+  return { ok: true };
+}
+export async function deleteEvent(id: string): Promise<ActionResult> {
+  const supabase = await ctx();
+  const { error } = await supabase.from('client_events').delete().eq('id', id);
+  if (error) return fail('Não foi possível excluir.');
+  refresh();
+  return { ok: true };
+}
+export async function setEventVisible(id: string, visible: boolean): Promise<ActionResult> {
+  const supabase = await ctx();
+  const { error } = await supabase.from('client_events').update({ visible }).eq('id', id);
+  if (error) return fail('Não foi possível alterar.');
   refresh();
   return { ok: true };
 }

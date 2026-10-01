@@ -1,7 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { fetchCards } from '@/lib/data/content';
-import type { PlanItemRow, PlanRow, ScriptRow, StoryRow } from '@/lib/extras/types';
+import type { EventRow, PlanItemRow, PlanRow, ScriptRow, StoryRow } from '@/lib/extras/types';
 
 /** Miniaturas (arte já cadastrada) dos conteúdos citados — só para quem foi vinculado de propósito. */
 async function thumbsFor(db: SupabaseClient, clientId: string, ids: (string | null)[]): Promise<Record<string, string>> {
@@ -30,6 +30,10 @@ export async function adminStories(db: SupabaseClient, clientId: string): Promis
   const { data, error } = await db.from('client_story_items').select('*').eq('client_id', clientId).order('story_date', { ascending: false }).order('position');
   return error ? { rows: [], missing: true } : { rows: (data ?? []) as StoryRow[], missing: false };
 }
+export async function adminEvents(db: SupabaseClient, clientId: string): Promise<{ rows: EventRow[]; missing: boolean }> {
+  const { data, error } = await db.from('client_events').select('*').eq('client_id', clientId).order('event_date').order('start_time');
+  return error ? { rows: [], missing: true } : { rows: (data ?? []) as EventRow[], missing: false };
+}
 export async function contentOptions(db: SupabaseClient, clientId: string, format?: string[]) {
   let q = db.from('content_items').select('id, title, format, scheduled_date').eq('client_id', clientId).order('scheduled_date', { ascending: false, nullsFirst: false }).limit(200);
   if (format) q = q.in('format', format);
@@ -55,11 +59,16 @@ export async function portalStories(db: SupabaseClient, clientId: string): Promi
   const rows = (data ?? []) as StoryRow[];
   return { rows, thumbs: await thumbsFor(db, clientId, rows.map((r) => r.content_id)) };
 }
+export async function portalEvents(db: SupabaseClient, clientId: string): Promise<EventRow[]> {
+  const { data, error } = await db.from('client_events').select('*').eq('client_id', clientId).eq('visible', true).order('event_date').order('start_time');
+  return error ? [] : ((data ?? []) as EventRow[]);
+}
 export async function portalCounts(db: SupabaseClient, clientId: string) {
-  const [s, p, st] = await Promise.all([
+  const [s, p, st, ev] = await Promise.all([
     db.from('client_scripts').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('visible', true),
     db.from('client_plans').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('visible', true),
     db.from('client_story_items').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('visible', true),
+    db.from('client_events').select('id', { count: 'exact', head: true }).eq('client_id', clientId).eq('visible', true).neq('status', 'cancelled'),
   ]);
-  return { scripts: s.error ? 0 : (s.count ?? 0), plans: p.error ? 0 : (p.count ?? 0), stories: st.error ? 0 : (st.count ?? 0) };
+  return { scripts: s.error ? 0 : (s.count ?? 0), plans: p.error ? 0 : (p.count ?? 0), stories: st.error ? 0 : (st.count ?? 0), events: ev.error ? 0 : (ev.count ?? 0) };
 }

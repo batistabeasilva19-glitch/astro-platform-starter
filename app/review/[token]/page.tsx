@@ -81,13 +81,13 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
         </section>
       )}
 
-      {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0) && (
+      {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0 || extras.events > 0) && (
         <Link href={`${base}/cronograma`} className="mb-8 flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
           <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15"><CalendarCheck className="size-5" /></span>
           <span className="min-w-0 flex-1">
             <span className="label block text-white/70">Organização</span>
             <span className="h-display text-2xl text-white">Cronograma de entregas</span>
-            <span className="block text-xs text-white/75">{[extras.scripts > 0 && 'roteiro de vídeos', extras.plans > 0 && 'calendário do mês', extras.stories > 0 && 'stories do dia'].filter(Boolean).join(' · ')}</span>
+            <span className="block text-xs text-white/75">{[extras.scripts > 0 && 'roteiro de vídeos', extras.plans > 0 && 'calendário do mês', extras.stories > 0 && 'stories do dia', extras.events > 0 && 'agenda de gravações e reuniões'].filter(Boolean).join(' · ')}</span>
           </span>
           <ArrowRight className="size-5" />
         </Link>
