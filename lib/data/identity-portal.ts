@@ -1,6 +1,7 @@
 import 'server-only';
 import { cache } from 'react';
 import { createAdminClient } from '@/lib/supabase/admin';
+import { hasPortalSession } from '@/lib/portal-auth';
 import { signOne } from '@/lib/storage';
 import { fetchIdentityDetail } from '@/lib/data/identity';
 import type { Client } from '@/lib/types';
@@ -14,20 +15,32 @@ export interface IdentitySession {
 }
 
 /** Porta de entrada do portal de Identidade Visual (/brand/review/<token>): valida o token do link. */
-export const resolveIdentityToken = cache(async (token: string): Promise<IdentitySession | null> => {
+export const resolveIdentityGate = cache(async (token: string): Promise<{ session: IdentitySession; locked: boolean } | null> => {
   if (!token || token.length < 20 || token.length > 200) return null;
   const db = createAdminClient();
   const { data: project } = await db.from('identity_projects').select('*').eq('review_token', token).eq('token_active', true).maybeSingle();
   if (!project) return null;
   const { data: client } = await db.from('clients').select('*').eq('id', project.client_id).maybeSingle();
   if (!client) return null;
+  const c = client as Client & { portal_login_required?: boolean };
+  // "exigir login" ligado no cliente: o link sozinho não basta (mesmo login do portal de conteúdo)
+  const locked = !!c.portal_login_required && !(await hasPortalSession(c.id));
   return {
-    project: project as IdentityProject,
-    client: client as Client,
-    avatarUrl: await signOne((client as Client).avatar_path),
-    signerName: (client as Client).contact_name || (client as Client).company_name,
+    session: {
+      project: project as IdentityProject,
+      client: c,
+      avatarUrl: await signOne(c.avatar_path),
+      signerName: c.contact_name || c.company_name,
+    },
+    locked,
   };
 });
+
+/** Sessão do portal de identidade. Null se o link não existe, foi revogado OU se o login ainda não foi feito. */
+export const resolveIdentityToken = async (token: string): Promise<IdentitySession | null> => {
+  const r = await resolveIdentityGate(token);
+  return r && !r.locked ? r.session : null;
+};
 
 const CLIENT_ACTIONS = ['created', 'sent', 'approved', 'changes_requested', 'new_version', 'comment', 'favorite', 'chosen', 'selection', 'annotation', 'restore', 'download', 'briefing'];
 

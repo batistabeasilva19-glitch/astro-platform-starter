@@ -55,7 +55,7 @@ export function ContentCard({
           {fmtDate(item.scheduled_date, true)}
           {item.scheduled_time ? ` · ${fmtTime(item.scheduled_time)}` : ''}
         </p>
-        <h3 className="h-display line-clamp-2 text-[1.35rem] text-wine">{item.title}</h3>
+        <h3 className="font-sans line-clamp-2 text-[1.1rem] font-medium leading-snug tracking-tight text-wine">{item.title}</h3>
         {clientName && <p className="text-xs text-ink/55">{clientName}</p>}
         <StatusBadge status={item.status} audience={audience} />
       </div>
@@ -87,7 +87,7 @@ export function ContentRow({
           <span>{fmtDate(item.scheduled_date, true)}{item.scheduled_time ? ` · ${fmtTime(item.scheduled_time)}` : ''}</span>
           <span className="inline-flex items-center gap-1 normal-case tracking-normal text-wine"><FormatIcon format={item.format} className="size-3.5" />{FORMAT_META[item.format].label}</span>
         </p>
-        <h3 className="h-display truncate text-xl text-wine">{item.title}</h3>
+        <h3 className="font-sans truncate text-base font-medium tracking-tight text-wine">{item.title}</h3>
         {clientName && <p className="truncate text-xs text-ink/55">{clientName}</p>}
       </div>
       <StatusBadge status={item.status} audience={audience} className="hidden shrink-0 sm:inline-flex" />

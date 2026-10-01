@@ -5,6 +5,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/data/clients';
 import { resolveTokenGate } from '@/lib/data/portal';
+import { resolveIdentityGate } from '@/lib/data/identity-portal';
 import { endPortalSession, hashPassword, startPortalSession, verifyPassword } from '@/lib/portal-auth';
 import { fail, type ActionResult } from './shared';
 
@@ -16,8 +17,12 @@ const MISSING = 'Não foi possível salvar. A migration 0014 foi aplicada no Sup
 
 // ─── Cliente ─────────────────────────────────────────────────────────────
 
-export async function portalLogin(token: string, _prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
-  const gate = await resolveTokenGate(token);
+export type PortalKind = 'portal' | 'brand';
+const gateFor = (kind: PortalKind, token: string) => (kind === 'brand' ? resolveIdentityGate(token) : resolveTokenGate(token));
+const base = (kind: PortalKind, token: string) => (kind === 'brand' ? `/brand/review/${token}` : `/review/${token}`);
+
+export async function portalLogin(kind: PortalKind, token: string, _prev: ActionResult | null, formData: FormData): Promise<ActionResult> {
+  const gate = await gateFor(kind, token);
   if (!gate) return fail('Este link não está mais ativo. Peça um novo link para a Soltria.');
   const email = String(formData.get('email') ?? '').trim().toLowerCase();
   const password = String(formData.get('password') ?? '');
@@ -37,15 +42,15 @@ export async function portalLogin(token: string, _prev: ActionResult | null, for
   }
   await db.from('client_portal_users').update({ failed_attempts: 0, locked_until: null, last_login_at: new Date().toISOString() }).eq('id', user.id);
   await startPortalSession(clientId, user.id as string, user.password_hash as string);
-  revalidatePath(`/review/${token}`, 'layout');
+  revalidatePath(base(kind, token), 'layout');
   return { ok: true };
 }
 
-export async function portalLogout(token: string): Promise<ActionResult> {
-  const gate = await resolveTokenGate(token);
+export async function portalLogout(kind: PortalKind, token: string): Promise<ActionResult> {
+  const gate = await gateFor(kind, token);
   if (!gate) return fail('Link indisponível.');
   await endPortalSession(gate.session.client.id);
-  revalidatePath(`/review/${token}`, 'layout');
+  revalidatePath(base(kind, token), 'layout');
   return { ok: true };
 }
 

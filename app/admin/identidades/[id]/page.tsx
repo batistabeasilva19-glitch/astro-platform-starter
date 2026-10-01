@@ -10,6 +10,7 @@ import { ProjectForm } from '@/components/identity/ProjectForm';
 import { DeleteProjectButton, FinalizeButton, IdentityLink, StageSwitch } from '@/components/identity/ProjectActions';
 import { StageWorkspace } from '@/components/identity/StageWorkspace';
 import { DecisionsPanel } from '@/components/identity/DecisionsPanel';
+import { PortalAccess } from '@/components/admin/PortalAccess';
 import { QuickLinks } from '@/components/identity/QuickLinks';
 import { StageTabs } from '@/components/identity/StageTabs';
 import { HistoryList } from '@/components/content/Thread';
@@ -37,6 +38,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
   const [client, clients] = await Promise.all([getClient(project.client_id), needsClients ? listClients() : Promise.resolve([])]);
   if (!client) notFound();
 
+  const { data: portalUsers } = needsClients ? await supabase.from('client_portal_users').select('id, email, last_login_at').eq('client_id', client.id).order('created_at') : { data: [] };
   const base = `/admin/identidades/${id}`;
   const url = `${await getSiteUrl()}/brand/review/${project.review_token}`;
   const activeStage = isStageKey(etapa) ? stages.find((s) => s.stage_key === etapa) : undefined;
@@ -96,6 +98,8 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
             <ProgressBar stages={stages} />
             <IdentityLink projectId={id} clientId={client.id} url={url} active={project.token_active} />
           </section>
+
+          <PortalAccess clientId={client.id} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
 
           <section className="card p-5 sm:p-7">
             <h2 className="h-display mb-1 text-2xl text-wine">Etapas</h2>
