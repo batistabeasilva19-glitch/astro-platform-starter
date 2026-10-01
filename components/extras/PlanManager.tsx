@@ -1,8 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
-import { createPlan, deletePlan, deletePlanItem, movePlanItem, resetPlanItem, savePlanItem, sendPlan, unsendPlan, updatePlan } from '@/lib/actions/extras';
+import { ArrowDownUp, Pencil, Plus, RotateCcw, Send, Trash2, Undo2 } from 'lucide-react';
+import { createPlan, deletePlan, deletePlanItem, movePlanItem, resetPlanItem, savePlanItem, sendPlan, sortPlanByDate, unsendPlan, updatePlan } from '@/lib/actions/extras';
 import { Button } from '@/components/ui/Button';
 import { Field, FormMessage, Input, Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
@@ -28,62 +28,58 @@ export function PlanManager({ clientId, plans, thumbs, contents }: { clientId: s
         {plans.filter((p) => monthKey(p.month) !== month).slice(0, 5).map((p) => <button key={p.id} onClick={() => setMonth(monthKey(p.month))} className="rounded-full border border-wine/25 px-3 py-1.5 text-xs text-wine hover:bg-blush">{monthTitle(p.month)}</button>)}
       </div>
 
-      {!plan ? (
-        <div className="card border-dashed px-6 py-12 text-center">
-          <p className="h-display text-2xl text-wine">Calendário de {monthTitle(`${month}-01`)}</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-ink/60">Monte o mês inteiro em ordem (posts, carrosséis e Reels) e envie de uma vez para o cliente aprovar.</p>
-          <Button className="mt-5" loading={pending} onClick={() => act(() => createPlan(clientId, month), 'Calendário criado ♡')}><Plus className="size-4" /> Criar calendário do mês</Button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="text-sm text-ink/60">Coloque os posts, carrosséis e Reels <strong className="font-normal text-wine">na ordem de entrega</strong>. Quando estiver pronto, envie o mês para o cliente aprovar.</p>
+        <div className="flex flex-wrap gap-2">
+          {plan && plan.items.length > 1 && <Button variant="outline" loading={pending} onClick={() => act(() => sortPlanByDate(plan.id), 'Ordenado por data ♡')}><ArrowDownUp className="size-4" /> Ordenar por data</Button>}
+          <Button onClick={() => setEdit('new')}><Plus className="size-4" /> Novo item</Button>
         </div>
-      ) : (
-        <>
-          <section className="card space-y-4 p-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <h2 className="h-display text-2xl text-wine">{monthTitle(plan.month)}</h2>
-              <Chip className={plan.status === 'approved' ? 'bg-wine text-white' : plan.status === 'changes_requested' ? 'bg-red-100 text-red-700' : 'bg-blush text-wine'}>{PLAN_STATUS_LABEL[plan.status].admin}</Chip>
-              {plan.visible && <span className="text-xs text-ink/50">{decided}/{plan.items.length} decididos pelo cliente</span>}
-              {plan.status === 'approved' && plan.approved_by && <span className="text-xs text-ink/50">por {plan.approved_by}</span>}
-            </div>
-            <PlanNote plan={plan} />
-            <div className="flex flex-wrap gap-2">
-              <Button loading={pending} onClick={() => act(() => sendPlan(plan.id), plan.visible ? 'Atualizado para o cliente ♡' : 'Enviado para aprovação ♡')}><Send className="size-4" /> {plan.visible ? 'Atualizar envio' : 'Enviar para aprovação'}</Button>
-              {plan.visible && <Button variant="outline" loading={pending} onClick={() => confirm('Voltar para rascunho? O cliente deixa de ver este calendário.') && act(() => unsendPlan(plan.id), 'Voltou para rascunho')}><Undo2 className="size-4" /> Tirar do ar</Button>}
-              <Button variant="danger" onClick={() => confirm('Excluir este calendário e todos os itens?') && act(() => deletePlan(plan.id), 'Calendário excluído')}><Trash2 className="size-4" /> Excluir</Button>
-            </div>
-            {!plan.visible && <p className="text-xs text-ink/50">Enquanto não enviar, o cliente não vê nada deste calendário.</p>}
-          </section>
+      </div>
 
-          <div className="flex items-center justify-between">
-            <h3 className="h-display text-2xl text-wine">Itens em ordem</h3>
-            <Button onClick={() => setEdit('new')}><Plus className="size-4" /> Adicionar item</Button>
+      {plan && (
+        <section className="card space-y-4 p-5">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="h-display text-2xl text-wine">{monthTitle(plan.month)}</h2>
+            <Chip className={plan.status === 'approved' ? 'bg-wine text-white' : plan.status === 'changes_requested' ? 'bg-red-100 text-red-700' : 'bg-blush text-wine'}>{PLAN_STATUS_LABEL[plan.status].admin}</Chip>
+            {plan.visible && <span className="text-xs text-ink/50">{decided}/{plan.items.length} decididos pelo cliente</span>}
+            {plan.status === 'approved' && plan.approved_by && <span className="text-xs text-ink/50">por {plan.approved_by}</span>}
           </div>
-          {plan.items.length === 0 ? (
-            <p className="card border-dashed px-6 py-10 text-center text-sm text-ink/60">Nenhum item ainda. Adicione posts, carrosséis e Reels na ordem do mês.</p>
-          ) : (
-            <ul className="space-y-3">
-              {plan.items.map((it, i) => (
-                <li key={it.id} className="card flex gap-3 p-4">
-                  <OrderControls n={i + 1} first={i === 0} last={i === plan.items.length - 1} disabled={pending} onUp={() => act(() => movePlanItem(it.id, -1))} onDown={() => act(() => movePlanItem(it.id, 1))} />
-                  {it.content_id && thumbs[it.content_id] && (
-                    <img src={thumbs[it.content_id]} alt="" loading="lazy" className="size-16 shrink-0 rounded-xl object-cover" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex flex-wrap items-center gap-2"><Chip className="bg-wine text-white">{FORMAT_LABEL[it.format]}</Chip>{it.publish_date && <span className="text-xs text-ink/55">{shortDate(it.publish_date)}</span>}{plan.visible && <Chip className={ITEM_CHIP[it.client_status]}>{ITEM_STATUS_LABEL[it.client_status]}</Chip>}</div>
-                    <p className="mt-1 text-base text-ink">{it.title}</p>
-                    {it.description && <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-ink/60">{it.description}</p>}
-                    {it.client_note && <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">“{it.client_note}”</p>}
-                  </div>
-                  <div className="flex shrink-0 flex-col gap-0.5">
-                    <button aria-label="Editar" onClick={() => setEdit(it)} className="rounded-full p-2 text-wine hover:bg-blush"><Pencil className="size-4" /></button>
-                    {it.client_status !== 'pending' && <button aria-label="Voltar para aguardando" title="Voltar para aguardando" onClick={() => act(() => resetPlanItem(it.id), 'Voltou para aguardando')} className="rounded-full p-2 text-wine hover:bg-blush"><RotateCcw className="size-4" /></button>}
-                    <button aria-label="Excluir" onClick={() => confirm(`Excluir “${it.title}”?`) && act(() => deletePlanItem(it.id), 'Item excluído')} className="rounded-full p-2 text-wine hover:bg-blush"><Trash2 className="size-4" /></button>
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
-          {edit && <ItemForm key={edit === 'new' ? 'new' : edit.id} plan={plan} item={edit === 'new' ? null : edit} contents={contents} onClose={() => setEdit(null)} />}
-        </>
+          <PlanNote plan={plan} />
+          <div className="flex flex-wrap gap-2">
+            <Button loading={pending} onClick={() => act(() => sendPlan(plan.id), plan.visible ? 'Atualizado para o cliente ♡' : 'Enviado para aprovação ♡')}><Send className="size-4" /> {plan.visible ? 'Atualizar envio' : 'Enviar para aprovação'}</Button>
+            {plan.visible && <Button variant="outline" loading={pending} onClick={() => confirm('Voltar para rascunho? O cliente deixa de ver este calendário.') && act(() => unsendPlan(plan.id), 'Voltou para rascunho')}><Undo2 className="size-4" /> Tirar do ar</Button>}
+            <Button variant="danger" onClick={() => confirm('Excluir este calendário e todos os itens?') && act(() => deletePlan(plan.id), 'Calendário excluído')}><Trash2 className="size-4" /> Excluir</Button>
+          </div>
+          {!plan.visible && <p className="text-xs text-ink/50">Enquanto não enviar, o cliente não vê nada deste calendário.</p>}
+        </section>
       )}
+
+      {!plan || plan.items.length === 0 ? (
+        <p className="card border-dashed px-6 py-12 text-center text-sm text-ink/60">Nenhum item em {monthTitle(`${month}-01`)}. Clique em “Novo item” para começar.</p>
+      ) : (
+        <ul className="space-y-3">
+          {plan.items.map((it, i) => (
+            <li key={it.id} className="card flex gap-3 p-4">
+              <OrderControls n={i + 1} first={i === 0} last={i === plan.items.length - 1} disabled={pending} onUp={() => act(() => movePlanItem(it.id, -1))} onDown={() => act(() => movePlanItem(it.id, 1))} />
+              {it.content_id && thumbs[it.content_id] && (
+                <img src={thumbs[it.content_id]} alt="" loading="lazy" className="size-16 shrink-0 rounded-xl object-cover" />
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2"><Chip className="bg-wine text-white">{FORMAT_LABEL[it.format]}</Chip>{it.publish_date && <span className="text-xs text-ink/55">{shortDate(it.publish_date)}</span>}{plan.visible && <Chip className={ITEM_CHIP[it.client_status]}>{ITEM_STATUS_LABEL[it.client_status]}</Chip>}</div>
+                <p className="mt-1 text-base text-ink">{it.title}</p>
+                {it.description && <p className="mt-1 line-clamp-2 whitespace-pre-line text-sm text-ink/60">{it.description}</p>}
+                {it.client_note && <p className="mt-2 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-800">“{it.client_note}”</p>}
+              </div>
+              <div className="flex shrink-0 flex-col gap-0.5">
+                <button aria-label="Editar" onClick={() => setEdit(it)} className="rounded-full p-2 text-wine hover:bg-blush"><Pencil className="size-4" /></button>
+                {it.client_status !== 'pending' && <button aria-label="Voltar para aguardando" title="Voltar para aguardando" onClick={() => act(() => resetPlanItem(it.id), 'Voltou para aguardando')} className="rounded-full p-2 text-wine hover:bg-blush"><RotateCcw className="size-4" /></button>}
+                <button aria-label="Excluir" onClick={() => confirm(`Excluir “${it.title}”?`) && act(() => deletePlanItem(it.id), 'Item excluído')} className="rounded-full p-2 text-wine hover:bg-blush"><Trash2 className="size-4" /></button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+      {edit && <ItemForm key={edit === 'new' ? 'new' : edit.id} clientId={clientId} month={month} plan={plan ?? null} item={edit === 'new' ? null : edit} contents={contents} onClose={() => setEdit(null)} />}
     </div>
   );
 }
@@ -98,7 +94,7 @@ function PlanNote({ plan }: { plan: Plan }) {
   );
 }
 
-function ItemForm({ plan, item, contents, onClose }: { plan: Plan; item: PlanItemRow | null; contents: ContentOpt[]; onClose: () => void }) {
+function ItemForm({ clientId, month, plan, item, contents, onClose }: { clientId: string; month: string; plan: Plan | null; item: PlanItemRow | null; contents: ContentOpt[]; onClose: () => void }) {
   const [f, setF] = useState({ format: item?.format ?? 'post', title: item?.title ?? '', publish_date: item?.publish_date ?? '', description: item?.description ?? '', content_id: item?.content_id ?? '' });
   const [error, setError] = useState<string | null>(null);
   const { act, pending } = useAct();
@@ -115,10 +111,21 @@ function ItemForm({ plan, item, contents, onClose }: { plan: Plan; item: PlanIte
         <Field label="Mostrar a arte de um conteúdo já cadastrado (opcional)" hint="O cliente vê a miniatura da arte junto com o item.">
           <Select value={f.content_id} onChange={(e) => setF({ ...f, content_id: e.target.value })}><option value="">Sem arte</option>{options.map((c) => <option key={c.id} value={c.id}>{c.title}{c.date ? ` · ${shortDate(c.date)}` : ''}</option>)}</Select>
         </Field>
-        {item && item.client_status !== 'pending' && plan.visible && <p className="rounded-2xl bg-blush px-4 py-3 text-xs text-wine">Se você mudar o conteúdo deste item, ele volta para “Aguardando” e o cliente decide de novo.</p>}
+        {item && item.client_status !== 'pending' && plan?.visible && <p className="rounded-2xl bg-blush px-4 py-3 text-xs text-wine">Se você mudar o conteúdo deste item, ele volta para “Aguardando” e o cliente decide de novo.</p>}
         <FormMessage error={error} />
         <div className="flex justify-end gap-2"><Button variant="ghost" onClick={onClose}>Cancelar</Button>
-          <Button loading={pending} disabled={!f.title.trim()} onClick={() => act(async () => { const r = await savePlanItem({ id: item?.id, planId: plan.id, ...f, content_id: f.content_id || null }); if (!r.ok) setError(r.error); return r; }, 'Item salvo ♡', onClose)}>Salvar item</Button>
+          <Button loading={pending} disabled={!f.title.trim()} onClick={() => act(async () => {
+            // o calendário do mês é criado sozinho no primeiro item
+            let planId = plan?.id;
+            if (!planId) {
+              const c = await createPlan(clientId, month);
+              if (!c.ok) { setError(c.error); return c; }
+              planId = c.id;
+            }
+            const r = await savePlanItem({ id: item?.id, planId, ...f, content_id: f.content_id || null });
+            if (!r.ok) setError(r.error);
+            return r;
+          }, 'Item salvo ♡', onClose)}>Salvar item</Button>
         </div>
       </div>
     </Modal>

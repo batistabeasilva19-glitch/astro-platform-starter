@@ -37,9 +37,9 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 - **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
 - **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
 
-## Roteiros, Calendário do mês e Stories (no link do cliente)
+## Cronograma de entregas: Roteiro de vídeos, Calendário do mês e Stories (no link do cliente)
 
-Em cada cliente (`/admin/clients/<id>/roteiros`, `/mes`, `/stories`) e, no link `/review/<token>`, três cartões que só aparecem quando há conteúdo liberado:
+Em cada cliente (`/admin/clients/<id>/cronograma`, com as abas Roteiro de vídeos · Calendário do mês · Stories) e, no link `/review/<token>`, um cartão **Cronograma de entregas** que reúne as três partes liberadas:
 
 - **Roteiros:** você lista os vídeos a gravar **em ordem** (por mês) e escreve o roteiro. O cliente vê numerado (1, 2, 3…) e toca em **Copiar roteiro** / **Copiar com título** / **Copiar todos** (funciona no celular).
 - **Calendário do mês (aprovação):** você monta o mês em ordem (posts, carrosséis, Reels…) e **envia**. O cliente aprova item por item, **aprova o calendário completo** ou pede alteração com comentário. Editar um item já decidido o devolve para “Aguardando”. Você acompanha o status e os pedidos.

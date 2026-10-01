@@ -227,3 +227,17 @@ export async function resetStory(id: string): Promise<ActionResult> {
   refresh();
   return { ok: true };
 }
+
+/** Reordena os itens do calendário pela data de publicação (sem data fica no fim; empates mantêm a ordem atual). */
+export async function sortPlanByDate(planId: string): Promise<ActionResult> {
+  const supabase = await ctx();
+  const { data } = await supabase.from('client_plan_items').select('id, position, publish_date').eq('plan_id', planId).order('position');
+  const sorted = [...(data ?? [])].sort((a, b) => {
+    const da = (a.publish_date as string | null) ?? '9999-12-31';
+    const db = (b.publish_date as string | null) ?? '9999-12-31';
+    return da < db ? -1 : da > db ? 1 : (a.position as number) - (b.position as number);
+  });
+  await Promise.all(sorted.map((r, i) => supabase.from('client_plan_items').update({ position: i }).eq('id', r.id)));
+  refresh();
+  return { ok: true };
+}

@@ -16,7 +16,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
   const { rows, thumbs } = await portalStories(createAdminClient(), session.client.id);
   return (
     <div>
-      <Link href={`/review/${token}`} className="mb-6 inline-flex items-center gap-2 text-sm text-wine transition hover:gap-3"><ArrowLeft className="size-4" /> Voltar</Link>
+      <Link href={`/review/${token}/cronograma`} className="mb-6 inline-flex items-center gap-2 text-sm text-wine transition hover:gap-3"><ArrowLeft className="size-4" /> Cronograma de entregas</Link>
       <header className="mb-8">
         <p className="label mb-3 text-wine/70">Publicações</p>
         <h1 className="h-display text-5xl text-wine sm:text-6xl">Stories</h1>
