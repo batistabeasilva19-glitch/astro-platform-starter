@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import type { ContentCardData } from '@/lib/types';
+import { LightImage } from '@/components/content/LightImage';
 import { FormatIcon } from '@/components/content/Badges';
 import { STATUS_META } from '@/lib/constants';
 import { cn, toDateKey } from '@/lib/utils';
@@ -12,7 +13,7 @@ const WEEK = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sáb'];
 
 function Thumb({ item, className }: { item: ContentCardData; className?: string }) {
   return item.thumb ? (
-    <img src={item.thumb} alt="" loading="lazy" className={cn('shrink-0 bg-blush object-cover', className)} />
+    <LightImage src={item.thumb} alt="" width={240} className={cn('shrink-0 bg-blush object-cover', className)} />
   ) : (
     <span className={cn('flex shrink-0 items-center justify-center bg-blush text-wine', className)}>
       <FormatIcon format={item.format} className="size-1/2" />

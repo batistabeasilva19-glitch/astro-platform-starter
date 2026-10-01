@@ -4,12 +4,13 @@ import type { ContentCardData } from '@/lib/types';
 import { FORMAT_META } from '@/lib/constants';
 import { fmtDate, fmtTime } from '@/lib/utils';
 import { FormatIcon, StatusBadge } from './Badges';
+import { LightImage } from './LightImage';
 
 export function Thumb({ item, className = '' }: { item: ContentCardData; className?: string }) {
   return (
     <div className={`relative aspect-[4/5] overflow-hidden bg-blush ${className}`}>
       {item.thumb ? (
-        <img src={item.thumb} alt="" className="size-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]" loading="lazy" />
+        <LightImage src={item.thumb} alt="" width={540} className="size-full object-cover transition duration-500 ease-out group-hover:scale-[1.03]" />
       ) : (
         <div className="flex size-full flex-col items-center justify-center gap-2 text-wine/40">
           <ImageOff className="size-6" />
@@ -80,7 +81,7 @@ export function ContentRow({
   return (
     <Link href={href} className="group card card-hover flex items-center gap-4 p-3 pr-5 focus-visible:outline-2 focus-visible:outline-wine">
       <div className="size-16 shrink-0 overflow-hidden rounded-2xl bg-blush sm:size-20">
-        {item.thumb ? <img src={item.thumb} alt="" className="size-full object-cover" loading="lazy" /> : <div className="flex size-full items-center justify-center"><ImageOff className="size-5 text-wine/40" /></div>}
+        {item.thumb ? <LightImage src={item.thumb} alt="" width={360} className="size-full object-cover" /> : <div className="flex size-full items-center justify-center"><ImageOff className="size-5 text-wine/40" /></div>}
       </div>
       <div className="min-w-0 flex-1">
         <p className="label mb-1 flex flex-wrap items-center gap-x-3 text-ink/55">
