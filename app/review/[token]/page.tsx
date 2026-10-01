@@ -78,14 +78,14 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
       )}
 
       {strategyCount > 0 && (
-        <Link href={`${base}/estrategia`} className="card card-hover mb-8 flex items-center gap-4 p-5">
-          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-blush text-wine"><FileText className="size-5" /></span>
+        <Link href={`${base}/estrategia`} className="mb-8 flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white"><FileText className="size-5" /></span>
           <span className="min-w-0 flex-1">
-            <span className="label block text-wine/60">Documentos</span>
-            <span className="h-display text-2xl text-wine">Estratégia de rede</span>
-            <span className="block text-xs text-ink/55">{strategyCount} {strategyCount === 1 ? 'documento' : 'documentos'}, organizados por mês</span>
+            <span className="label block text-white/70">Documentos</span>
+            <span className="h-display text-2xl text-white">Estratégia de rede</span>
+            <span className="block text-xs text-white/75">{strategyCount} {strategyCount === 1 ? 'documento' : 'documentos'}, organizados por mês</span>
           </span>
-          <ArrowRight className="size-5 text-wine" />
+          <ArrowRight className="size-5 text-white" />
         </Link>
       )}
 
