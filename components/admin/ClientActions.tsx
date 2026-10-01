@@ -9,14 +9,22 @@ import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 
-export function SendAllButton({ clientId, drafts }: { clientId: string; drafts: number }) {
+export function SendAllButton({ clientId, drafts, awaiting = 0, changes = 0 }: { clientId: string; drafts: number; awaiting?: number; changes?: number }) {
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
   const toast = useToast();
   const router = useRouter();
   return (
     <>
-      <Button variant="outline" onClick={() => setOpen(true)} disabled={!drafts}>
+      <Button
+        variant="outline"
+        onClick={() => {
+          if (drafts) return setOpen(true);
+          const parts = [awaiting ? `${awaiting} já ${awaiting === 1 ? 'está aguardando' : 'estão aguardando'} aprovação do cliente` : '', changes ? `${changes} ${changes === 1 ? 'tem alteração solicitada (suba uma nova versão e envie pelo próprio conteúdo)' : 'têm alteração solicitada (suba uma nova versão e envie pelo próprio conteúdo)'}` : ''].filter(Boolean);
+          toast(`Não há rascunhos para enviar${parts.length ? `: ${parts.join('; ')}` : ''}. Crie um conteúdo novo ou volte um conteúdo para “Rascunho”.`, 'error');
+        }}
+        className={drafts ? '' : 'opacity-70'}
+      >
         <Send className="size-4" /> Enviar para aprovação{drafts ? ` (${drafts})` : ''}
       </Button>
       <Modal open={open} onClose={() => setOpen(false)} title="Enviar para aprovação?">

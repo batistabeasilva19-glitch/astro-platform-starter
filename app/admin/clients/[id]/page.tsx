@@ -14,7 +14,7 @@ import { ProfileFeed } from '@/components/feed/ProfileFeed';
 import { LinkActions } from '@/components/admin/LinkActions';
 import { SendAllButton } from '@/components/admin/ClientActions';
 import { Avatar, EmptyState } from '@/components/ui/Misc';
-import { LinkButton } from '@/components/ui/Button';
+import { LinkButton, buttonClass } from '@/components/ui/Button';
 import { ViewTabs, parseView } from '@/components/ui/ViewTabs';
 
 export default async function ClientWorkspacePage({
@@ -79,19 +79,19 @@ export default async function ClientWorkspacePage({
         <div className="card p-5">
           <p className="label mb-2 text-wine/70">Conteúdo</p>
           <p className="mb-3 text-sm text-ink/65">Posts, carrosséis, Reels, Stories, calendário e feed.</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-            <Link href={`/admin/clients/${id}`} className="text-wine underline-offset-4 hover:underline">Ver conteúdos →</Link>
-            <Link href={`/admin/clients/${id}/estrategia`} className="text-wine underline-offset-4 hover:underline">Estratégia de rede →</Link>
-            <Link href={`/admin/clients/${id}/desempenho`} className="text-wine underline-offset-4 hover:underline">Desempenho →</Link>
-            <Link href={`/admin/clients/${id}/relatorios`} className="text-wine underline-offset-4 hover:underline">Relatórios →</Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/admin/clients/${id}`} className={buttonClass('primary', 'sm')}>Ver conteúdos →</Link>
+            <Link href={`/admin/clients/${id}/estrategia`} className={buttonClass('primary', 'sm')}>Estratégia de rede →</Link>
+            <Link href={`/admin/clients/${id}/desempenho`} className={buttonClass('primary', 'sm')}>Desempenho →</Link>
+            <Link href={`/admin/clients/${id}/relatorios`} className={buttonClass('primary', 'sm')}>Relatórios →</Link>
           </div>
         </div>
         <div className="card p-5">
           <p className="label mb-2 text-wine/70">Identidade Visual</p>
           <p className="mb-3 text-sm text-ink/65">{identityCount ? `${identityCount} ${identityCount === 1 ? 'projeto' : 'projetos'} de branding.` : 'Nenhum projeto de branding ainda.'}</p>
-          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-            <Link href={`/admin/identidades?cliente=${id}`} className="text-wine underline-offset-4 hover:underline">Ver projetos →</Link>
-            <Link href={`/admin/identidades/new?client=${id}`} className="text-wine underline-offset-4 hover:underline">+ Nova identidade →</Link>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/admin/identidades?cliente=${id}`} className={buttonClass('primary', 'sm')}>Ver projetos →</Link>
+            <Link href={`/admin/identidades/new?client=${id}`} className={buttonClass('primary', 'sm')}>+ Nova identidade →</Link>
           </div>
         </div>
       </div>
@@ -103,7 +103,7 @@ export default async function ClientWorkspacePage({
       <div className="mb-6 mt-8 flex flex-wrap items-center justify-between gap-3">
         <ViewTabs basePath={`/admin/clients/${id}`} current={view} />
         <div className="flex flex-wrap gap-2">
-          <SendAllButton clientId={id} drafts={drafts} />
+          <SendAllButton clientId={id} drafts={drafts} awaiting={c((s) => AWAITING.includes(s as never))} changes={c((s) => s === 'changes_requested')} />
           <LinkButton href={`/admin/clients/${id}/estrategia`} variant="outline">
             <FileText className="size-4" /> Estratégia de rede
           </LinkButton>
