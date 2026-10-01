@@ -2,7 +2,7 @@
 
 import { useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, ExternalLink, FileText, Loader2, Pencil, Trash2, UploadCloud } from 'lucide-react';
+import { Eye, EyeOff, ExternalLink, FileText, Loader2, Pencil, Save, Trash2, UploadCloud, X } from 'lucide-react';
 import { deleteStrategyDoc, registerStrategyDoc, updateStrategyDoc } from '@/lib/actions/strategy';
 import { currentMonth, fmtSize, groupByMonth, monthLabel, monthKey, type StrategyDoc } from '@/lib/strategy';
 import { uploadToStorage } from '@/lib/upload';
@@ -24,18 +24,25 @@ export function StrategyManager({ ownerId, clientId, docs }: { ownerId: string; 
   const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('todos');
   const [edit, setEdit] = useState<Doc | null>(null);
+  const [staged, setStaged] = useState<File[]>([]);
   const fileRef = useRef<HTMLInputElement>(null);
   const [pending, start] = useTransition();
   const toast = useToast();
   const router = useRouter();
 
-  async function upload(files: File[]) {
+  function stage(files: File[]) {
     if (!files.length) return;
     setError(null);
     for (const f of files) {
       if (f.type !== 'application/pdf' && !/\.pdf$/i.test(f.name)) return setError(`“${f.name}” não é um PDF.`);
       if (f.size > MAX_MB * 1024 * 1024) return setError(`“${f.name}” tem mais de ${MAX_MB} MB.`);
     }
+    setStaged((cur) => [...cur, ...files]);
+  }
+
+  async function save() {
+    const files = staged;
+    if (!files.length) return setError('Escolha pelo menos um PDF antes de salvar.');
     setBusy(true);
     try {
       for (const f of files) {
@@ -46,6 +53,7 @@ export function StrategyManager({ ownerId, clientId, docs }: { ownerId: string; 
       toast(files.length > 1 ? `${files.length} PDFs enviados ♡` : 'PDF enviado ♡');
       setTitle('');
       setDescription('');
+      setStaged([]);
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Falha no envio.');
@@ -93,15 +101,32 @@ export function StrategyManager({ ownerId, clientId, docs }: { ownerId: string; 
           onDragOver={(e) => e.preventDefault()}
           onDrop={(e) => {
             e.preventDefault();
-            upload([...e.dataTransfer.files]);
+            stage([...e.dataTransfer.files]);
           }}
           className="mt-4 flex w-full flex-col items-center justify-center gap-2 rounded-3xl border-2 border-dashed border-wine/30 px-6 py-9 text-center text-wine transition hover:border-wine hover:bg-blush disabled:opacity-60"
         >
           {busy ? <Loader2 className="size-6 animate-spin" /> : <UploadCloud className="size-6" />}
           <span className="text-sm">{busy ? 'Enviando…' : `Clique ou arraste os PDFs de ${monthLabel(month)}`}</span>
-          <span className="text-xs text-ink/50">Somente PDF · até {MAX_MB} MB cada</span>
+          <span className="text-xs text-ink/50">Somente PDF · depois clique em Salvar · até {MAX_MB} MB cada</span>
         </button>
-        <input ref={fileRef} type="file" accept="application/pdf,.pdf" multiple hidden onChange={(e) => { upload([...(e.target.files ?? [])]); e.target.value = ''; }} />
+        {staged.length > 0 && (
+          <ul className="mt-4 space-y-2">
+            {staged.map((f, i) => (
+              <li key={`${f.name}-${i}`} className="flex items-center gap-3 rounded-2xl bg-blush px-4 py-2.5 text-sm text-wine">
+                <FileText className="size-4 shrink-0" />
+                <span className="min-w-0 flex-1 truncate">{f.name}</span>
+                <span className="text-xs text-ink/50">{fmtSize(f.size)}</span>
+                <button type="button" disabled={busy} aria-label="Remover da lista" onClick={() => setStaged((c) => c.filter((_, j) => j !== i))} className="rounded-full p-1 hover:bg-white"><X className="size-4" /></button>
+              </li>
+            ))}
+          </ul>
+        )}
+        <div className="mt-5 flex justify-end">
+          <Button type="button" loading={busy} disabled={!staged.length || !month} onClick={save}>
+            <Save className="size-4" /> Salvar{staged.length > 1 ? ` ${staged.length} PDFs` : ''}
+          </Button>
+        </div>
+        <input ref={fileRef} type="file" accept="application/pdf,.pdf" multiple hidden onChange={(e) => { stage([...(e.target.files ?? [])]); e.target.value = ''; }} />
       </section>
 
       {/* lista por mês */}

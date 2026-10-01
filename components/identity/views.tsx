@@ -2,6 +2,7 @@
 
 import type { VersionData } from '@/lib/identity/types';
 import { ConceptView, FilesView, FinalMessage, GalleryView, IdentitySummary, MoodboardView } from './views/BasicViews';
+import { BriefingView } from './views/BriefingView';
 import { ColorsView } from './views/ColorsView';
 import { LogoView } from './views/LogoView';
 import { TypographyView } from './views/TypographyView';
@@ -13,6 +14,8 @@ export { IdentitySummary, FinalMessage };
 export function StageView({ ctx, version }: { ctx: ViewCtx; version: VersionData }) {
   const { stage } = ctx;
   switch (stage.stage_key) {
+    case 'briefing':
+      return <BriefingView ctx={ctx} version={version} />;
     case 'concept':
       return <ConceptView ctx={ctx} content={version.content} images={version.assets} />;
     case 'moodboard':

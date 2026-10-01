@@ -1,9 +1,9 @@
-import { STAGE_BY_KEY, STAGE_STATUS_META, IDENTITY_STATUS_META, countableStages, progressOf, type IdentityStatus, type StageKey, type StageStatus } from '@/lib/identity/types';
+import { BRIEFING_STATUS_LABEL, STAGE_BY_KEY, STAGE_STATUS_META, IDENTITY_STATUS_META, countableStages, progressOf, type IdentityStatus, type StageKey, type StageStatus } from '@/lib/identity/types';
 import { cn } from '@/lib/utils';
 
-export function StageStatusBadge({ status, audience = 'admin', version, className }: { status: StageStatus; audience?: 'admin' | 'client'; version?: number; className?: string }) {
+export function StageStatusBadge({ status, audience = 'admin', version, className, stageKey }: { status: StageStatus; audience?: 'admin' | 'client'; version?: number; className?: string; stageKey?: StageKey }) {
   const m = STAGE_STATUS_META[status];
-  const label = status === 'awaiting' && (version ?? 1) > 1 ? (audience === 'client' ? 'Nova versão para revisar' : 'Alterado — aguardando nova aprovação') : audience === 'client' ? m.client : m.label;
+  const label = stageKey === 'briefing' ? BRIEFING_STATUS_LABEL[status][audience] : status === 'awaiting' && (version ?? 1) > 1 ? (audience === 'client' ? 'Nova versão para revisar' : 'Alterado — aguardando nova aprovação') : audience === 'client' ? m.client : m.label;
   return (
     <span className={cn('inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[0.7rem] leading-tight', m.chip, className)}>
       <span className="font-normal">{m.symbol}</span>

@@ -43,12 +43,14 @@ import {
   type VersionData,
 } from '@/lib/identity/types';
 import { uploadToStorage, validateFile } from '@/lib/upload';
-import { Button } from '@/components/ui/Button';
+import { Button, buttonClass } from '@/components/ui/Button';
 import { Field, Input, Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtFullDate } from '@/lib/utils';
 import { VersionCompare } from './views/VersionCompare';
+import { QuestionField } from './briefing/QuestionField';
+import { BRIEFING_SECTIONS, answeredCount, type Answers, type Question } from '@/lib/identity/briefing';
 
 export interface EditorCtx {
   ownerId: string;
@@ -109,7 +111,51 @@ function SaveBar({ dirty, saving, onSave }: { dirty: boolean; saving: boolean; o
 
 const folderOf = (ctx: EditorCtx, stage: StageData) => `${ctx.ownerId}/${ctx.clientId}/brands/${ctx.projectId}/${STAGE_FOLDER[stage.stage_key]}`;
 
-// ─── 01 Conceito ───────────────────────────────────────────────────────────
+// ─── 01 Formulário da marca ────────────────────────────────────────────────
+export function BriefingEditor({ stage, version, ctx, editable }: EditorProps) {
+  const s = useContentState(stage, version);
+  const answers = (s.content.answers ?? {}) as Answers;
+  const set = (id: string, v: string | string[]) => s.set({ answers: { ...answers, [id]: v } });
+  const toggle = (q: Question, opt: string) => {
+    const cur = (answers[q.id] as string[] | undefined) ?? [];
+    set(q.id, cur.includes(opt) ? cur.filter((x) => x !== opt) : [...cur, opt]);
+  };
+  const prog = answeredCount(answers);
+  const refs = version.assets.filter((a) => a.slot === 'reference');
+  return (
+    <div>
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-blush px-5 py-4 text-sm text-wine">
+        <span>O cliente responde este formulário pelo link dele. Você também pode preencher ou ajustar as respostas aqui (por exemplo, depois de uma conversa).</span>
+        <span className="tabular-nums">{prog.answered}/{prog.total} respondidas</span>
+      </div>
+      <div className="mb-8">
+        <a href={`/admin/identidades/${ctx.projectId}/briefing/pdf`} className={buttonClass('outline')}>
+          <Download className="size-4" /> Baixar formulário (PDF)
+        </a>
+      </div>
+      <div className="space-y-12">
+        {BRIEFING_SECTIONS.map((sec, i) => (
+          <section key={sec.id}>
+            <p className="label mb-1 text-wine/60">{String(i + 1).padStart(2, '0')}</p>
+            <h3 className="h-display mb-5 text-2xl text-wine">{sec.title}</h3>
+            <div className="space-y-6">
+              {sec.questions.map((q) => (
+                <QuestionField key={q.id} q={q} answers={answers} set={set} toggle={toggle} disabled={!editable} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+      {editable && <SaveBar dirty={s.dirty} saving={s.saving} onSave={s.save} />}
+      <div className="mt-8">
+        <p className="label mb-3 text-wine">Fotos de referência {refs.length ? `(${refs.length})` : ''}</p>
+        <AssetGrid ctx={ctx} stage={stage} version={version} assets={refs} editable={editable} captions slot="reference" />
+      </div>
+    </div>
+  );
+}
+
+// ─── Conceito ───────────────────────────────────────────────────────────
 export function ConceptEditor({ stage, version, ctx, editable }: EditorProps) {
   const s = useContentState(stage, version);
   return (
@@ -503,7 +549,7 @@ interface GridMeta {
   categories?: [string, string][];
 }
 
-export function AssetGrid({ ctx, stage, version, assets, editable, captions, files, meta, release, downloads }: { ctx: EditorCtx; stage: StageData; version: VersionData; assets: SignedAsset[]; editable: boolean; captions?: boolean; files?: boolean; meta?: GridMeta; release?: boolean; downloads?: Record<string, number> }) {
+export function AssetGrid({ ctx, stage, version, assets, editable, captions, files, meta, release, downloads, slot }: { slot?: string; ctx: EditorCtx; stage: StageData; version: VersionData; assets: SignedAsset[]; editable: boolean; captions?: boolean; files?: boolean; meta?: GridMeta; release?: boolean; downloads?: Record<string, number> }) {
   const { run, toast, router } = useRun();
   const [busy, setBusy] = useState<string | null>(null);
   const [order, setOrder] = useState<string[] | null>(null);
@@ -521,7 +567,7 @@ export function AssetGrid({ ctx, stage, version, assets, editable, captions, fil
     try {
       for (const f of list) {
         const path = await uploadToStorage(f, folderOf(ctx, stage));
-        const r = await registerIdentityAsset({ stageId: stage.id, versionId: version.id, path, mime: f.type, fileName: f.name, name: meta?.name ? f.name.replace(/\.[^.]+$/, '') : undefined });
+        const r = await registerIdentityAsset({ stageId: stage.id, versionId: version.id, slot, path, mime: f.type, fileName: f.name, name: meta?.name ? f.name.replace(/\.[^.]+$/, '') : undefined });
         if (!r.ok) throw new Error(r.error);
       }
       toast(list.length > 1 ? `${list.length} arquivos enviados` : 'Arquivo enviado');

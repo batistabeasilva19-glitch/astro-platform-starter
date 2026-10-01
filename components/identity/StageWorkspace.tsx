@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, History, MessageSquareText, Plus, Power, Send, Trash2 } from 'lucide-react';
+import { Download, Eye, EyeOff, History, MessageSquareText, Plus, Power, Send, Trash2 } from 'lucide-react';
 import { addAdminIdentityComment, createStageVersion, deleteAnnotation, sendStageForApproval, setStageEnabled } from '@/lib/actions/identity';
 import { STAGE_BY_KEY, type CommentRowLike, type IdentityDetail, type SignedAsset, type StageData } from '@/lib/identity/types';
 import { CommentThread } from '@/components/content/Thread';
@@ -12,7 +12,7 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtStamp } from '@/lib/utils';
 import { StageStatusBadge } from './ui';
-import { ColorsEditor, ConceptEditor, FinalEditor, GalleryEditor, LogoEditor, MoodboardEditor, TypographyEditor, type EditorCtx } from './editors';
+import { BriefingEditor, ColorsEditor, ConceptEditor, FinalEditor, GalleryEditor, LogoEditor, MoodboardEditor, TypographyEditor, type EditorCtx } from './editors';
 import { StageView } from './views';
 import type { ViewCtx } from './view-context';
 
@@ -31,6 +31,7 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
   const isFiles = stage.stage_key === 'files';
   const isLogo = stage.stage_key === 'logo';
   const isFinal = stage.stage_key === 'final';
+  const isBriefing = stage.stage_key === 'briefing';
   const pad = (n: number) => String(n).padStart(2, '0');
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, msg: string, after?: () => void) =>
@@ -67,16 +68,21 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
       <section className="card space-y-4 p-5 sm:p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-3">
-            {!isFiles && <StageStatusBadge status={stage.status} version={stage.current_version} />}
-            {!isLogo && !isFiles && <span className="text-xs text-ink/55">Versão {pad(stage.current_version)} · atualizada {fmtStamp(stage.updated_at)}</span>}
+            {!isFiles && <StageStatusBadge status={stage.status} version={stage.current_version} stageKey={stage.stage_key} />}
+            {!isLogo && !isFiles && !isBriefing && <span className="text-xs text-ink/55">Versão {pad(stage.current_version)} · atualizada {fmtStamp(stage.updated_at)}</span>}
           </div>
           <div className="flex flex-wrap gap-2">
+            {isBriefing && (
+              <a href={`/admin/identidades/${ctx.projectId}/briefing/pdf`} className="inline-flex items-center gap-2 rounded-full border border-wine px-4 py-1.5 text-[0.78rem] text-wine transition hover:bg-wine hover:text-white">
+                <Download className="size-3.5" /> Baixar formulário (PDF)
+              </a>
+            )}
             {!isFiles && !isFinal && (stage.status === 'draft' || stage.status === 'changes_requested') && (
-              <Button size="sm" loading={pending} onClick={() => run(() => sendStageForApproval(stage.id), 'Enviado para aprovação ♡')}>
-                <Send className="size-3.5" /> Enviar para aprovação
+              <Button size="sm" loading={pending} onClick={() => run(() => sendStageForApproval(stage.id), isBriefing ? 'Formulário enviado ao cliente ♡' : 'Enviado para aprovação ♡')}>
+                <Send className="size-3.5" /> {isBriefing ? 'Enviar formulário ao cliente' : 'Enviar para aprovação'}
               </Button>
             )}
-            {!isFiles && !isLogo && !isFinal && (
+            {!isFiles && !isLogo && !isFinal && !isBriefing && (
               <Button size="sm" variant={stage.status === 'changes_requested' ? 'outline' : 'ghost'} onClick={() => setModal(true)}>
                 {stage.status === 'changes_requested' ? <Plus className="size-3.5" /> : <History className="size-3.5" />} Nova versão
               </Button>
@@ -87,14 +93,15 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
           </div>
         </div>
         {stage.status === 'approved' && stage.approved_at && !isFiles && (
-          <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-wine">✓ Aprovado por <strong className="font-normal">{stage.approved_by}</strong> em {fmtStamp(stage.approved_at)}</p>
+          <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-wine">✓ {isBriefing ? 'Respondido' : 'Aprovado'} por <strong className="font-normal">{stage.approved_by}</strong> em {fmtStamp(stage.approved_at)}</p>
         )}
         {stage.status === 'changes_requested' && (
           <p className="rounded-2xl border border-dashed border-wine/40 px-4 py-3 text-sm text-wine">
             O cliente pediu alteração (veja os comentários abaixo). {isLogo ? <>Crie uma <strong className="font-normal">nova versão</strong> dentro da proposta</> : <>Crie uma <strong className="font-normal">nova versão</strong> para ajustar sem perder a anterior</>} e envie novamente.
           </p>
         )}
-        {stage.status === 'draft' && !isFiles && !isFinal && <p className="text-xs text-ink/55">Em criação: o cliente ainda não vê esta etapa. Quando estiver pronta, envie para aprovação.</p>}
+        {stage.status === 'draft' && !isFiles && !isFinal && <p className="text-xs text-ink/55">Em criação: o cliente ainda não vê esta etapa. {isBriefing ? 'Envie o formulário quando quiser que ele responda.' : 'Quando estiver pronta, envie para aprovação.'}</p>}
+        {isBriefing && stage.status === 'awaiting' && <p className="text-xs text-ink/55">O cliente já pode responder pelo link dele. Você acompanha as respostas aqui; elas salvam sozinhas enquanto ele preenche.</p>}
         {isFinal && <p className="text-xs text-ink/55">A aprovação final é liberada sozinha quando todas as outras etapas ativas forem aprovadas.</p>}
       </section>
 
@@ -162,7 +169,7 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
         </section>
       )}
 
-      {!isFiles && (
+      {!isFiles && !isBriefing && (
         <section className="card p-5 sm:p-6">
           <CommentThread comments={comments as never} viewer="admin" versionNumbers={versionNumbers} onSend={(m) => addAdminIdentityComment(stage.id, m)} />
         </section>
@@ -195,6 +202,8 @@ const isImg = (a: SignedAsset) => (a.mime_type ?? '').startsWith('image/') || /\
 
 function EditorFor(props: { stage: StageData; version: StageData['versions'][number]; ctx: EditorCtx; editable: boolean; favorites: IdentityDetail['favorites']; downloads: IdentityDetail['downloads'] }) {
   switch (props.stage.stage_key) {
+    case 'briefing':
+      return <BriefingEditor {...props} />;
     case 'concept':
       return <ConceptEditor {...props} />;
     case 'moodboard':

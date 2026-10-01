@@ -88,7 +88,7 @@ export async function createIdentityProject(_prev: ActionResult | null, fd: Form
 
   const { data: stages, error: sErr } = await supabase
     .from('identity_stages')
-    .insert(STAGES.map((s) => ({ project_id: project.id, stage_key: s.key })))
+    .insert(STAGES.map((s) => ({ project_id: project.id, stage_key: s.key, ...(s.key === 'briefing' ? { status: 'awaiting', sent_at: new Date().toISOString() } : {}) })))
     .select('id');
   if (sErr || !stages) return fail('Projeto criado, mas as etapas falharam.');
   await supabase.from('identity_versions').insert(stages.map((s) => ({ stage_id: s.id, version_number: 1, content: {} })));
@@ -223,6 +223,7 @@ export async function sendStageForApproval(stageId: string): Promise<ActionResul
     }
   }
   const missing: Record<StageKey, string | null> = {
+    briefing: null,
     concept: hasText || (assets?.length ?? 0) > 0 ? null : 'Preencha ao menos um campo do conceito.',
     moodboard: (assets?.length ?? 0) > 0 ? null : 'Adicione imagens ao moodboard.',
     logo: logoOk ? null : 'Crie ao menos uma proposta com um arquivo de logo.',
