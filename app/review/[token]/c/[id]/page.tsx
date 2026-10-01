@@ -24,7 +24,7 @@ export default async function ReviewContentPage({ params }: { params: Promise<{ 
           <FormatTag format={content.format} className="text-wine" />
           <span className="capitalize">{fmtDateLong(content.scheduled_date)}{content.scheduled_time ? ` · ${fmtTime(content.scheduled_time)}` : ''}</span>
         </p>
-        <h1 className="h-display text-4xl text-wine sm:text-5xl">{content.title}</h1>
+        <h1 className="font-sans text-3xl font-medium leading-tight tracking-tight text-wine sm:text-4xl">{content.title}</h1>
         <div className="mt-4"><StatusBadge status={content.status} audience="client" /></div>
       </header>
       <ReviewContent
