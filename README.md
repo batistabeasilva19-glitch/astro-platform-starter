@@ -26,7 +26,7 @@ O sistema tem dois módulos **independentes**, que compartilham clientes, login,
 
 Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
 
-> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) e `0005_links_identidade.sql` (links de acesso rápido) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) e `0006_estrategia.sql` (PDFs de estratégia de rede) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.
@@ -36,6 +36,10 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 - **Decisões do cliente** (admin): logo favorita/aprovada (e versão), paleta favorita, cores escolhidas, tipografias, alterações solicitadas e favoritos.
 - **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
 - **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
+
+## Estratégia de rede (PDFs por mês)
+
+Em cada cliente de Social Mídia (`/admin/clients/<id>/estrategia`) a administradora sobe PDFs de estratégia, escolhendo o **mês** de cada um, edita título/descrição/mês, oculta ou mostra para o cliente e exclui. No link do cliente (`/review/<token>`) aparece o cartão **Estratégia de rede** (somente se houver documentos visíveis); a página `/review/<token>/estrategia` permite **pesquisar por mês** (e ano) ou por título, abrir e baixar. Os arquivos ficam no bucket privado e o servidor valida o token antes de liberar cada PDF.
 
 ## Estrutura
 
