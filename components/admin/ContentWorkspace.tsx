@@ -9,6 +9,7 @@ import { InstagramPost } from '@/components/content/InstagramPost';
 import { CommentThread, HistoryList } from '@/components/content/Thread';
 import { StatusBadge } from '@/components/content/Badges';
 import { MediaManager } from './MediaManager';
+import { EmailComposer, type EmailCtx } from '@/components/identity/EmailComposer';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Fields';
@@ -21,9 +22,11 @@ interface Props {
   client: { id: string; handle: string; displayName: string; avatarUrl: string | null };
   /** slot com o formulário de dados (server → client children). */
   form: React.ReactNode;
+  /** dados para o e-mail ao cliente (modelos editáveis). */
+  email?: EmailCtx;
 }
 
-export function ContentWorkspace({ content, ownerId, client, form }: Props) {
+export function ContentWorkspace({ content, ownerId, client, form, email }: Props) {
   const current = content.versions.find((v) => v.version_number === content.current_version) ?? content.versions[content.versions.length - 1];
   const [selectedId, setSelectedId] = useState(current.id);
   const [slide, setSlide] = useState(0);
@@ -59,6 +62,7 @@ export function ContentWorkspace({ content, ownerId, client, form }: Props) {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <StatusBadge status={content.status} />
             <div className="flex flex-wrap gap-2">
+              {email && <EmailComposer key={content.id + content.status} ctx={email} item={{ thing: `a postagem “${content.title}”`, short: content.title, approved: ['approved', 'scheduled', 'published'].includes(content.status) }} />}
               {canSend && (
                 <Button size="sm" loading={pending} onClick={() => run(() => sendForApproval(content.id), 'Enviado para aprovação ♡')}>
                   <Send className="size-3.5" /> Enviar para aprovação

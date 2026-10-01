@@ -7,6 +7,7 @@ import { listProfileShots } from '@/lib/data/profile-shots';
 import { loadAllTasks } from '@/lib/data/production';
 import { productionStats } from '@/lib/production/stats';
 import { ProfileBefore } from '@/components/admin/ProfileBefore';
+import { EmailComposer } from '@/components/identity/EmailComposer';
 import { PortalAccess } from '@/components/admin/PortalAccess';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
@@ -63,7 +64,12 @@ export default async function ClientWorkspacePage({
             <Pencil className="size-3.5" /> Editar
           </LinkButton>
         </div>
-        {project && <LinkActions clientId={id} url={url} active={project.token_active} />}
+        {project && (
+          <div className="flex flex-wrap items-center gap-3">
+            <LinkActions clientId={id} url={url} active={project.token_active} />
+            <EmailComposer ctx={{ clientName: client.contact_name || client.company_name, clientEmail: client.contact_email ?? '', url }} item={{ thing: 'os conteúdos do mês', short: 'Conteúdos', plural: true }} />
+          </div>
+        )}
         <div className="flex flex-wrap gap-2 text-xs">
           {[
             ['Rascunhos', drafts, 'bg-zinc-100 text-zinc-700 ring-zinc-300'],
