@@ -32,9 +32,6 @@ export async function saveProfileMetrics(clientId: string, input: { id?: string;
   const parsed = parseMetrics(input.values, PROFILE_FIELDS.flatMap((g) => g.fields));
   if (!parsed.ok) return fail(parsed.error);
   const v = parsed.values;
-  if (v.followers_start != null && v.followers_end != null && v.new_followers != null && v.lost_followers != null && v.followers_start + v.new_followers - v.lost_followers !== v.followers_end) {
-    return fail('Os números de seguidores não fecham: início + novos − perdidos precisa ser igual ao final. Confira os valores.');
-  }
   if (!Object.keys(v).length) return fail('Preencha pelo menos uma métrica.');
 
   // evita dobrar números: períodos do mesmo cliente não podem se sobrepor
