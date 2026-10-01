@@ -7,6 +7,7 @@ import { listProfileShots } from '@/lib/data/profile-shots';
 import { loadAllTasks } from '@/lib/data/production';
 import { productionStats } from '@/lib/production/stats';
 import { ProfileBefore } from '@/components/admin/ProfileBefore';
+import { PortalAccess } from '@/components/admin/PortalAccess';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
@@ -35,6 +36,7 @@ export default async function ClientWorkspacePage({
   const { shots, missing: shotsMissing } = await listProfileShots(supabase, id);
   const prod = await loadAllTasks(supabase, { clientId: id });
   const ps = prod.missing ? null : productionStats(prod.tasks, prod.columns);
+  const { data: portalUsers } = await supabase.from('client_portal_users').select('id, email, last_login_at').eq('client_id', id).order('created_at');
   const items = await fetchCards(supabase, { clientId: id });
   const { count: identityCount } = await supabase.from('identity_projects').select('id', { count: 'exact', head: true }).eq('client_id', id);
   const feed = view === 'feed' ? await fetchFeed(supabase, id) : null;
@@ -108,6 +110,10 @@ export default async function ClientWorkspacePage({
             <Link href={`/admin/producao/cliente/${id}`} className={buttonClass('primary', 'sm')}>Ver quadro do cliente <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
           </div>
         )}
+      </div>
+
+      <div className="mt-6">
+        <PortalAccess clientId={id} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
       </div>
 
       <div className="mt-6">

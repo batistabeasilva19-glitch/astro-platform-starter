@@ -1,4 +1,6 @@
-import { resolveToken } from '@/lib/data/portal';
+import { resolveTokenGate } from '@/lib/data/portal';
+import { LoginForm } from '@/components/portal/LoginForm';
+import { LogoutButton } from '@/components/portal/LogoutButton';
 import { BrandElement, Logo, Sparkle } from '@/components/brand/Brand';
 import { Avatar } from '@/components/ui/Misc';
 
@@ -7,7 +9,8 @@ export const metadata = { title: 'Aprovação de conteúdo' };
 
 export default async function ReviewLayout({ children, params }: { children: React.ReactNode; params: Promise<{ token: string }> }) {
   const { token } = await params;
-  const session = await resolveToken(token);
+  const gate = await resolveTokenGate(token);
+  const session = gate?.session;
 
   if (!session) {
     return (
@@ -15,6 +18,20 @@ export default async function ReviewLayout({ children, params }: { children: Rea
         <Logo tone="light" withTagline className="w-72 max-w-full" />
         <h1 className="script mt-10 text-5xl">Link indisponível</h1>
         <p className="mt-4 max-w-sm text-sm text-white/80">Este link de aprovação não está mais ativo. Peça um novo link para a Soltria pelo WhatsApp.</p>
+        <BrandElement name="sparkles" className="absolute right-8 top-8 w-16 opacity-60" />
+      </main>
+    );
+  }
+
+  if (gate.locked) {
+    return (
+      <main className="relative flex min-h-dvh flex-col items-center justify-center overflow-hidden bg-wine px-6 text-center text-white">
+        <Logo tone="light" withTagline className="w-72 max-w-full" />
+        <h1 className="script mt-10 text-5xl">Bem-vinda</h1>
+        <p className="mt-3 max-w-sm text-sm text-white/80">Entre com o e-mail e a senha que a Soltria enviou para ver o portal de {session.client.company_name}.</p>
+        <div className="mt-2 w-full max-w-sm rounded-3xl bg-white p-6 text-ink [&_label]:text-wine/70">
+          <LoginForm token={token} />
+        </div>
         <BrandElement name="sparkles" className="absolute right-8 top-8 w-16 opacity-60" />
       </main>
     );
@@ -31,6 +48,7 @@ export default async function ReviewLayout({ children, params }: { children: Rea
               <br />
               <span className="text-white">{session.client.company_name}</span>
             </span>
+            {(session.client as { portal_login_required?: boolean }).portal_login_required && <LogoutButton token={token} />}
             <Avatar name={session.client.company_name} src={session.avatarUrl} className="size-10 text-xs ring-2 ring-white/40" />
           </div>
         </div>
