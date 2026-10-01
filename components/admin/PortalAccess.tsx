@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Copy, KeyRound, Trash2 } from 'lucide-react';
+import { useEffect, useState, useTransition } from 'react';
+import { ChevronDown, Copy, KeyRound, Trash2 } from 'lucide-react';
 import { addPortalUser, deletePortalUser, resetPortalPassword, setLoginRequired } from '@/lib/actions/portal-auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Fields';
@@ -33,6 +33,19 @@ export function PortalAccess({ clientId, clientName, url, required, users }: { c
   const [pending, start] = useTransition();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [open, setOpen] = useState(required);
+  const key = `portal-access-open-${clientId}`;
+  useEffect(() => {
+    try {
+      const v = localStorage.getItem(key);
+      if (v !== null) setOpen(v === '1');
+    } catch {}
+  }, [key]);
+  const toggle = () =>
+    setOpen((o) => {
+      try { localStorage.setItem(key, o ? '0' : '1'); } catch {}
+      return !o;
+    });
   const [shown, setShown] = useState<string | null>(null);
   // senhas só ficam conhecidas aqui logo depois de criadas/trocadas (no banco só existe o hash)
   const [known, setKnown] = useState<Record<string, string>>({});
@@ -50,14 +63,18 @@ export function PortalAccess({ clientId, clientName, url, required, users }: { c
     });
 
   return (
-    <details className="card p-5 sm:p-6" open={required || undefined}>
-      <summary className="flex cursor-pointer items-center justify-between gap-3">
+    <section className="card p-5 sm:p-6">
+      <button type="button" onClick={toggle} aria-expanded={open} className="flex w-full items-center justify-between gap-3 text-left">
         <span className="flex items-center gap-2 text-sm">
           <KeyRound className="size-4 text-wine" /> <span className="label text-wine/70">Login do cliente</span>
         </span>
-        <span className={required ? 'rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs text-emerald-800' : 'rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-600'}>{required ? 'Exigido' : 'Só pelo link'}</span>
-      </summary>
+        <span className="flex items-center gap-3">
+          <span className={required ? 'rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs text-emerald-800' : 'rounded-full bg-zinc-100 px-2.5 py-0.5 text-xs text-zinc-600'}>{required ? 'Exigido' : 'Só pelo link'}</span>
+          <span className="flex items-center gap-1 text-xs text-wine">{open ? 'Minimizar' : 'Abrir'} <ChevronDown className={open ? 'size-4 rotate-180 transition' : 'size-4 transition'} /></span>
+        </span>
+      </button>
 
+      {open && (
       <div className="mt-5 space-y-5">
         <label className="flex items-start gap-3 text-sm">
           <input type="checkbox" checked={required} disabled={pending} onChange={(e) => run(() => setLoginRequired(clientId, e.target.checked), e.target.checked ? 'Login ativado ♡' : 'Login desativado')} className="mt-1 size-4 accent-[#771430]" />
@@ -97,6 +114,7 @@ export function PortalAccess({ clientId, clientName, url, required, users }: { c
         </form>
         <p className="text-xs text-ink/50">Use “Copiar mensagem” para enviar ao cliente o texto pronto com nome, link, e-mail e senha. A senha é guardada criptografada: ela só aparece na mensagem logo depois de criada ou trocada — depois disso, gere uma “Nova senha”.</p>
       </div>
-    </details>
+      )}
+    </section>
   );
 }
