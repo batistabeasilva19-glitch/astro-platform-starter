@@ -148,7 +148,7 @@ export function DecisionsPanel({ detail }: { detail: IdentityDetail }) {
                     <div key={i.refId} className="flex items-center gap-2 rounded-full border border-wine/20 py-1 pl-1 pr-4 text-sm">
                       {i.kind === 'color' && <span className="size-7 rounded-full border border-wine/15" style={{ backgroundColor: i.color.hex }} />}
                       {i.kind === 'palette' && <span className="flex h-7 w-14 overflow-hidden rounded-full border border-wine/15">{i.palette.colors.map((c) => <span key={c.id} className="flex-1" style={{ backgroundColor: c.hex }} />)}</span>}
-                      {(i.kind === 'logo' || i.kind === 'application') && i.imageUrl && <img src={i.imageUrl} alt="" className="size-7 rounded-full bg-blush object-cover" />}
+                      {(i.kind === 'logo' || i.kind === 'application') && i.imageUrl && <img loading="lazy" decoding="async" src={i.imageUrl} alt="" className="size-7 rounded-full bg-blush object-cover" />}
                       {i.kind === 'font' && <span className="flex size-7 items-center justify-center rounded-full bg-blush text-xs text-wine">Aa</span>}
                       {i.label}
                     </div>

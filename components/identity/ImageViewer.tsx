@@ -171,7 +171,7 @@ export function ImageViewer({ asset, onClose, annotations = [], feedback, favori
         >
           <div className="flex size-full items-center justify-center p-4 sm:p-10">
             <div className="relative inline-block max-h-full max-w-full" style={{ transform: `translate(${pos.x}px, ${pos.y}px) scale(${scale})`, transition: gesture.current ? 'none' : 'transform 0.15s ease-out' }}>
-              <img ref={img} src={asset.url} alt={asset.name || asset.caption || ''} draggable={false} className={cn('block max-h-[calc(100dvh-9rem)] max-w-full rounded-lg object-contain sm:max-h-[calc(100dvh-5rem)]', dark ? 'bg-ink' : 'bg-white')} />
+              <img loading="lazy" decoding="async" ref={img} src={asset.url} alt={asset.name || asset.caption || ''} draggable={false} className={cn('block max-h-[calc(100dvh-9rem)] max-w-full rounded-lg object-contain sm:max-h-[calc(100dvh-5rem)]', dark ? 'bg-ink' : 'bg-white')} />
               {marked.map((a) => (
                 <button
                   key={a.id}

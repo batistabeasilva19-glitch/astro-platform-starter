@@ -41,7 +41,7 @@ export function FavoritesBoard({ items, ctx, fontAssets, hrefBase }: { items: Re
             {items[k].map((i) => (
               <div key={`${i.kind}-${i.refId}`} className="card overflow-hidden">
                 {i.kind === 'logo' && (
-                  <div className="flex h-40 items-center justify-center bg-white p-6">{i.imageUrl ? <img src={i.imageUrl} alt={i.label} className="max-h-full max-w-full object-contain" /> : null}</div>
+                  <div className="flex h-40 items-center justify-center bg-white p-6">{i.imageUrl ? <img loading="lazy" decoding="async" src={i.imageUrl} alt={i.label} className="max-h-full max-w-full object-contain" /> : null}</div>
                 )}
                 {i.kind === 'palette' && (
                   <div className="flex h-24">
@@ -54,7 +54,7 @@ export function FavoritesBoard({ items, ctx, fontAssets, hrefBase }: { items: Re
                 {i.kind === 'font' && (
                   <p className="px-5 pt-5 text-5xl text-wine" style={{ fontFamily: family(i.font) }}>Aa</p>
                 )}
-                {i.kind === 'application' && i.imageUrl && <img src={i.imageUrl} alt={i.label} className="aspect-[4/3] w-full object-cover" />}
+                {i.kind === 'application' && i.imageUrl && <img loading="lazy" decoding="async" src={i.imageUrl} alt={i.label} className="aspect-[4/3] w-full object-cover" />}
                 <div className="flex items-center justify-between gap-3 p-4">
                   <p className="min-w-0 truncate text-sm" style={i.kind === 'font' ? { fontFamily: family(i.font) } : undefined}>{i.label}</p>
                   {remove(i)}

@@ -221,7 +221,7 @@ export function IdentitySummary({ ctx }: { ctx: ViewCtx }) {
       <div className="grid gap-4 sm:grid-cols-2">
         {logoImg && (
           <div className="card flex flex-col items-center justify-center gap-3 p-8 sm:row-span-2">
-            <img src={logoImg.url} alt={chosen?.label} className="max-h-52 object-contain" />
+            <img loading="lazy" decoding="async" src={logoImg.url} alt={chosen?.label} className="max-h-52 object-contain" />
             <p className="label text-wine/70">{chosen?.label} · V{lv?.version_number} · logo escolhido</p>
           </div>
         )}
@@ -257,7 +257,7 @@ export function IdentitySummary({ ctx }: { ctx: ViewCtx }) {
                 <Label>{label as string}</Label>
                 <div className="grid grid-cols-4 gap-2">
                   {(list as SignedAsset[]).slice(0, 8).map((a) => (
-                    <img key={a.id} src={a.url} alt={a.name} className="aspect-square w-full rounded-xl object-cover" />
+                    <img loading="lazy" decoding="async" key={a.id} src={a.url} alt={a.name} className="aspect-square w-full rounded-xl object-cover" />
                   ))}
                 </div>
               </div>

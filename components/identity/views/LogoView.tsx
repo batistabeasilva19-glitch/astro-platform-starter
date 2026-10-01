@@ -155,7 +155,7 @@ function ProposalCard({ ctx, proposal: p, canAct, favOn, favEnabled, favBusy, on
         <div className="border-t border-wine/10 bg-blush-soft/60 p-4 sm:p-6">
           {main && (
             <button onClick={() => setOpen(main)} className="mb-3 flex h-56 w-full items-center justify-center rounded-3xl bg-white p-8 transition hover:shadow-sm sm:mb-4 sm:h-80">
-              <img src={main.url} alt={`${p.label} — ${SLOT_LABEL[main.slot] ?? 'logo'}`} className="max-h-full max-w-full object-contain" />
+              <img loading="lazy" decoding="async" src={main.url} alt={`${p.label} — ${SLOT_LABEL[main.slot] ?? 'logo'}`} className="max-h-full max-w-full object-contain" />
             </button>
           )}
           {others.length > 0 && (
@@ -163,7 +163,7 @@ function ProposalCard({ ctx, proposal: p, canAct, favOn, favEnabled, favBusy, on
               {others.map((a) => (
                 <figure key={a.id}>
                   <button onClick={() => setOpen(a)} className={cn('flex aspect-[4/3] w-full items-center justify-center overflow-hidden p-5 transition hover:shadow-sm', a.slot === 'avatar' ? 'rounded-3xl' : 'rounded-2xl', slotBg[a.slot] ?? 'bg-white')}>
-                    <img src={a.url} alt={SLOT_LABEL[a.slot] ?? 'logo'} className={cn('max-h-full max-w-full object-contain', a.slot === 'avatar' && 'size-24 rounded-full object-cover')} />
+                    <img loading="lazy" decoding="async" src={a.url} alt={SLOT_LABEL[a.slot] ?? 'logo'} className={cn('max-h-full max-w-full object-contain', a.slot === 'avatar' && 'size-24 rounded-full object-cover')} />
                   </button>
                   <figcaption className="label mt-2 text-center text-ink/55">{SLOT_LABEL[a.slot] ?? a.slot}</figcaption>
                 </figure>
