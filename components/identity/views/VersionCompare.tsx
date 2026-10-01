@@ -38,7 +38,7 @@ export function VersionCompare({ proposal, open, onClose, initialA, initialB }: 
   const Pane = ({ v, img, tag }: { v: LogoVersionData; img?: { url: string }; tag?: string }) => (
     <figure>
       <div className={cn('flex h-64 items-center justify-center rounded-3xl border border-wine/15 p-6 sm:h-80', dark ? 'bg-ink' : 'bg-white')}>
-        {img ? <img src={img.url} alt={`V${v.version_number}`} className="max-h-full max-w-full object-contain" /> : <span className={cn('text-sm', dark ? 'text-white/60' : 'text-ink/45')}>Sem arquivo nesta versão</span>}
+        {img ? <img loading="lazy" decoding="async" src={img.url} alt={`V${v.version_number}`} className="max-h-full max-w-full object-contain" /> : <span className={cn('text-sm', dark ? 'text-white/60' : 'text-ink/45')}>Sem arquivo nesta versão</span>}
       </div>
       <figcaption className="label mt-2 text-center text-wine">{tag ?? `Versão ${String(v.version_number).padStart(2, '0')}`}</figcaption>
     </figure>
@@ -105,10 +105,10 @@ export function VersionCompare({ proposal, open, onClose, initialA, initialB }: 
         <div>
           <div className={cn('relative h-72 select-none overflow-hidden rounded-3xl border border-wine/15 sm:h-96', dark ? 'bg-ink' : 'bg-white')}>
             {/* depois (versão B) por baixo */}
-            <div className="absolute inset-0 flex items-center justify-center p-6">{imgB ? <img src={imgB.url} alt="Depois" className="max-h-full max-w-full object-contain" /> : null}</div>
+            <div className="absolute inset-0 flex items-center justify-center p-6">{imgB ? <img loading="lazy" decoding="async" src={imgB.url} alt="Depois" className="max-h-full max-w-full object-contain" /> : null}</div>
             {/* antes (versão A) recortada pela esquerda */}
             <div className={cn('absolute inset-0 flex items-center justify-center p-6', dark ? 'bg-ink' : 'bg-white')} style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}>
-              {imgA ? <img src={imgA.url} alt="Antes" className="max-h-full max-w-full object-contain" /> : null}
+              {imgA ? <img loading="lazy" decoding="async" src={imgA.url} alt="Antes" className="max-h-full max-w-full object-contain" /> : null}
             </div>
             <div className="pointer-events-none absolute inset-y-0 w-0.5 bg-wine" style={{ left: `${pos}%` }}>
               <span className="absolute left-1/2 top-1/2 flex size-9 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-2 border-white bg-wine text-white shadow"><ArrowLeftRight className="size-4" /></span>

@@ -634,7 +634,7 @@ function SortableAsset({ asset, editable, captions, file, meta, release, downloa
             {downloads ? <span className="inline-flex items-center gap-1 text-xs text-ink/55"><Download className="size-3" /> {downloads}</span> : null}
           </>
         ) : (
-          <img src={asset.url} alt={asset.name || asset.caption} className="size-full object-cover" draggable={false} />
+          <img loading="lazy" decoding="async" src={asset.url} alt={asset.name || asset.caption} className="size-full object-cover" draggable={false} />
         )}
         {editable && (
           <>
@@ -698,7 +698,7 @@ function SlotUploader({ ctx, stage, version, proposalId, logoVersionId, slot, la
     <div>
       <div className={cn('relative flex aspect-[4/3] items-center justify-center overflow-hidden rounded-2xl border border-wine/20', dark ? 'bg-ink' : 'bg-white', !asset && 'border-dashed')}>
         {asset ? (
-          <img src={asset.url} alt={label} className="max-h-full max-w-full object-contain p-3" />
+          <img loading="lazy" decoding="async" src={asset.url} alt={label} className="max-h-full max-w-full object-contain p-3" />
         ) : (
           <button type="button" disabled={!editable} onClick={() => ref.current?.click()} className="flex size-full flex-col items-center justify-center gap-1.5 text-wine/70 transition hover:bg-blush disabled:hover:bg-transparent">
             {busy ? <Loader2 className="size-5 animate-spin" /> : <ImagePlus className="size-5" />}

@@ -8,7 +8,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GripVertical, ImagePlus, Loader2, Trash2, UploadCloud, Video } from 'lucide-react';
 import type { ContentFormat, SignedMedia, VersionWithMedia } from '@/lib/types';
 import { registerMedia, removeMedia, reorderMedia, setDuration } from '@/lib/actions/content';
-import { readVideoDuration, uploadToStorage, validateFile } from '@/lib/upload';
+import { readVideoDuration, shrinkImage, uploadToStorage, validateFile } from '@/lib/upload';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtDuration } from '@/lib/utils';
 
@@ -46,8 +46,9 @@ export function MediaManager({ ownerId, clientId, contentId, format, version, ed
     setBusy(kind);
     try {
       for (const f of files) {
-        const path = await uploadToStorage(f, folder);
-        const res = await registerMedia({ contentId, versionId: version.id, kind, path, mime: f.type });
+        const file = kind === 'video' ? f : await shrinkImage(f);
+        const path = await uploadToStorage(file, folder);
+        const res = await registerMedia({ contentId, versionId: version.id, kind, path, mime: file.type });
         if (!res.ok) throw new Error(res.error);
         if (kind === 'video') {
           const d = await readVideoDuration(f);
@@ -118,7 +119,7 @@ export function MediaManager({ ownerId, clientId, contentId, format, version, ed
           onFiles={(f) => upload(f, 'cover')}
           filled={!!cover}
           onRemove={cover ? () => remove(cover.id) : undefined}
-          preview={cover ? <img src={cover.url} alt="Capa" className="size-full object-cover" /> : null}
+          preview={cover ? <img src={cover.url} alt="Capa" loading="lazy" decoding="async" className="size-full object-cover" /> : null}
           aspect="aspect-[9/16]"
         />
       </div>
@@ -138,7 +139,7 @@ export function MediaManager({ ownerId, clientId, contentId, format, version, ed
           onFiles={(f) => upload(f.slice(0, 1), 'image')}
           filled={!!img}
           onRemove={img ? () => remove(img.id) : undefined}
-          preview={img ? <img src={img.url} alt="Arte" className="size-full object-cover" /> : null}
+          preview={img ? <img src={img.url} alt="Arte" loading="lazy" decoding="async" className="size-full object-cover" /> : null}
           aspect="aspect-[4/5]"
         />
       </div>
@@ -167,7 +168,7 @@ function SortableThumb({ media, label, aspect, busy, onRemove }: { media: Signed
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: media.id });
   return (
     <div ref={setNodeRef} style={{ transform: CSS.Transform.toString(transform), transition }} className={cn('group relative overflow-hidden rounded-2xl border border-wine/20 bg-blush', aspect, isDragging && 'z-10 opacity-60 ring-2 ring-wine')}>
-      <img src={media.url} alt={label} className="size-full object-cover" draggable={false} />
+      <img src={media.url} alt={label} loading="lazy" decoding="async" className="size-full object-cover" draggable={false} />
       <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-ink/70 to-transparent px-2 pb-1.5 pt-6 text-[0.68rem] text-white">{label}</span>
       <button {...attributes} {...listeners} aria-label={`Arrastar ${label}`} className="absolute left-1.5 top-1.5 cursor-grab touch-none rounded-full bg-white/90 p-1 text-wine active:cursor-grabbing">
         <GripVertical className="size-4" />

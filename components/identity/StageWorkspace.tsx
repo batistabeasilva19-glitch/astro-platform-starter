@@ -173,7 +173,7 @@ export function StageWorkspace({ stage, ctx, detail, email }: { stage: StageData
               const asset = assets.find((x) => x.id === a.asset_id);
               return (
                 <li key={a.id} className="flex gap-3 rounded-2xl border border-wine/15 p-3">
-                  {asset && isImg(asset) ? <img src={asset.url} alt="" className="size-14 shrink-0 rounded-xl bg-blush object-cover" /> : <span className="size-14 shrink-0 rounded-xl bg-blush" />}
+                  {asset && isImg(asset) ? <img loading="lazy" decoding="async" src={asset.url} alt="" className="size-14 shrink-0 rounded-xl bg-blush object-cover" /> : <span className="size-14 shrink-0 rounded-xl bg-blush" />}
                   <div className="min-w-0 flex-1 text-sm">
                     <p className="label mb-0.5 text-wine">
                       {a.number ? `Marcador ${a.number} · ` : 'Geral · '}
