@@ -80,10 +80,10 @@ export default async function ClientWorkspacePage({
           <p className="label mb-2 text-wine/70">Conteúdo</p>
           <p className="mb-3 text-sm text-ink/65">Posts, carrosséis, Reels, Stories, calendário e feed.</p>
           <div className="flex flex-wrap gap-2">
-            <Link href={`/admin/clients/${id}`} className={buttonClass('primary', 'sm')}>Ver conteúdos →</Link>
-            <Link href={`/admin/clients/${id}/estrategia`} className={buttonClass('primary', 'sm')}>Estratégia de rede →</Link>
-            <Link href={`/admin/clients/${id}/desempenho`} className={buttonClass('primary', 'sm')}>Desempenho →</Link>
-            <Link href={`/admin/clients/${id}/relatorios`} className={buttonClass('primary', 'sm')}>Relatórios →</Link>
+            <Link href={`/admin/clients/${id}`} className={buttonClass('primary', 'sm')}>Ver conteúdos <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/estrategia`} className={buttonClass('primary', 'sm')}>Estratégia de rede <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/desempenho`} className={buttonClass('primary', 'sm')}>Desempenho <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/relatorios`} className={buttonClass('primary', 'sm')}>Relatórios <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
           </div>
         </div>
         <div className="card p-5">
