@@ -12,11 +12,12 @@ import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtStamp } from '@/lib/utils';
 import { StageStatusBadge } from './ui';
+import { EmailComposer, type EmailCtx } from './EmailComposer';
 import { BriefingEditor, ColorsEditor, ConceptEditor, FinalEditor, GalleryEditor, LogoEditor, MoodboardEditor, TypographyEditor, type EditorCtx } from './editors';
 import { StageView } from './views';
 import type { ViewCtx } from './view-context';
 
-export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: EditorCtx; detail: IdentityDetail }) {
+export function StageWorkspace({ stage, ctx, detail, email }: { stage: StageData; ctx: EditorCtx; detail: IdentityDetail; email?: EmailCtx }) {
   const meta = STAGE_BY_KEY[stage.stage_key];
   const current = stage.versions.find((v) => v.version_number === stage.current_version) ?? stage.versions[stage.versions.length - 1];
   const [selectedId, setSelectedId] = useState(current.id);
@@ -72,6 +73,7 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
             {!isLogo && !isFiles && !isBriefing && <span className="text-xs text-ink/55">Versão {pad(stage.current_version)} · atualizada {fmtStamp(stage.updated_at)}</span>}
           </div>
           <div className="flex flex-wrap gap-2">
+            {email && !isFiles && <EmailComposer key={stage.id + stage.status} ctx={email} stageKey={stage.stage_key} />}
             {isBriefing && (
               <a href={`/admin/identidades/${ctx.projectId}/briefing/pdf`} className="inline-flex items-center gap-2 rounded-full border border-wine px-4 py-1.5 text-[0.78rem] text-wine transition hover:bg-wine hover:text-white">
                 <Download className="size-3.5" /> Baixar formulário (PDF)

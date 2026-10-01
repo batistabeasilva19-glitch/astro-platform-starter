@@ -41,19 +41,19 @@ function body(i: NotifyInput): string {
   )}</h2>${msg}${link}<p style="color:#771430">✦ Soltria</p></div>`;
 }
 
-function escapeHtml(s: string) {
+export function escapeHtml(s: string) {
   return s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 }
 
 /** Provedor de e-mail. Troque aqui para SES, Postmark etc. */
-async function sendEmail(to: string, subject: string, html: string): Promise<boolean> {
+export async function sendEmail(to: string, subject: string, html: string, replyTo?: string): Promise<boolean> {
   const key = process.env.RESEND_API_KEY;
   const from = process.env.NOTIFICATIONS_FROM;
   if (!key || !from) return false;
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ from, to, subject, html }),
+    body: JSON.stringify({ from, to, subject, html, ...(replyTo ? { reply_to: replyTo } : {}) }),
   });
   return res.ok;
 }
