@@ -23,7 +23,7 @@ const src = (v: unknown) => (isSource(v) ? v : 'manual');
 
 // ─── perfil ───────────────────────────────────────────────────────────────
 
-export async function saveProfileMetrics(clientId: string, input: { id?: string; period_start: string; period_end: string; source: string; source_note?: string; notes?: string; values: Record<string, unknown> }): Promise<ActionResult> {
+export async function saveProfileMetrics(clientId: string, input: { id?: string; period_start: string; period_end: string; source: string; source_note?: string; notes?: string; values: Record<string, unknown>; before?: Record<string, unknown>; before_start?: string; before_end?: string }): Promise<ActionResult> {
   await requireUser();
   const supabase = await createClient();
   if (!isIsoDate(input.period_start) || !isIsoDate(input.period_end)) return fail('Informe a data inicial e a data final.');
@@ -33,7 +33,15 @@ export async function saveProfileMetrics(clientId: string, input: { id?: string;
   const parsed = parseMetrics(input.values, PROFILE_FIELDS.flatMap((g) => g.fields));
   if (!parsed.ok) return fail(parsed.error);
   const v = parsed.values;
-  if (!Object.keys(v).length) return fail('Preencha pelo menos uma métrica.');
+  // "antes": mesmos campos numéricos (exceto seguidores, que já têm início/final), validados do mesmo jeito
+  const BEFORE_DEFS = PROFILE_FIELDS.filter((g) => g.group !== 'Seguidores').flatMap((g) => g.fields);
+  const bp = parseMetrics(input.before ?? {}, BEFORE_DEFS);
+  if (!bp.ok) return fail(`Antes — ${bp.error}`);
+  const bs = input.before_start && isIsoDate(input.before_start) ? input.before_start : null;
+  const be = input.before_end && isIsoDate(input.before_end) ? input.before_end : null;
+  if (bs && be && be < bs) return fail('No período de antes, a data final não pode ser anterior à inicial.');
+  if ((be ?? bs) && (be ?? bs)! >= input.period_start) return fail('O período de “antes” precisa terminar antes do início do período de “depois”.');
+  if (!Object.keys(v).length && !Object.keys(bp.values).length) return fail('Preencha pelo menos uma métrica.');
 
   // evita dobrar números: períodos do mesmo cliente não podem se sobrepor
   const { data: others, error: e0 } = await supabase.from('perf_profile_metrics').select('id, period_start, period_end').eq('client_id', clientId).lte('period_start', input.period_end).gte('period_end', input.period_start);
@@ -41,7 +49,7 @@ export async function saveProfileMetrics(clientId: string, input: { id?: string;
   const clash = (others ?? []).find((o) => o.id !== input.id);
   if (clash) return fail(`Já existe um registro de ${clash.period_start.split('-').reverse().join('/')} a ${clash.period_end.split('-').reverse().join('/')} que se sobrepõe a este período. Edite o existente ou ajuste as datas.`);
 
-  const row = { client_id: clientId, period_start: input.period_start, period_end: input.period_end, source: src(input.source), source_note: trimStr(input.source_note, 300), notes: trimStr(input.notes, 2000), ...Object.fromEntries(PROFILE_FIELDS.flatMap((g) => g.fields).map((f) => [f.key, v[f.key] ?? null])) };
+  const row = { client_id: clientId, before: bp.values, before_start: bs, before_end: be, period_start: input.period_start, period_end: input.period_end, source: src(input.source), source_note: trimStr(input.source_note, 300), notes: trimStr(input.notes, 2000), ...Object.fromEntries(PROFILE_FIELDS.flatMap((g) => g.fields).map((f) => [f.key, v[f.key] ?? null])) };
   const { error } = input.id ? await supabase.from('perf_profile_metrics').update(row).eq('id', input.id).eq('client_id', clientId) : await supabase.from('perf_profile_metrics').insert(row);
   if (error) return dbFail(error, 'Já existe um registro para exatamente este período.');
   refresh();

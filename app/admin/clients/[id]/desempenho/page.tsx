@@ -7,6 +7,7 @@ import { signPaths } from '@/lib/storage';
 import {
   PERIOD_OPTIONS,
   aggregateProfile,
+  aggregatePrev,
   autoInsights,
   contentResults,
   delta,
@@ -139,7 +140,9 @@ function PeriodFilter({ base, period, sp }: { base: string; period: string; sp: 
 async function Overview({ clientId, raw, period, sp }: { clientId: string; raw: Awaited<ReturnType<typeof loadPerfRaw>>['raw']; period: ReturnType<typeof parsePeriod>; sp: SP }) {
   const { range, prev } = resolveRange(period, { from: sp.from, to: sp.to });
   const cur = aggregateProfile(raw.profile, range);
-  const before = aggregateProfile(raw.profile, prev);
+  const pr = aggregatePrev(raw.profile, range, prev);
+  const before = pr.agg;
+  const prevLabel = pr.usedBefore ? (pr.beforeLabel ?? 'Antes') : prev.label;
   const series = profileSeries(raw.profile, range);
   const contents = contentResults(raw, range);
   const paid = paidData(raw, range);
@@ -158,7 +161,7 @@ async function Overview({ clientId, raw, period, sp }: { clientId: string; raw: 
   return (
     <div className="space-y-6">
       <PeriodFilter base={`/admin/clients/${clientId}/desempenho`} period={period} sp={sp} />
-      <p className="text-sm text-ink/60">Período: <strong className="font-normal text-wine">{range.label}</strong> · comparando com {prev.label}</p>
+      <p className="text-sm text-ink/60">Período: <strong className="font-normal text-wine">{range.label}</strong> · comparando com {prevLabel}</p>
 
       {!hasAny && (
         <p className="card border-dashed px-6 py-12 text-center text-sm text-ink/60">
@@ -167,7 +170,7 @@ async function Overview({ clientId, raw, period, sp }: { clientId: string; raw: 
       )}
       {pendingResults > 0 && <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-wine">{pendingResults} {pendingResults === 1 ? 'publicação ainda não tem' : 'publicações ainda não têm'} resultado cadastrado — veja na aba <Link href={`/admin/clients/${clientId}/desempenho?aba=conteudos&p=${period}`} className="underline">Conteúdos</Link>.</p>}
 
-      <KpiGrid cur={cur} prev={before} prevLabel={prev.label} />
+      <KpiGrid cur={cur} prev={before} prevLabel={prevLabel} />
 
       {insights.length > 0 && (
         <Block title="Análises automáticas" hint="Geradas só com os dados cadastrados. No relatório mensal você pode editar cada uma.">
@@ -191,7 +194,7 @@ async function Overview({ clientId, raw, period, sp }: { clientId: string; raw: 
       </div>
 
       <Block title="Engajamento — taxas"><EngagementRates cur={cur} /></Block>
-      <Block title={`${range.label} × ${prev.label}`}><CompareProfile cur={cur} prev={before} curLabel={range.label} prevLabel={prev.label} /></Block>
+      <Block title={`${range.label} × ${prevLabel}`}><CompareProfile cur={cur} prev={before} curLabel={range.label} prevLabel={prevLabel} /></Block>
 
       {multi && (
         <Block title="Evolução mês a mês">

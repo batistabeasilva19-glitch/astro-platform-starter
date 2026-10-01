@@ -93,6 +93,10 @@ export interface ProfileRow {
   saves: number | null;
   replies: number | null;
   sticker_taps: number | null;
+  /** números de "antes" (base de comparação), por chave de métrica */
+  before: Record<string, number>;
+  before_start: string | null;
+  before_end: string | null;
 }
 
 // ─── Conteúdos ────────────────────────────────────────────────────────
