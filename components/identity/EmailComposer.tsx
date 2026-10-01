@@ -99,10 +99,18 @@ export function EmailComposer({ ctx, item }: { ctx: EmailCtx; item: EmailItem })
           <div className="flex flex-wrap justify-end gap-2">
             <Button variant="ghost" onClick={() => navigator.clipboard.writeText(`${subject}\n\n${text}`).then(() => toast('Copiado ♡'), () => toast('Não foi possível copiar.', 'error'))}><Copy className="size-3.5" /> Copiar</Button>
             <a
-              href={`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}
+              href={`https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="inline-flex items-center gap-2 rounded-full border border-wine px-4 py-2 text-sm text-wine transition hover:bg-wine hover:text-white"
             >
-              <ExternalLink className="size-3.5" /> Abrir no meu e-mail
+              <ExternalLink className="size-3.5" /> Abrir no Gmail
+            </a>
+            <a
+              href={`mailto:${to.trim()}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`}
+              className="inline-flex items-center gap-2 rounded-full px-3 py-2 text-sm text-wine/80 transition hover:bg-blush"
+            >
+              <Mail className="size-3.5" /> Outro app de e-mail
             </a>
             <Button
               loading={pending}
