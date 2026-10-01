@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { clientCards, clientFeed, resolveToken } from '@/lib/data/portal';
 import { listPublicStrategyDocs } from '@/lib/data/strategy';
+import { listReleasedReports } from '@/lib/data/perf';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AWAITING } from '@/lib/constants';
 import { ContentCard } from '@/components/content/ContentCard';
@@ -9,7 +10,7 @@ import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { ProfileFeed } from '@/components/feed/ProfileFeed';
 import { ApproveAll } from '@/components/review/ApproveAll';
 import { BrandElement } from '@/components/brand/Brand';
-import { ArrowRight, FileText } from 'lucide-react';
+import { ArrowRight, BarChart3, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/Misc';
 import { ViewTabs, parseView } from '@/components/ui/ViewTabs';
 import { firstName } from '@/lib/utils';
@@ -24,6 +25,7 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
 
   const items = await clientCards(session);
   const strategyCount = (await listPublicStrategyDocs(createAdminClient(), client.id)).length;
+  const resultsCount = (await listReleasedReports(createAdminClient(), client.id)).length;
   const awaiting = items.filter((i) => AWAITING.includes(i.status));
   const changes = items.filter((i) => i.status === 'changes_requested');
   const approved = items.filter((i) => ['approved', 'scheduled', 'published'].includes(i.status));
@@ -84,6 +86,18 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
             <span className="label block text-white/70">Documentos</span>
             <span className="h-display text-2xl text-white">Estratégia de rede</span>
             <span className="block text-xs text-white/75">{strategyCount} {strategyCount === 1 ? 'documento' : 'documentos'}, organizados por mês</span>
+          </span>
+          <ArrowRight className="size-5 text-white" />
+        </Link>
+      )}
+
+      {resultsCount > 0 && (
+        <Link href={`${base}/resultados`} className="mb-8 flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15 text-white"><BarChart3 className="size-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="label block text-white/70">Desempenho</span>
+            <span className="h-display text-2xl text-white">Resultados</span>
+            <span className="block text-xs text-white/75">{resultsCount} {resultsCount === 1 ? 'relatório mensal disponível' : 'relatórios mensais disponíveis'}</span>
           </span>
           <ArrowRight className="size-5 text-white" />
         </Link>

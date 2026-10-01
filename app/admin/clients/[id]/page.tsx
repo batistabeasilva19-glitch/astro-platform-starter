@@ -78,6 +78,8 @@ export default async function ClientWorkspacePage({
           <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             <Link href={`/admin/clients/${id}`} className="text-wine underline-offset-4 hover:underline">Ver conteúdos →</Link>
             <Link href={`/admin/clients/${id}/estrategia`} className="text-wine underline-offset-4 hover:underline">Estratégia de rede →</Link>
+            <Link href={`/admin/clients/${id}/desempenho`} className="text-wine underline-offset-4 hover:underline">Desempenho →</Link>
+            <Link href={`/admin/clients/${id}/relatorios`} className="text-wine underline-offset-4 hover:underline">Relatórios →</Link>
           </div>
         </div>
         <div className="card p-5">
