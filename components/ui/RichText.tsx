@@ -71,11 +71,12 @@ export function RichText({ text, className }: { text: string; className?: string
         </blockquote>,
       );
     } else {
-      out.push(<span key={`p${i}`} className="block min-h-[1em]">{inline(line)}</span>);
+      out.push(<span key={`p${i}`} className="block min-h-[1.2em]">{inline(line)}</span>);
       i++;
     }
   }
-  return <div className={className}>{out}</div>;
+  // pre-wrap: mantém exatamente os espaços, recuos e linhas em branco do texto colado
+  return <div className={cn('whitespace-pre-wrap break-words', className)}>{out}</div>;
 }
 
 const BUTTONS = [
