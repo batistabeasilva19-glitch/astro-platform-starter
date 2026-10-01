@@ -42,6 +42,8 @@ export interface PlanItemRow {
   publish_date: string | null;
   description: string;
   content_id: string | null;
+  /** link da arte (Drive, Canva, Figma…) */
+  link: string;
   client_status: ItemStatus;
   client_note: string;
   decided_at: string | null;

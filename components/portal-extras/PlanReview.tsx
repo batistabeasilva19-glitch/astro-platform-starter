@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Pencil, Undo2 } from 'lucide-react';
-import { approveWholePlan, decidePlanItem } from '@/lib/actions/extras-portal';
+import { Check, ExternalLink, MessageSquare, Pencil, Undo2 } from 'lucide-react';
+import { approveWholePlan, commentPlanItem, decidePlanItem } from '@/lib/actions/extras-portal';
 import { Button } from '@/components/ui/Button';
 import { FormMessage, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
@@ -18,6 +18,7 @@ export function PlanReview({ token, plans, thumbs }: { token: string; plans: Pla
   const [month, setMonth] = useState(monthKey(plans[0].month));
   const plan = plans.find((p) => monthKey(p.month) === month) ?? plans[0];
   const [change, setChange] = useState<PlanItemRow | null>(null);
+  const [comment, setComment] = useState<PlanItemRow | null>(null);
   const [note, setNote] = useState('');
   const [all, setAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,31 +75,44 @@ export function PlanReview({ token, plans, thumbs }: { token: string; plans: Pla
                 </div>
                 <h3 className="mt-1 text-[1.05rem] leading-snug text-ink">{it.title}</h3>
                 {it.description && <p className="mt-1 whitespace-pre-line text-sm leading-relaxed text-ink/65">{it.description}</p>}
-                {it.client_status === 'changes_requested' && it.client_note && <p className="mt-2 rounded-xl bg-blush px-3 py-2 text-sm text-wine">Você pediu: “{it.client_note}”</p>}
+                {it.link && <a href={it.link} target="_blank" rel="noreferrer" className="mt-2 inline-flex items-center gap-1.5 text-sm text-wine underline-offset-4 hover:underline">Ver arte <ExternalLink className="size-3.5" /></a>}
+                {it.client_note && <p className="mt-2 rounded-xl bg-blush px-3 py-2 text-sm text-wine"><span className="label mr-1 text-[0.6rem]">Sua consideração:</span>“{it.client_note}”</p>}
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-2 sm:pl-14">
+            <div className="mt-4 flex flex-wrap items-center gap-2 sm:pl-14">
               {it.client_status === 'pending' ? (
                 <>
                   <Button size="sm" loading={pending} onClick={() => run(() => decidePlanItem(token, it.id, 'approved'), 'Aprovado ♡')}><Check className="size-3.5" /> Aprovar</Button>
-                  <Button size="sm" variant="outline" onClick={() => { setChange(it); setNote(''); setError(null); }}><Pencil className="size-3.5" /> Pedir alteração</Button>
+                  <Button size="sm" variant="outline" onClick={() => { setChange(it); setNote(it.client_note); setError(null); }}><Pencil className="size-3.5" /> Pedir ajuste</Button>
                 </>
               ) : (
                 <Button size="sm" variant="ghost" loading={pending} onClick={() => run(() => decidePlanItem(token, it.id, 'pending'), 'Decisão desfeita')}><Undo2 className="size-3.5" /> Mudar minha decisão</Button>
               )}
+              <Button size="sm" variant="ghost" onClick={() => { setComment(it); setNote(it.client_note); setError(null); }}><MessageSquare className="size-3.5" /> {it.client_note ? 'Editar consideração' : 'Deixar consideração'}</Button>
             </div>
           </li>
         ))}
       </ol>
 
       {change && (
-        <Modal open onClose={() => setChange(null)} title="Pedir alteração">
+        <Modal open onClose={() => setChange(null)} title="Pedir ajuste">
           <p className="mb-3 text-sm text-ink/65">{change.title}</p>
-          <Textarea autoFocus rows={5} value={note} onChange={(e) => setNote(e.target.value)} placeholder="O que você gostaria de mudar?" />
+          <Textarea autoFocus rows={5} value={note} onChange={(e) => setNote(e.target.value)} placeholder="O que você gostaria de ajustar?" />
           <div className="mt-3"><FormMessage error={error} /></div>
           <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
             <Button variant="ghost" onClick={() => setChange(null)}>Voltar</Button>
-            <Button loading={pending} disabled={!note.trim()} onClick={() => run(() => decidePlanItem(token, change.id, 'changes_requested', note), 'Pedido enviado. Obrigada! ♡', () => setChange(null))}>Enviar pedido</Button>
+            <Button loading={pending} disabled={!note.trim()} onClick={() => run(() => decidePlanItem(token, change.id, 'changes_requested', note), 'Pedido de ajuste enviado. Obrigada! ♡', () => setChange(null))}>Enviar pedido</Button>
+          </div>
+        </Modal>
+      )}
+      {comment && (
+        <Modal open onClose={() => setComment(null)} title="Sua consideração">
+          <p className="mb-3 text-sm text-ink/65">{comment.title}</p>
+          <Textarea autoFocus rows={5} value={note} onChange={(e) => setNote(e.target.value)} placeholder="Escreva aqui o que quiser comentar sobre este item…" />
+          <div className="mt-3"><FormMessage error={error} /></div>
+          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <Button variant="ghost" onClick={() => setComment(null)}>Voltar</Button>
+            <Button loading={pending} onClick={() => run(() => commentPlanItem(token, comment.id, note), 'Consideração salva ♡', () => setComment(null))}>Salvar</Button>
           </div>
         </Modal>
       )}

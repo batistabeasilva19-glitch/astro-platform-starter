@@ -109,7 +109,7 @@ export async function deletePlan(id: string): Promise<ActionResult> {
 }
 
 /** Itens em ordem (posts, carrosséis, Reels…). Editar um item já decidido o devolve para “Aguardando”. */
-export async function savePlanItem(input: { id?: string; planId: string; format: string; title: string; publish_date?: string; description?: string; content_id?: string | null }): Promise<ActionResult> {
+export async function savePlanItem(input: { id?: string; planId: string; format: string; title: string; publish_date?: string; description?: string; link?: string; content_id?: string | null }): Promise<ActionResult> {
   const supabase = await ctx();
   const title = trim(input.title, 200);
   if (!title) return fail('Dê um título ao item.');
@@ -118,11 +118,16 @@ export async function savePlanItem(input: { id?: string; planId: string; format:
   const { data: plan } = await supabase.from('client_plans').select('id, client_id, status, visible').eq('id', input.planId).maybeSingle();
   if (!plan) return fail('Calendário não encontrado.');
   if (!(await contentOk(supabase, plan.client_id as string, input.content_id))) return fail('Conteúdo não encontrado.');
-  const row = { format: input.format, title, publish_date: input.publish_date || null, description: trim(input.description, 4000), content_id: input.content_id || null };
+  const link = trim(input.link, 500);
+  if (link && !/^https?:\/\/\S+$/i.test(link)) return fail('O link precisa começar com https://');
+  const row = { format: input.format, title, publish_date: input.publish_date || null, description: trim(input.description, 4000), content_id: input.content_id || null } as Record<string, unknown>;
+  // o campo `link` só entra se for usado (assim o resto funciona mesmo antes da migration 0013)
+  if (link) row.link = link;
   let reopen = false;
   if (input.id) {
     const { data: cur } = await supabase.from('client_plan_items').select('*').eq('id', input.id).maybeSingle();
-    const changed = !!cur && (cur.format !== row.format || cur.title !== row.title || cur.publish_date !== row.publish_date || cur.description !== row.description || cur.content_id !== row.content_id);
+    const changed = !!cur && (cur.format !== row.format || cur.title !== row.title || cur.publish_date !== row.publish_date || cur.description !== row.description || cur.content_id !== row.content_id || (cur.link ?? '') !== link);
+    if (!link && cur && 'link' in cur) row.link = '';
     const { error } = await supabase.from('client_plan_items').update({ ...row, ...(changed && cur?.client_status !== 'pending' ? { client_status: 'pending', decided_at: null } : {}) }).eq('id', input.id).eq('plan_id', input.planId);
     if (error) return fail(MISSING);
     reopen = changed && cur?.client_status !== 'pending';
