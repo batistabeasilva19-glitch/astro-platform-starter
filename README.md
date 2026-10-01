@@ -26,7 +26,7 @@ O sistema tem dois módulos **independentes**, que compartilham clientes, login,
 
 Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, aprovações, histórico e **link próprio** (copiar / novo link / revogar). Na identidade, o cliente pode **favoritar** propostas de logo (não aprova nada), **escolher** uma proposta, **aprovar**, **solicitar alteração** e **comentar** em cada etapa. As etapas podem ser ativadas/desativadas por projeto.
 
-> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) `0008_desempenho.sql` (Desempenho & Relatórios) `0009_perfil_antes.sql` (print do perfil “antes”) `0010_metricas_antes_depois.sql` (“antes” de cada métrica) e `0011_producao.sql` (Produção / Kanban) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
+> **Atualizando um projeto que já está no ar:** rode, em ordem, `0002_identidade_visual.sql` e `0003_identidade_completa.sql` `0004_perfil.sql` (foto do perfil) `0005_links_identidade.sql` (links de acesso rápido) `0006_estrategia.sql` (PDFs de estratégia de rede) `0007_formulario_marca.sql` (etapa “Formulário da marca”) `0008_desempenho.sql` (Desempenho & Relatórios) `0009_perfil_antes.sql` (print do perfil “antes”) `0010_metricas_antes_depois.sql` (“antes” de cada métrica) `0011_producao.sql` (Produção / Kanban) e `0012_portal_roteiros_calendario_stories.sql` (roteiros, calendário do mês e stories do cliente) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.
@@ -36,6 +36,15 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
 - **Decisões do cliente** (admin): logo favorita/aprovada (e versão), paleta favorita, cores escolhidas, tipografias, alterações solicitadas e favoritos.
 - **Aprovação final automática** quando todas as etapas ativas estão aprovadas, com resumo e registro do que foi aprovado.
 - **Arquivos finais:** por categoria, com **“Disponibilizar para cliente [ON/OFF]”** por arquivo; só aparecem depois da aprovação, e o download é registrado.
+
+## Roteiros, Calendário do mês e Stories (no link do cliente)
+
+Em cada cliente (`/admin/clients/<id>/roteiros`, `/mes`, `/stories`) e, no link `/review/<token>`, três cartões que só aparecem quando há conteúdo liberado:
+
+- **Roteiros:** você lista os vídeos a gravar **em ordem** (por mês) e escreve o roteiro. O cliente vê numerado (1, 2, 3…) e toca em **Copiar roteiro** / **Copiar com título** / **Copiar todos** (funciona no celular).
+- **Calendário do mês (aprovação):** você monta o mês em ordem (posts, carrosséis, Reels…) e **envia**. O cliente aprova item por item, **aprova o calendário completo** ou pede alteração com comentário. Editar um item já decidido o devolve para “Aguardando”. Você acompanha o status e os pedidos.
+- **Stories do dia:** você coloca os stories de cada dia em ordem (um por linha, em lote, se quiser). O cliente vê numerado e toca em **OK, postei** em cada um (dá para desfazer); você vê o que já foi postado, por quem e quando.
+- Opcionalmente, cada item pode mostrar a arte de um conteúdo já cadastrado. Nada aparece para o cliente até estar liberado (calendário só depois de enviado; roteiros e stories podem ser ocultados).
 
 ## Produção (Kanban interno)
 
