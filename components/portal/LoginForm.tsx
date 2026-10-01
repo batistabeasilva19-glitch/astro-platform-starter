@@ -2,15 +2,15 @@
 
 import { useActionState } from 'react';
 import { useRouter } from 'next/navigation';
-import { portalLogin } from '@/lib/actions/portal-auth';
+import { portalLogin, type PortalKind } from '@/lib/actions/portal-auth';
 import type { ActionResult } from '@/lib/actions/shared';
 import { Button } from '@/components/ui/Button';
 import { Field, FormMessage, Input } from '@/components/ui/Fields';
 
-export function LoginForm({ token }: { token: string }) {
+export function LoginForm({ token, kind = 'portal' }: { token: string; kind?: PortalKind }) {
   const router = useRouter();
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(async (prev, fd) => {
-    const r = await portalLogin(token, prev, fd);
+    const r = await portalLogin(kind, token, prev, fd);
     if (r.ok) router.refresh();
     return r;
   }, null);
