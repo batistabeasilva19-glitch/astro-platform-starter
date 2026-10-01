@@ -6,6 +6,7 @@ import type { ContentFormat, VersionWithMedia } from '@/lib/types';
 import { Avatar } from '@/components/ui/Misc';
 import { Carousel, Placeholder, VideoPlayer } from './Carousel';
 import { StoryViewer } from './StoryViewer';
+import { LightImage } from './LightImage';
 import { fmtDuration } from '@/lib/utils';
 
 interface Props {
@@ -51,7 +52,7 @@ export function InstagramPost({ handle, displayName, avatarUrl, format, version,
       ) : format === 'reel' || format === 'video' ? (
         <VideoPlayer src={video?.url} poster={cover?.url} aspect={format === 'reel' ? 'story' : 'portrait'} />
       ) : images[0] ? (
-        <img src={images[0].url} alt="Arte do post" className="aspect-[4/5] w-full bg-blush object-cover" />
+        <LightImage src={images[0].url} alt="Arte do post" className="aspect-[4/5] w-full bg-blush object-cover" />
       ) : (
         <Placeholder text="Nenhuma arte enviada ainda" />
       )}

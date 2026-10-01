@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { LightImage } from './LightImage';
 
 interface Props {
   images: { id: string; url: string }[];
@@ -50,7 +51,7 @@ export function Carousel({ images, aspect = 'portrait', onIndexChange, index }: 
         {images.map((img, i) => (
           <div key={img.id} className={cn('w-full shrink-0 snap-center', aspect === 'story' ? 'aspect-[9/16]' : 'aspect-[4/5]')}>
             {/* só o slide atual e os vizinhos são carregados/decodificados: artes grandes não estouram a memória */}
-            {Math.abs(i - active) <= 1 ? <img src={img.url} alt={`Slide ${i + 1}`} decoding="async" className="size-full object-cover" draggable={false} /> : null}
+            {Math.abs(i - active) <= 1 ? <LightImage src={img.url} alt={`Slide ${i + 1}`} className="size-full object-cover" /> : null}
           </div>
         ))}
       </div>

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Avatar } from '@/components/ui/Misc';
 import { cn } from '@/lib/utils';
 import { Placeholder } from './Carousel';
+import { LightImage } from './LightImage';
 
 /** Telas sequenciais de Story: toque/clique nas laterais para avançar ou voltar. */
 export function StoryViewer({
@@ -23,7 +24,7 @@ export function StoryViewer({
 
   return (
     <div className="relative aspect-[9/16] overflow-hidden rounded-[1.75rem] bg-ink">
-      <img src={images[i].url} alt={`Tela ${i + 1}`} className="size-full object-cover" draggable={false} />
+      <LightImage key={images[i].id} src={images[i].url} alt={`Tela ${i + 1}`} className="size-full object-cover" />
       <div className="absolute inset-x-0 top-0 bg-gradient-to-b from-ink/50 to-transparent p-3">
         <div className="flex gap-1">
           {images.map((img, n) => (
