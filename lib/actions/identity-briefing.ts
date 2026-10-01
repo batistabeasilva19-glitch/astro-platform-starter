@@ -39,7 +39,7 @@ const done = (token: string) => {
 export async function saveBriefingAnswers(token: string, answers: unknown): Promise<ActionResult> {
   const c = await ctx(token);
   if (!c.ok) return fail(c.error);
-  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado. Clique em “Editar respostas” para alterar.');
+  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado e está travado. Fale com a Soltria para liberar a edição.');
   const clean = sanitizeAnswers(answers);
   const { error } = await c.db.from('identity_versions').update({ content: { ...c.version.content, answers: clean } }).eq('id', c.version.id);
   if (error) return fail('Não foi possível salvar. Tente novamente.');
@@ -82,7 +82,7 @@ export async function reopenBriefing(token: string): Promise<ActionResult> {
 export async function createReferenceUpload(token: string, input: { fileName: string; mime: string; size: number }): Promise<ActionResult<{ path: string; uploadToken: string }>> {
   const c = await ctx(token);
   if (!c.ok) return fail(c.error);
-  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado. Clique em “Editar respostas” para adicionar fotos.');
+  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado e está travado. Fale com a Soltria para liberar a edição.');
   if (!input.mime.startsWith('image/')) return fail('Envie apenas imagens (JPG, PNG, WEBP…).');
   if (input.size > 15 * 1024 * 1024) return fail('A imagem deve ter até 15 MB.');
   const ext = (input.fileName.split('.').pop() ?? '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -140,7 +140,7 @@ export async function updateReferenceCaption(token: string, assetId: string, cap
 export async function removeReferenceAsset(token: string, assetId: string): Promise<ActionResult> {
   const c = await ownAsset(token, assetId);
   if (!c.ok) return fail(c.error);
-  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado. Clique em “Editar respostas” para remover fotos.');
+  if (c.stage.status !== 'awaiting') return fail('O formulário já foi enviado e está travado. Fale com a Soltria para liberar a edição.');
   await c.db.from('identity_assets').delete().eq('id', assetId);
   const { count } = await c.db.from('identity_assets').select('id', { count: 'exact', head: true }).eq('storage_path', c.asset.storage_path);
   if (!count) await removeFiles([c.asset.storage_path]);
