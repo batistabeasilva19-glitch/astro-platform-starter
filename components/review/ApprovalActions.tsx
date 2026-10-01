@@ -81,10 +81,10 @@ export function ApprovalActions({ token, contentId, versionId, versionNumber, fo
   return (
     <>
       <div className="grid gap-3 sm:grid-cols-2">
-        <Button size="lg" onClick={() => setModal('approve')} className="py-4">
+        <Button size="lg" onClick={() => setModal('approve')} className="!whitespace-normal py-4 text-center !tracking-[0.08em] max-sm:!px-4 max-sm:!text-[0.8rem]">
           <Check className="size-4" /> {format === 'carousel' ? 'Aprovar carrossel completo' : 'Aprovar conteúdo'}
         </Button>
-        <Button size="lg" variant="outline" onClick={() => setModal('change')} className="py-4">
+        <Button size="lg" variant="outline" onClick={() => setModal('change')} className="!whitespace-normal py-4 text-center !tracking-[0.08em] max-sm:!px-4 max-sm:!text-[0.8rem]">
           <Pencil className="size-4" /> Solicitar alteração
         </Button>
       </div>
