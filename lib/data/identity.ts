@@ -142,3 +142,21 @@ export async function logIdentity(
     detail: e.detail,
   });
 }
+
+/**
+ * Conserta projetos que ficaram sem etapas (ex.: criados quando a criação das etapas falhou):
+ * cria as etapas que faltam, já com a versão 01. Devolve true se criou algo.
+ */
+export async function ensureStages(db: SupabaseClient, projectId: string, existingKeys: string[]): Promise<boolean> {
+  const missing = STAGES.filter((s) => !existingKeys.includes(s.key));
+  if (!missing.length) return false;
+  const rows = (list: typeof STAGES) => list.map((s) => ({ project_id: projectId, stage_key: s.key }));
+  let { data, error } = await db.from('identity_stages').insert(rows(missing)).select('id');
+  if (error || !data) {
+    // banco sem a migration 0007 (etapa "Formulário da marca"): recria as demais
+    ({ data, error } = await db.from('identity_stages').insert(rows(missing.filter((s) => s.key !== 'briefing'))).select('id'));
+  }
+  if (error || !data?.length) return false;
+  await db.from('identity_versions').insert(data.map((s) => ({ stage_id: s.id as string, version_number: 1, content: {} })));
+  return true;
+}

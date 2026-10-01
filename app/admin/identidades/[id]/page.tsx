@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { getClient, listClients, requireUser } from '@/lib/data/clients';
-import { fetchIdentityDetail } from '@/lib/data/identity';
+import { ensureStages, fetchIdentityDetail } from '@/lib/data/identity';
 import { getSiteUrl } from '@/lib/site-url';
 import { STAGES, STAGE_BY_KEY, STAGE_STATUS_META, isStageKey, stageSentence } from '@/lib/identity/types';
 import { ProgressBar, ProjectStatusBadge, StageStatusBadge } from '@/components/identity/ui';
@@ -24,8 +24,13 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
   const etapa = (await searchParams).etapa ?? 'geral';
   const user = await requireUser();
   const supabase = await createClient();
-  const detail = await fetchIdentityDetail(supabase, id);
+  let detail = await fetchIdentityDetail(supabase, id);
   if (!detail) notFound();
+  // projeto sem todas as etapas (criado quando a criação falhou): recria as que faltam e recarrega
+  if (await ensureStages(supabase, id, detail.stages.map((st) => st.stage_key))) {
+    const fresh = await fetchIdentityDetail(supabase, id);
+    if (fresh) detail = fresh;
+  }
   const { project, stages, activity } = detail;
   // a lista de clientes só é usada no formulário da Visão geral: nas outras etapas não precisa carregar
   const needsClients = !etapa || etapa === 'geral' || !(isStageKey(etapa) || etapa === 'historico' || etapa === 'decisoes');
