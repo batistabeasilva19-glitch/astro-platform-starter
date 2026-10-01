@@ -61,11 +61,19 @@ export const BRIEFING_SECTIONS: Section[] = [
   {
     id: 'publico',
     title: 'Para quem é a marca',
+    intro: 'Escolha as opções que mais combinam — pode marcar mais de uma. Isso ajuda a desenhar a marca para as pessoas certas.',
     questions: [
-      { id: 'audience', label: 'Quem é o público da marca?', type: 'textarea', required: true, hint: 'Perfil geral: faixa de idade, estilo de vida, o que busca.' },
-      { id: 'where', label: 'Onde esse público está? (cidade, região, internet…)', type: 'textarea' },
-      { id: 'values_audience', label: 'O que esse público mais valoriza?', type: 'textarea' },
-      { id: 'feel', label: 'Como a marca quer que as pessoas se sintam ao ter contato com ela?', type: 'textarea' },
+      { id: 'customer_type', label: 'A marca vende principalmente para…', type: 'select', options: ['Pessoas (consumidor final)', 'Empresas (B2B)', 'Os dois'] },
+      { id: 'age_ranges', label: 'Qual a faixa de idade do público?', type: 'multi', options: ['Até 17 anos', '18 a 24', '25 a 34', '35 a 44', '45 a 54', '55 a 64', '65 anos ou mais', 'Todas as idades'], hint: 'Marque todas que se aplicam.' },
+      { id: 'gender', label: 'Para quem a marca fala?', type: 'multi', options: ['Mulheres', 'Homens', 'Todos os gêneros', 'Público LGBTQIA+', 'Casais', 'Famílias', 'Mães e gestantes', 'Crianças e adolescentes'] },
+      { id: 'income', label: 'Qual o poder aquisitivo do público?', type: 'select', options: ['Popular / acessível', 'Médio', 'Médio-alto', 'Alto / premium', 'Varia bastante'] },
+      { id: 'lifestyle', label: 'Como é o estilo de vida desse público?', type: 'multi', options: ['Vida corrida', 'Empreendedor(a)', 'Profissional liberal', 'Estudante', 'Família / casa', 'Aventureiro(a)', 'Bem-estar e saúde', 'Fashion e tendências', 'Tecnologia', 'Tradicional', 'Sustentável / consciente', 'Luxo e exclusividade'] },
+      { id: 'buy_moment', label: 'O que leva essa pessoa a procurar a marca?', type: 'multi', options: ['Necessidade do dia a dia', 'Autocuidado / se presentear', 'Presentear alguém', 'Ocasião especial', 'Resolver um problema', 'Status e exclusividade', 'Indicação de alguém', 'Curiosidade / novidade'] },
+      { id: 'where_area', label: 'Onde esse público está?', type: 'multi', options: ['Bairro / região específica', 'Minha cidade', 'Meu estado', 'Brasil todo', 'Internacional', 'Só online'] },
+      { id: 'channels', label: 'Onde esse público passa o tempo e encontra a marca?', type: 'multi', options: ['Instagram', 'TikTok', 'WhatsApp', 'Google', 'Pinterest', 'YouTube', 'LinkedIn', 'Loja física', 'Indicação / boca a boca', 'Eventos'] },
+      { id: 'values_audience', label: 'O que esse público mais valoriza?', type: 'multi', options: ['Qualidade', 'Preço justo', 'Atendimento acolhedor', 'Exclusividade', 'Praticidade', 'Estética / beleza', 'Confiança', 'Inovação', 'Sustentabilidade', 'Tradição', 'Resultado rápido', 'Personalização'] },
+      { id: 'audience', label: 'Descreva com suas palavras o cliente ideal da marca', type: 'textarea', required: true, hint: 'Como se fosse uma pessoa real: o que ela faz, o que ela busca, o que a incomoda.', placeholder: 'Ex.: Mulher de 30 a 45 anos, profissional ocupada, que quer se cuidar sem perder tempo…' },
+      { id: 'feel', label: 'Como a marca quer que as pessoas se sintam ao ter contato com ela?', type: 'multi', options: ['Acolhidas', 'Seguras', 'Especiais', 'Inspiradas', 'Bonitas', 'Confiantes', 'Relaxadas', 'Animadas', 'Pertencentes', 'Empoderadas'] },
     ],
   },
   {
