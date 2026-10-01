@@ -41,7 +41,7 @@ export function ScriptsManager({ clientId, rows }: { clientId: string; rows: Scr
               <OrderControls n={i + 1} first={i === 0} last={i === list.length - 1} disabled={pending} onUp={() => act(() => moveScript(r.id, -1))} onDown={() => act(() => moveScript(r.id, 1))} />
               <div className="min-w-0 flex-1">
                 <p className="text-base text-ink">{r.title}</p>
-                <p className="text-xs text-ink/50">{r.shoot_date ? `Gravar em ${shortDate(r.shoot_date)} · ` : ''}{r.visible ? 'Visível ao cliente' : 'Oculto'}</p>
+                <p className="text-xs text-ink/50">{r.shoot_date ? `Postar em ${shortDate(r.shoot_date)} · ` : ''}{r.visible ? 'Visível ao cliente' : 'Oculto'}</p>
                 <p className="mt-2 line-clamp-3 whitespace-pre-line text-sm text-ink/65">{r.script || <span className="text-ink/35">Sem roteiro ainda.</span>}</p>
               </div>
               <div className="flex shrink-0 flex-col gap-0.5">
@@ -73,7 +73,7 @@ function ScriptForm({ clientId, month, row, onClose }: { clientId: string; month
         <Field label="Título do vídeo"><Input autoFocus value={f.title} onChange={(e) => setF({ ...f, title: e.target.value })} placeholder="Ex.: 3 erros que sabotam sua pele" maxLength={200} /></Field>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Mês"><Input type="month" value={f.month} onChange={(e) => setF({ ...f, month: e.target.value })} /></Field>
-          <Field label="Data para gravar (opcional)"><Input type="date" value={f.shoot_date} onChange={(e) => setF({ ...f, shoot_date: e.target.value })} /></Field>
+          <Field label="Data que será postado (opcional)"><Input type="date" value={f.shoot_date} onChange={(e) => setF({ ...f, shoot_date: e.target.value })} /></Field>
         </div>
         <Field label="Roteiro" hint="O cliente copia o texto exatamente como está aqui (as quebras de linha são mantidas)."><RichTextarea rows={12} value={f.script} onChange={(e) => setF({ ...f, script: e.target.value })} placeholder={'Abertura: …\nDesenvolvimento: …\nFechamento / chamada para ação: …'} /></Field>
         <Field label="Observações para o cliente (opcional)"><Textarea rows={2} value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} placeholder="Ex.: gravar na clínica, com jaleco branco." /></Field>

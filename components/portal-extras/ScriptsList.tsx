@@ -61,7 +61,7 @@ export function ScriptsList({ rows }: { rows: ScriptRow[] }) {
               <span className="h-display flex size-11 shrink-0 items-center justify-center rounded-full bg-wine text-xl text-white">{i + 1}</span>
               <div className="min-w-0">
                 <h2 className="h-display text-2xl leading-tight text-wine sm:text-3xl">{r.title}</h2>
-                {r.shoot_date && <p className="mt-1 text-xs text-ink/55">Gravar em {shortDate(r.shoot_date)}</p>}
+                {r.shoot_date && <p className="mt-1 text-xs text-ink/55">Postar em {shortDate(r.shoot_date)}</p>}
               </div>
             </div>
             {r.notes && <p className="mt-4 rounded-2xl bg-blush px-4 py-3 text-sm text-wine">{r.notes}</p>}
