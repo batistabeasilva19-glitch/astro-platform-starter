@@ -3,11 +3,11 @@
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Download, Eye, EyeOff, History, MessageSquareText, Plus, Power, Send, Trash2 } from 'lucide-react';
-import { addAdminIdentityComment, createStageVersion, deleteAnnotation, sendStageForApproval, setStageEnabled } from '@/lib/actions/identity';
-import { STAGE_BY_KEY, type CommentRowLike, type IdentityDetail, type SignedAsset, type StageData } from '@/lib/identity/types';
+import { addAdminIdentityComment, createStageVersion, deleteAnnotation, sendStageForApproval, setStageEnabled, setStageStatus } from '@/lib/actions/identity';
+import { BRIEFING_STATUS_LABEL, STAGE_BY_KEY, STAGE_STATUS_META, type StageStatus, type CommentRowLike, type IdentityDetail, type SignedAsset, type StageData } from '@/lib/identity/types';
 import { CommentThread } from '@/components/content/Thread';
 import { Button } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Fields';
+import { Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtStamp } from '@/lib/utils';
@@ -86,6 +86,24 @@ export function StageWorkspace({ stage, ctx, detail }: { stage: StageData; ctx: 
               <Button size="sm" variant={stage.status === 'changes_requested' ? 'outline' : 'ghost'} onClick={() => setModal(true)}>
                 {stage.status === 'changes_requested' ? <Plus className="size-3.5" /> : <History className="size-3.5" />} Nova versão
               </Button>
+            )}
+            {meta.approvable && !isFiles && (
+              <Select
+                aria-label="Alterar status manualmente"
+                title="Alterar status manualmente"
+                value={stage.status}
+                disabled={pending}
+                onChange={(e) => {
+                  const next = e.target.value as StageStatus;
+                  const label = isBriefing ? BRIEFING_STATUS_LABEL[next].admin : STAGE_STATUS_META[next].label;
+                  if (confirm(`Alterar o status desta etapa para “${label}”? ${next === 'approved' ? 'Ela será registrada como aprovada manualmente por você.' : next === 'awaiting' ? 'O cliente passa a ver esta etapa para aprovar.' : ''}`)) run(() => setStageStatus(stage.id, next), 'Status atualizado ♡');
+                }}
+                className="!w-auto !py-1.5 text-[0.78rem]"
+              >
+                {(['draft', 'awaiting', 'changes_requested', 'approved'] as StageStatus[]).map((st) => (
+                  <option key={st} value={st}>{isBriefing ? BRIEFING_STATUS_LABEL[st].admin : STAGE_STATUS_META[st].label}</option>
+                ))}
+              </Select>
             )}
             <Button size="sm" variant="ghost" onClick={() => run(() => setStageEnabled(stage.id, false), 'Etapa desativada')} aria-label="Desativar etapa">
               <Power className="size-3.5" /> Desativar
