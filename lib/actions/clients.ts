@@ -52,6 +52,8 @@ export async function saveClient(_prev: ActionResult | null, fd: FormData): Prom
     const { error } = await supabase.from('clients').update(row).eq('id', editingId);
     if (error) return fail('Não foi possível salvar as alterações.');
     revalidatePath('/admin', 'layout');
+    const back = String(fd.get('next') || '');
+    if (back.startsWith('/admin/identidades')) redirect(back);
     redirect(`/admin/clients/${editingId}`);
   }
 
