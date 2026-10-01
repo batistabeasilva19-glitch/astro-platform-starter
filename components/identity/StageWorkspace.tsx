@@ -123,6 +123,12 @@ export function StageWorkspace({ stage, ctx, detail, email }: { stage: StageData
         {stage.status === 'approved' && stage.approved_at && !isFiles && (
           <p className="rounded-2xl bg-blush px-4 py-3 text-sm text-wine">✓ {isBriefing ? 'Respondido' : 'Aprovado'} por <strong className="font-normal">{stage.approved_by}</strong> em {fmtStamp(stage.approved_at)}</p>
         )}
+        {isBriefing && stage.status === 'approved' && (
+          <div className="flex flex-wrap items-center gap-3 rounded-2xl border border-wine/20 px-4 py-3 text-sm">
+            <span className="min-w-0 flex-1 text-ink/70">🔒 O formulário está <strong className="font-normal text-wine">travado</strong> para o cliente. Ele só volta a editar se você liberar.</span>
+            <Button size="sm" variant="outline" loading={pending} onClick={() => run(() => setStageStatus(stage.id, 'awaiting'), 'Edição liberada ao cliente ♡')}>Liberar edição ao cliente</Button>
+          </div>
+        )}
         {stage.status === 'changes_requested' && (
           <p className="rounded-2xl border border-dashed border-wine/40 px-4 py-3 text-sm text-wine">
             O cliente pediu alteração (veja os comentários abaixo). {isLogo ? <>Crie uma <strong className="font-normal">nova versão</strong> dentro da proposta</> : <>Crie uma <strong className="font-normal">nova versão</strong> para ajustar sem perder a anterior</>} e envie novamente.

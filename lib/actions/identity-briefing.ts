@@ -66,16 +66,13 @@ export async function submitBriefing(token: string, answers: unknown): Promise<A
   return { ok: true };
 }
 
-/** Volta o formulário para edição ("Editar respostas"). */
+/**
+ * Depois de enviado, o formulário fica TRAVADO para o cliente. Só a administradora libera a edição
+ * (Identidade → Formulário da marca → "Liberar edição ao cliente"). A trava é conferida aqui, no servidor.
+ */
 export async function reopenBriefing(token: string): Promise<ActionResult> {
-  const c = await ctx(token);
-  if (!c.ok) return fail(c.error);
-  if (c.stage.status !== 'approved') return fail('O formulário já está aberto para edição.');
-  await c.db.from('identity_stages').update({ status: 'awaiting', approved_at: null, approved_by: null }).eq('id', c.stage.id);
-  await syncProjectStatus(c.db, c.session.project.id);
-  await logIdentity(c.db, { projectId: c.session.project.id, stageId: c.stage.id, actorType: 'client', actorName: c.session.signerName, action: 'briefing', detail: 'Cliente reabriu o formulário para editar as respostas' });
-  done(token);
-  return { ok: true };
+  void token;
+  return fail('O formulário já foi enviado e está travado. Para alterar alguma resposta, fale com a Soltria — ela libera a edição para você.');
 }
 
 /**
