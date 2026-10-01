@@ -2,13 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { CalendarDays, LayoutDashboard, Users } from 'lucide-react';
+import { CalendarDays, LayoutDashboard, Palette, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LINKS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, exact: true },
   { href: '/admin/clients', label: 'Clientes', icon: Users },
   { href: '/admin/content', label: 'Conteúdos', icon: CalendarDays },
+  { href: '/admin/identidades', label: 'Identidade Visual', icon: Palette },
 ];
 
 export function NavLinks({ orientation }: { orientation: 'vertical' | 'horizontal' }) {

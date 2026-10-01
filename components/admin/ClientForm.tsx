@@ -12,7 +12,7 @@ import { Field, FormMessage, Input, Textarea } from '@/components/ui/Fields';
 import { Avatar } from '@/components/ui/Misc';
 import { useToast } from '@/components/ui/Toast';
 
-export function ClientForm({ ownerId, newId, client }: { ownerId: string; newId: string; client?: ClientWithProject }) {
+export function ClientForm({ ownerId, newId, client, next }: { ownerId: string; newId: string; client?: ClientWithProject; next?: string }) {
   const [state, action, pending] = useActionState<ActionResult | null, FormData>(saveClient, null);
   const id = client?.id ?? newId;
   const [avatarPath, setAvatarPath] = useState<string | undefined>(undefined);
@@ -41,6 +41,7 @@ export function ClientForm({ ownerId, newId, client }: { ownerId: string; newId:
     <form action={action} className="card space-y-6 p-6 sm:p-8">
       <input type="hidden" name="id" value={id} />
       {client && <input type="hidden" name="editing" value={client.id} />}
+      {next && <input type="hidden" name="next" value={next} />}
       {avatarPath !== undefined && <input type="hidden" name="avatar_path" value={avatarPath} />}
 
       <div className="flex items-center gap-5">
