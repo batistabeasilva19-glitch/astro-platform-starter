@@ -11,7 +11,7 @@ import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { ProfileFeed } from '@/components/feed/ProfileFeed';
 import { ApproveAll } from '@/components/review/ApproveAll';
 import { BrandElement } from '@/components/brand/Brand';
-import { ArrowRight, BarChart3, CalendarCheck, FileText, Film, Smartphone } from 'lucide-react';
+import { ArrowRight, BarChart3, CalendarCheck, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/Misc';
 import { ViewTabs, parseView } from '@/components/ui/ViewTabs';
 import { firstName } from '@/lib/utils';
@@ -82,23 +82,15 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
       )}
 
       {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0) && (
-        <div className="mb-8 grid gap-3 sm:grid-cols-3">
-          {([
-            [extras.stories, 'stories', 'Publicações', 'Stories', 'organizados por dia, em ordem', Smartphone],
-            [extras.scripts, 'roteiros', 'Gravações', 'Roteiros', 'prontos para copiar', Film],
-            [extras.plans, 'mes', 'Planejamento', 'Calendário do mês', 'para aprovar', CalendarCheck],
-          ] as const).filter((c) => c[0] > 0).map(([, path, kicker, title, sub, Icon]) => (
-            <Link key={path} href={`${base}/${path}`} className="flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
-              <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15"><Icon className="size-5" /></span>
-              <span className="min-w-0 flex-1">
-                <span className="label block text-white/70">{kicker}</span>
-                <span className="h-display text-2xl text-white">{title}</span>
-                <span className="block text-xs text-white/75">{sub}</span>
-              </span>
-              <ArrowRight className="size-5" />
-            </Link>
-          ))}
-        </div>
+        <Link href={`${base}/cronograma`} className="mb-8 flex items-center gap-4 rounded-3xl bg-wine p-5 text-white shadow-sm transition hover:bg-wine/90">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-white/15"><CalendarCheck className="size-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="label block text-white/70">Organização</span>
+            <span className="h-display text-2xl text-white">Cronograma de entregas</span>
+            <span className="block text-xs text-white/75">{[extras.scripts > 0 && 'roteiro de vídeos', extras.plans > 0 && 'calendário do mês', extras.stories > 0 && 'stories do dia'].filter(Boolean).join(' · ')}</span>
+          </span>
+          <ArrowRight className="size-5" />
+        </Link>
       )}
 
       {strategyCount > 0 && (
