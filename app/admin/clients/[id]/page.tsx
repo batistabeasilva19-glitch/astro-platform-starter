@@ -103,7 +103,7 @@ export default async function ClientWorkspacePage({
       <div className="mb-6 mt-8 flex flex-wrap items-center justify-between gap-3">
         <ViewTabs basePath={`/admin/clients/${id}`} current={view} />
         <div className="flex flex-wrap gap-2">
-          <SendAllButton clientId={id} drafts={drafts} />
+          <SendAllButton clientId={id} drafts={drafts} awaiting={c((s) => AWAITING.includes(s as never))} changes={c((s) => s === 'changes_requested')} />
           <LinkButton href={`/admin/clients/${id}/estrategia`} variant="outline">
             <FileText className="size-4" /> Estratégia de rede
           </LinkButton>
