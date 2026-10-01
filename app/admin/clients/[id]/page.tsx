@@ -113,7 +113,7 @@ export default async function ClientWorkspacePage({
       </div>
 
       <div className="mt-6">
-        <PortalAccess clientId={id} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
+        <PortalAccess clientId={id} clientName={client.contact_name || client.company_name} url={url} required={!!(client as { portal_login_required?: boolean }).portal_login_required} users={portalUsers ?? []} />
       </div>
 
       <div className="mt-6">

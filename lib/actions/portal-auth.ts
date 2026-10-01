@@ -70,15 +70,15 @@ export async function setLoginRequired(clientId: string, required: boolean): Pro
   return { ok: true };
 }
 
-export async function addPortalUser(clientId: string, email: string, password: string): Promise<ActionResult> {
+export async function addPortalUser(clientId: string, email: string, password: string): Promise<ActionResult<{ id: string }>> {
   const supabase = await ctx();
   const e = email.trim().toLowerCase();
   if (!EMAIL.test(e)) return fail('E-mail inválido.');
   if (password.length < 8) return fail('A senha precisa ter pelo menos 8 caracteres.');
-  const { error } = await supabase.from('client_portal_users').insert({ client_id: clientId, email: e, password_hash: await hashPassword(password) });
-  if (error) return fail(error.code === '23505' ? 'Já existe um acesso com este e-mail.' : MISSING);
+  const { data, error } = await supabase.from('client_portal_users').insert({ client_id: clientId, email: e, password_hash: await hashPassword(password) }).select('id').single();
+  if (error || !data) return fail(error?.code === '23505' ? 'Já existe um acesso com este e-mail.' : MISSING);
   refresh();
-  return { ok: true };
+  return { ok: true, id: data.id as string };
 }
 
 export async function resetPortalPassword(userId: string, password: string): Promise<ActionResult> {

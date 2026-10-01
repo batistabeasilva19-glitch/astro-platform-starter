@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { KeyRound, Trash2 } from 'lucide-react';
+import { Copy, KeyRound, Trash2 } from 'lucide-react';
 import { addPortalUser, deletePortalUser, resetPortalPassword, setLoginRequired } from '@/lib/actions/portal-auth';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Fields';
@@ -17,12 +17,30 @@ const genPassword = () => {
 };
 
 /** Login do cliente no portal: liga/desliga a exigência e gerencia os acessos (e-mail + senha). */
-export function PortalAccess({ clientId, required, users }: { clientId: string; required: boolean; users: PortalUserRow[] }) {
+export const accessMessage = (name: string, url: string, email: string, password?: string) =>
+  `${name}, esse link vai te acompanhar durante todo o nosso processo. Por ele, você poderá acessar tudo o que está sendo desenvolvido, acompanhar as informações do projeto, visualizar as alterações realizadas e fazer as aprovações de forma mais organizada.
+
+🔗 Link de acesso: ${url}
+📧 E-mail para login: ${email}
+🔒 Senha: ${password ?? '[inserir senha]'}
+
+Sempre que houver alguma atualização ou alteração, ela ficará registrada por aqui para você acompanhar com facilidade.
+
+Guarde esse acesso, porque será o nosso espaço principal para aprovações e acompanhamento do projeto. ✨`;
+
+export function PortalAccess({ clientId, clientName, url, required, users }: { clientId: string; clientName: string; url: string; required: boolean; users: PortalUserRow[] }) {
   const toast = useToast();
   const [pending, start] = useTransition();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [shown, setShown] = useState<string | null>(null);
+  // senhas só ficam conhecidas aqui logo depois de criadas/trocadas (no banco só existe o hash)
+  const [known, setKnown] = useState<Record<string, string>>({});
+  const copyMsg = (u: PortalUserRow) =>
+    navigator.clipboard.writeText(accessMessage(clientName, url, u.email, known[u.id])).then(
+      () => toast(known[u.id] ? 'Mensagem copiada ♡' : 'Mensagem copiada — troque [inserir senha] pela senha do cliente'),
+      () => toast('Não foi possível copiar.', 'error'),
+    );
 
   const run = (fn: () => Promise<{ ok: boolean; error?: string }>, okMsg: string) =>
     start(async () => {
@@ -58,7 +76,8 @@ export function PortalAccess({ clientId, required, users }: { clientId: string; 
                   <span className="block text-xs text-ink/50">{u.last_login_at ? `Último acesso: ${fmtDate(u.last_login_at.slice(0, 10), true)}` : 'Ainda não entrou'}</span>
                   {shown?.startsWith(u.id) && <span className="mt-1 block text-xs text-wine">Nova senha: <code className="select-all rounded bg-blush px-1.5 py-0.5">{shown.slice(u.id.length + 1)}</code> (anote e envie ao cliente)</span>}
                 </span>
-                <Button size="sm" variant="outline" disabled={pending} onClick={() => { const p = genPassword(); start(async () => { const r = await resetPortalPassword(u.id, p); if (r.ok) setShown(`${u.id}:${p}`); else toast(r.error, 'error'); }); }}>Nova senha</Button>
+                <Button size="sm" variant="outline" onClick={() => copyMsg(u)}><Copy className="size-3.5" /> Copiar mensagem</Button>
+                <Button size="sm" variant="outline" disabled={pending} onClick={() => { const p = genPassword(); start(async () => { const r = await resetPortalPassword(u.id, p); if (r.ok) { setShown(`${u.id}:${p}`); setKnown((k) => ({ ...k, [u.id]: p })); } else toast(r.error, 'error'); }); }}>Nova senha</Button>
                 <button aria-label="Remover acesso" disabled={pending} onClick={() => confirm(`Remover o acesso de ${u.email}?`) && run(() => deletePortalUser(u.id), 'Acesso removido')} className="rounded-full p-2 text-wine/60 hover:bg-blush hover:text-wine"><Trash2 className="size-4" /></button>
               </li>
             ))}
@@ -67,7 +86,7 @@ export function PortalAccess({ clientId, required, users }: { clientId: string; 
 
         <form
           className="grid gap-2 sm:grid-cols-[1fr_1fr_auto]"
-          onSubmit={(e) => { e.preventDefault(); run(async () => { const r = await addPortalUser(clientId, email, password); if (r.ok) { setShown(null); setEmail(''); setPassword(''); } return r; }, 'Acesso criado ♡'); }}
+          onSubmit={(e) => { e.preventDefault(); run(async () => { const r = await addPortalUser(clientId, email, password); if (r.ok) { setKnown((k) => ({ ...k, [r.id]: password })); setShown(null); setEmail(''); setPassword(''); } return r; }, 'Acesso criado ♡'); }}
         >
           <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail do cliente" required aria-label="E-mail do cliente" />
           <div className="flex gap-2">
@@ -76,7 +95,7 @@ export function PortalAccess({ clientId, required, users }: { clientId: string; 
           </div>
           <Button type="submit" loading={pending}>Criar acesso</Button>
         </form>
-        <p className="text-xs text-ink/50">Envie ao cliente o link do portal + e-mail e senha. A senha é guardada criptografada: depois de criada, só dá para trocar por uma nova.</p>
+        <p className="text-xs text-ink/50">Use “Copiar mensagem” para enviar ao cliente o texto pronto com nome, link, e-mail e senha. A senha é guardada criptografada: ela só aparece na mensagem logo depois de criada ou trocada — depois disso, gere uma “Nova senha”.</p>
       </div>
     </details>
   );
