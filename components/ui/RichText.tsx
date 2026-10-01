@@ -99,6 +99,28 @@ const BUTTONS = [
   { id: 'code', label: 'Código', Icon: Code },
 ] as const;
 
+const BLOCK = 'p,div,h1,h2,h3,h4,h5,h6,li,blockquote,pre';
+
+/** HTML copiado (Docs, Word, site, chat) → texto com UMA linha em branco entre parágrafos e <br> como quebra simples. */
+function htmlToText(html: string): string | null {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const blocks = [...doc.body.querySelectorAll(BLOCK)].filter((el) => !el.querySelector(BLOCK));
+  if (blocks.length < 2) return null; // sem parágrafos reais: deixa o navegador colar normalmente
+  const text = (el: Element) => {
+    const clone = el.cloneNode(true) as Element;
+    clone.querySelectorAll('br').forEach((b) => b.replaceWith('\n'));
+    return (clone.textContent ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').trim();
+  };
+  const out: string[] = [];
+  for (const el of blocks) {
+    const t = text(el);
+    if (!t) continue;
+    out.push(el.tagName === 'LI' ? `- ${t}` : t);
+  }
+  // itens de lista seguidos ficam juntos; o resto separado por linha em branco
+  return out.reduce((acc, cur, i) => (i === 0 ? cur : `${acc}${acc.startsWith('- ') || out[i - 1].startsWith('- ') ? (cur.startsWith('- ') && out[i - 1].startsWith('- ') ? '\n' : '\n\n') : '\n\n'}${cur}`), '');
+}
+
 const WRAP: Record<string, [string, string]> = { bold: ['**', '**'], italic: ['_', '_'], underline: ['++', '++'], strike: ['~~', '~~'], code: ['`', '`'] };
 
 /** Caixa de texto com barra de formatação (B / I / U / riscado / link / listas / citação / código). */
@@ -172,6 +194,17 @@ export function RichTextarea({ className, ...p }: TextareaHTMLAttributes<HTMLTex
       <textarea
         {...p}
         ref={ref}
+        onPaste={(e) => {
+          p.onPaste?.(e);
+          if (e.defaultPrevented || p.disabled || p.readOnly) return;
+          const html = e.clipboardData.getData('text/html');
+          const el = ref.current;
+          if (!html || !el) return;
+          const txt = htmlToText(html);
+          if (txt === null) return;
+          e.preventDefault();
+          commit(el, el.selectionStart, el.selectionEnd, el.selectionStart + txt.length, el.selectionStart + txt.length, txt);
+        }}
         onKeyDown={(e) => {
           p.onKeyDown?.(e);
           if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
