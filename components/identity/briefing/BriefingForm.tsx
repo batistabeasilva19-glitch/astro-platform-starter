@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Download, ImagePlus, Loader2, Pencil, Send, Trash2 } from 'lucide-react';
-import { createReferenceUpload, registerReferenceAsset, removeReferenceAsset, reopenBriefing, saveBriefingAnswers, submitBriefing, updateReferenceCaption } from '@/lib/actions/identity-briefing';
+import { Download, ImagePlus, Loader2, Lock, Send, Trash2 } from 'lucide-react';
+import { createReferenceUpload, registerReferenceAsset, removeReferenceAsset, saveBriefingAnswers, submitBriefing, updateReferenceCaption } from '@/lib/actions/identity-briefing';
 import { BRIEFING_SECTIONS, REQUIRED_IDS, answeredCount, missingRequired, type Answers, type Question } from '@/lib/identity/briefing';
 import type { SignedAsset, StageData } from '@/lib/identity/types';
 import { MEDIA_BUCKET } from '@/lib/constants';
@@ -71,13 +71,6 @@ export function BriefingForm({ token, stage, initial, references }: Props) {
       router.refresh();
     });
 
-  const reopen = () =>
-    start(async () => {
-      const r = await reopenBriefing(token);
-      if (!r.ok) return toast(r.error, 'error');
-      router.refresh();
-    });
-
   // enviado: mostra as respostas e permite editar
   if (!editable) {
     return (
@@ -86,8 +79,8 @@ export function BriefingForm({ token, stage, initial, references }: Props) {
           <Sparkle className="mx-auto mb-2 size-5 text-blush" animate />
           <p className="script text-4xl sm:text-5xl">Formulário enviado ♡</p>
           {stage.approved_at && <p className="mt-2 text-sm text-white/80">Enviado por {stage.approved_by} em {fmtStamp(stage.approved_at)}</p>}
+          <p className="mx-auto mt-3 flex max-w-md items-center justify-center gap-2 text-sm text-white/85"><Lock className="size-4 shrink-0" /> Suas respostas estão salvas e travadas. Se precisar alterar algo, fale com a Soltria que ela libera a edição.</p>
           <div className="mt-5 flex flex-wrap justify-center gap-3">
-            <Button variant="soft" onClick={reopen} loading={pending}><Pencil className="size-4" /> Editar respostas</Button>
             <a href={`/brand/review/${token}/briefing/pdf`} className="inline-flex items-center gap-2 rounded-full border border-white/50 px-6 py-2.5 text-[0.85rem] text-white transition hover:bg-white hover:text-wine"><Download className="size-4" /> Baixar uma cópia (PDF)</a>
           </div>
         </div>
