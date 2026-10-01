@@ -42,7 +42,7 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
           <FormatTag format={content.format} className="text-wine" />
           <span>{fmtDate(content.scheduled_date, true)}{content.scheduled_time ? ` · ${fmtTime(content.scheduled_time)}` : ''}</span>
         </p>
-        <h1 className="h-display text-4xl text-wine sm:text-5xl">{content.title}</h1>
+        <h1 className="font-sans text-3xl font-medium leading-tight tracking-tight text-wine sm:text-4xl">{content.title}</h1>
         <p className="mt-3 flex gap-4 text-sm"><a href="#" className="text-wine underline-offset-4 hover:underline">Conteúdo</a><a href="#desempenho" className="text-wine underline-offset-4 hover:underline">Desempenho ↓</a></p>
         {isNew && <p className="mt-3 rounded-2xl bg-blush px-4 py-3 text-sm text-wine">Conteúdo criado ♡ Agora suba as artes abaixo e, quando estiver pronto, clique em “Enviar para aprovação”.</p>}
       </header>
