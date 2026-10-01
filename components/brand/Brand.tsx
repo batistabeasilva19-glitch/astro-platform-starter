@@ -24,9 +24,9 @@ export function Sparkle({ className, animate = false }: { className?: string; an
   );
 }
 
-type ElementName = 'brush-stroke' | 'paintbrush' | 'sparkles' | 'rays';
+type ElementName = 'brush-stroke' | 'sparkles';
 
-/** Elementos gráficos originais do PDF (pincelada, pincel, brilhos). */
+/** Elementos gráficos originais do PDF (pincelada e brilhos). */
 export function BrandElement({
   name,
   tone = 'light',

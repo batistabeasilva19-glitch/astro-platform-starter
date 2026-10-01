@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { LogOut } from 'lucide-react';
 import { requireUser } from '@/lib/data/clients';
 import { signOut } from '@/lib/actions/auth';
-import { BrandElement, Logo } from '@/components/brand/Brand';
+import { Logo } from '@/components/brand/Brand';
 import { NavLinks } from '@/components/admin/NavLinks';
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +19,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <div className="mt-10">
           <NavLinks orientation="vertical" />
         </div>
-        <BrandElement name="paintbrush" className="pointer-events-none absolute -bottom-4 -right-6 w-36 opacity-25" />
         <div className="relative mt-auto pt-10">
           <p className="mb-3 truncate text-xs text-white/60">{user.email}</p>
           <form action={signOut}>

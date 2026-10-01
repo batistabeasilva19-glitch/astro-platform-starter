@@ -10,7 +10,6 @@ export default function LoginPage() {
       <section className="relative flex flex-col items-center justify-center px-8 py-16 text-center text-white lg:py-0">
         <Logo tone="light" withTagline className="w-[min(86%,30rem)]" />
         <p className="script mt-8 text-4xl text-blush sm:text-5xl">portal de aprovação</p>
-        <BrandElement name="paintbrush" className="absolute -bottom-6 left-6 hidden w-40 opacity-30 lg:block" />
         <BrandElement name="sparkles" className="absolute right-10 top-10 hidden w-20 opacity-60 lg:block" />
       </section>
       <section className="flex items-center justify-center bg-blush-soft px-6 py-14 lg:rounded-l-[3rem]">

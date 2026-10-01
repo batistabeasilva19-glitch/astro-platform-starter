@@ -10,7 +10,7 @@ Sistema completo para cadastrar conteúdos por cliente, gerar um **link exclusiv
 |---|---|
 | Cores | Vinho `#771430`, Grafite `#282828`, Rosé `#ffe7e5`, Branco — tokens em `app/globals.css` |
 | Tipografia | **Against** (títulos) · **Emitha** (saudações em script) · **Poppins Light** (texto) |
-| Logo e elementos | Logo, pincel, pincelada, brilhos e raios recortados do PDF → `public/brand/` (versões branca e vinho) |
+| Logo e elementos | Logo, pincelada e brilhos recortados do PDF → `public/brand/` (versões branca e vinho) |
 | Formas | Botões em pílula, cards com cantos 24px e borda fina vinho, poucas sombras, estrela de 4 pontas como detalhe |
 
 > **Fontes:** Against e Emitha são licenciadas e não estão no Google Fonts. Enquanto não forem adicionadas, o sistema usa *Bodoni Moda* e *Mrs Saint Delafield* como substitutas. Para usar as originais, coloque `against.woff2` e `emitha.woff2` em `public/fonts/` (já referenciadas em `globals.css`).
