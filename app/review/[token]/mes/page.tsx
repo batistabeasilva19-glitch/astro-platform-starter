@@ -20,7 +20,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
       <header className="mb-8">
         <p className="label mb-3 text-wine/70">Planejamento</p>
         <h1 className="h-display text-5xl text-wine sm:text-6xl">Calendário do mês</h1>
-        <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/65">Posts, carrosséis e Reels planejados para o mês, em ordem. Aprove um por um ou o calendário completo de uma vez; se algo precisar mudar, é só pedir.</p>
+        <p className="mt-3 max-w-xl text-sm leading-relaxed text-ink/65">Posts, carrosséis e Reels planejados para o mês, em ordem. Em cada item você pode aprovar, pedir ajuste ou deixar suas considerações. Se preferir, aprove o calendário completo de uma vez.</p>
       </header>
       {plans.length === 0 ? <EmptyState title="Ainda não há calendário para aprovar">Quando a Soltria enviar o planejamento do mês, ele aparece aqui. ♡</EmptyState> : <PlanReview token={token} plans={plans} thumbs={thumbs} />}
     </div>
