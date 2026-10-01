@@ -1,8 +1,8 @@
 'use client';
 
-import { useRef, useState, useTransition } from 'react';
+import { useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ImagePlus, Loader2, Lock, Trash2, X } from 'lucide-react';
+import { ChevronDown, ImagePlus, Loader2, Lock, Trash2, X } from 'lucide-react';
 import { addProfileShot, deleteProfileShot, updateProfileShot } from '@/lib/actions/profile-shots';
 import { uploadToStorage, validateFile } from '@/lib/upload';
 import { Button } from '@/components/ui/Button';
@@ -19,6 +19,21 @@ export function ProfileBefore({ ownerId, clientId, shots, missing }: { ownerId: 
   const [caption, setCaption] = useState('');
   const [takenOn, setTakenOn] = useState('');
   const [open, setOpen] = useState<ProfileShot | null>(null);
+  const [collapsed, setCollapsed] = useState(false);
+  const KEY = `profile-before-collapsed:${clientId}`;
+  // lembra a escolha só neste navegador (sem quebrar se o armazenamento estiver bloqueado)
+  useEffect(() => {
+    try {
+      setCollapsed(localStorage.getItem(KEY) === '1');
+    } catch {}
+  }, [KEY]);
+  const toggle = () =>
+    setCollapsed((c) => {
+      try {
+        localStorage.setItem(KEY, c ? '0' : '1');
+      } catch {}
+      return !c;
+    });
   const [pending, start] = useTransition();
   const ref = useRef<HTMLInputElement>(null);
   const toast = useToast();
@@ -59,13 +74,20 @@ export function ProfileBefore({ ownerId, clientId, shots, missing }: { ownerId: 
   return (
     <section className="card p-5 sm:p-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <p className="label mb-1 flex items-center gap-1.5 text-wine/70"><Lock className="size-3" /> Só você vê</p>
-          <h2 className="h-display text-2xl text-wine">Perfil antes</h2>
-          <p className="mt-1 max-w-xl text-sm text-ink/60">Guarde o print do Instagram do cliente de quando você começou. Não aparece no link do cliente nem nos relatórios.</p>
-        </div>
-        <Button variant="outline" loading={busy} onClick={() => ref.current?.click()}><ImagePlus className="size-4" /> Adicionar print</Button>
+        <button type="button" onClick={toggle} aria-expanded={!collapsed} aria-controls="profile-before-body" className="group flex min-w-0 flex-1 items-start gap-3 text-left">
+          <span className="min-w-0">
+            <span className="label mb-1 flex items-center gap-1.5 text-wine/70"><Lock className="size-3" /> Só você vê</span>
+            <span className="h-display block text-2xl text-wine">Perfil antes <span className="label align-middle text-ink/40">{shots.length ? `${shots.length} ${shots.length === 1 ? 'print' : 'prints'}` : ''}</span></span>
+            {!collapsed && <span className="mt-1 block max-w-xl text-sm text-ink/60">Guarde o print do Instagram do cliente de quando você começou. Não aparece no link do cliente nem nos relatórios.</span>}
+          </span>
+          <span className="mt-1 flex shrink-0 items-center gap-1 rounded-full border border-wine/25 px-3 py-1.5 text-xs text-wine transition group-hover:bg-blush">
+            {collapsed ? 'Expandir' : 'Minimizar'}
+            <ChevronDown className={`size-3.5 transition-transform ${collapsed ? '' : 'rotate-180'}`} />
+          </span>
+        </button>
+        {!collapsed && <Button variant="outline" loading={busy} onClick={() => ref.current?.click()}><ImagePlus className="size-4" /> Adicionar print</Button>}
       </div>
+      <div id="profile-before-body" hidden={collapsed}>
       <div className="mt-4 grid gap-3 sm:grid-cols-2">
         <Field label="Legenda (opcional)"><Input value={caption} onChange={(e) => setCaption(e.target.value)} maxLength={300} placeholder="Ex.: Perfil em outubro/2026, antes da Soltria" /></Field>
         <Field label="Data do print (opcional)"><Input type="date" value={takenOn} onChange={(e) => setTakenOn(e.target.value)} /></Field>
@@ -96,6 +118,8 @@ export function ProfileBefore({ ownerId, clientId, shots, missing }: { ownerId: 
           ))}
         </ul>
       )}
+
+      </div>
 
       {open && (
         <Modal open onClose={() => setOpen(null)} title="Perfil antes" className="sm:!max-w-xl">
