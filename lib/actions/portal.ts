@@ -7,6 +7,7 @@ import { resolveToken } from '@/lib/data/portal';
 import { AWAITING } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
 import { notify } from '@/lib/notifications';
+import { syncTasksForContent } from '@/lib/data/production';
 import { fail, logActivity, type ActionResult } from './shared';
 import type { ContentItem } from '@/lib/types';
 
@@ -85,6 +86,7 @@ export async function approveContent(
     contentTitle: item.title,
     clientName: session.signerName,
   });
+  await syncTasksForContent(db, item.id, 'approved');
 
   revalidatePath(`/review/${token}`, 'layout');
   revalidatePath('/admin', 'layout');
@@ -149,6 +151,7 @@ export async function requestChanges(
     clientName: session.signerName,
     message: text,
   });
+  await syncTasksForContent(db, item.id, 'changes');
 
   revalidatePath(`/review/${token}`, 'layout');
   revalidatePath('/admin', 'layout');
@@ -240,6 +243,7 @@ export async function approveAll(token: string): Promise<ActionResult<{ count: n
       clientName: session.signerName,
       reviewUrl: await reviewUrl(token),
     });
+    await syncTasksForContent(db, item.id, 'approved');
   }
 
   revalidatePath(`/review/${token}`, 'layout');

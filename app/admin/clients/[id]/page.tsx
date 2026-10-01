@@ -4,6 +4,8 @@ import { FileText, Pencil, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getClient, requireUser } from '@/lib/data/clients';
 import { listProfileShots } from '@/lib/data/profile-shots';
+import { loadAllTasks } from '@/lib/data/production';
+import { productionStats } from '@/lib/production/stats';
 import { ProfileBefore } from '@/components/admin/ProfileBefore';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
@@ -31,6 +33,8 @@ export default async function ClientWorkspacePage({
   const user = await requireUser();
   const supabase = await createClient();
   const { shots, missing: shotsMissing } = await listProfileShots(supabase, id);
+  const prod = await loadAllTasks(supabase, { clientId: id });
+  const ps = prod.missing ? null : productionStats(prod.tasks, prod.columns);
   const items = await fetchCards(supabase, { clientId: id });
   const { count: identityCount } = await supabase.from('identity_projects').select('id', { count: 'exact', head: true }).eq('client_id', id);
   const feed = view === 'feed' ? await fetchFeed(supabase, id) : null;
@@ -75,7 +79,7 @@ export default async function ClientWorkspacePage({
       </header>
 
       {/* dois módulos independentes: cada um abre a sua própria página */}
-      <div className="mt-6 grid gap-3 sm:grid-cols-2">
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         <div className="card p-5">
           <p className="label mb-2 text-wine/70">Conteúdo</p>
           <p className="mb-3 text-sm text-ink/65">Posts, carrosséis, Reels, Stories, calendário e feed.</p>
@@ -94,6 +98,15 @@ export default async function ClientWorkspacePage({
             <Link href={`/admin/identidades/new?client=${id}`} className={buttonClass('primary', 'sm')}>+ Nova identidade →</Link>
           </div>
         </div>
+        {ps && (
+          <div className="card p-5">
+            <p className="label mb-2 text-wine/70">Produção</p>
+            <p className="mb-3 text-sm text-ink/65">
+              {ps.open === 0 && ps.doneMonth === 0 ? 'Nenhuma tarefa deste cliente ainda.' : `${ps.open} ${ps.open === 1 ? 'tarefa aberta' : 'tarefas abertas'} · ${ps.production} em produção · ${ps.awaiting} aguardando aprovação · ${ps.changes} ${ps.changes === 1 ? 'alteração' : 'alterações'} · ${ps.doneMonth} ${ps.doneMonth === 1 ? 'concluída' : 'concluídas'}`}
+            </p>
+            <Link href={`/admin/producao/cliente/${id}`} className={buttonClass('primary', 'sm')}>Ver quadro do cliente <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+          </div>
+        )}
       </div>
 
       <div className="mt-6">
