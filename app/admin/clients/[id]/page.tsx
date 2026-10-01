@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { Pencil, Plus } from 'lucide-react';
+import { FileText, Pencil, Plus } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { getClient } from '@/lib/data/clients';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
@@ -75,7 +75,10 @@ export default async function ClientWorkspacePage({
         <div className="card p-5">
           <p className="label mb-2 text-wine/70">Conteúdo</p>
           <p className="mb-3 text-sm text-ink/65">Posts, carrosséis, Reels, Stories, calendário e feed.</p>
-          <Link href={`/admin/clients/${id}`} className="text-sm text-wine underline-offset-4 hover:underline">Ver conteúdos →</Link>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <Link href={`/admin/clients/${id}`} className="text-wine underline-offset-4 hover:underline">Ver conteúdos →</Link>
+            <Link href={`/admin/clients/${id}/estrategia`} className="text-wine underline-offset-4 hover:underline">Estratégia de rede →</Link>
+          </div>
         </div>
         <div className="card p-5">
           <p className="label mb-2 text-wine/70">Identidade Visual</p>
@@ -91,6 +94,9 @@ export default async function ClientWorkspacePage({
         <ViewTabs basePath={`/admin/clients/${id}`} current={view} />
         <div className="flex flex-wrap gap-2">
           <SendAllButton clientId={id} drafts={drafts} />
+          <LinkButton href={`/admin/clients/${id}/estrategia`} variant="outline">
+            <FileText className="size-4" /> Estratégia de rede
+          </LinkButton>
           <LinkButton href={`/admin/content/new?client=${id}`}>
             <Plus className="size-4" /> Novo conteúdo
           </LinkButton>

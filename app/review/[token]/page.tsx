@@ -1,12 +1,15 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { clientCards, clientFeed, resolveToken } from '@/lib/data/portal';
+import { listPublicStrategyDocs } from '@/lib/data/strategy';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { AWAITING } from '@/lib/constants';
 import { ContentCard } from '@/components/content/ContentCard';
 import { MonthCalendar } from '@/components/calendar/MonthCalendar';
 import { ProfileFeed } from '@/components/feed/ProfileFeed';
 import { ApproveAll } from '@/components/review/ApproveAll';
 import { BrandElement } from '@/components/brand/Brand';
+import { ArrowRight, FileText } from 'lucide-react';
 import { EmptyState } from '@/components/ui/Misc';
 import { ViewTabs, parseView } from '@/components/ui/ViewTabs';
 import { firstName } from '@/lib/utils';
@@ -20,6 +23,7 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
   const { client } = session;
 
   const items = await clientCards(session);
+  const strategyCount = (await listPublicStrategyDocs(createAdminClient(), client.id)).length;
   const awaiting = items.filter((i) => AWAITING.includes(i.status));
   const changes = items.filter((i) => i.status === 'changes_requested');
   const approved = items.filter((i) => ['approved', 'scheduled', 'published'].includes(i.status));
@@ -71,6 +75,18 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
           </p>
           <ApproveAll token={token} count={awaiting.length} />
         </section>
+      )}
+
+      {strategyCount > 0 && (
+        <Link href={`${base}/estrategia`} className="card card-hover mb-8 flex items-center gap-4 p-5">
+          <span className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-blush text-wine"><FileText className="size-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className="label block text-wine/60">Documentos</span>
+            <span className="h-display text-2xl text-wine">Estratégia de rede</span>
+            <span className="block text-xs text-ink/55">{strategyCount} {strategyCount === 1 ? 'documento' : 'documentos'}, organizados por mês</span>
+          </span>
+          <ArrowRight className="size-5 text-wine" />
+        </Link>
       )}
 
       <div className="mb-8 flex justify-center sm:justify-start">
