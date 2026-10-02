@@ -45,8 +45,6 @@ export interface Section {
   questions: Question[];
   /** mostra a área de envio destes grupos de arquivos nesta seção. */
   files?: FileGroup[];
-  /** condição para a área de arquivos aparecer. */
-  filesIf?: { id: string; in?: string[]; notIn?: string[] };
 }
 
 export type FormKind = 'clinic' | 'business';
@@ -104,13 +102,15 @@ const gosto: Section = {
 
 const voz = (extra: Question[] = []): Section => ({
   id: 'voz',
-  title: 'Tom de voz',
+  title: 'Tom de voz e identidade',
   questions: [
     { id: 'tone', label: 'Como você quer soar nas redes?', type: 'multi', options: TONES, hint: 'Escolha até 4.' },
     ...extra,
     { id: 'formality', label: 'Quão formal deve ser a comunicação?', type: 'scale', scale: ['Bem informal', 'Bem formal'] },
     { id: 'words_use', label: 'Palavras ou expressões que você usa e quer manter', type: 'textarea' },
     { id: 'words_avoid', label: 'Palavras, assuntos ou abordagens que você NÃO quer usar', type: 'textarea' },
+    { id: 'colors', label: 'Cores que representam o seu negócio (e as que você evita)', type: 'textarea' },
+    { id: 'brand_materials', label: 'Link da pasta com logo, fotos e vídeos (Drive, Dropbox…)', type: 'text', placeholder: 'https://' },
   ],
 });
 
@@ -133,31 +133,15 @@ const producao = (extra: Question[] = []): Section => ({
 });
 
 const NO_IDENTITY = 'Não tenho ainda';
-const HAS_ID = { id: 'visual_identity', notIn: [NO_IDENTITY] };
 
-/** Uma etapa só para a identidade visual: pergunta se tem; se tiver, um único lugar para anexar tudo. */
-const identidade: Section = {
-  id: 'identidade',
-  title: 'Identidade visual',
-  intro: 'Logo, cores e fontes da sua marca, tudo num lugar só.',
-  files: ['logo'],
-  filesIf: HAS_ID,
-  questions: [
-    { id: 'visual_identity', label: 'Você já tem identidade visual (logo, cores e fontes)?', type: 'select', required: true, options: ['Sim, completa (logo, cores e fontes)', 'Só tenho o logo', 'Quero renovar a que tenho', NO_IDENTITY] },
-    { id: 'visual_need', label: 'Quer que a Soltria cuide da criação da sua identidade visual?', type: 'select', options: ['Sim, quero um orçamento', 'Talvez mais para frente', 'Não, vou providenciar'], showIf: { id: 'visual_identity', in: [NO_IDENTITY] } },
-    { id: 'brand_colors', label: 'Cores da sua marca', type: 'colors', hint: 'Escolha no seletor ou digite o código (ex.: #771430). Se estiver no arquivo anexo, pode pular.', showIf: HAS_ID },
-    { id: 'brand_fonts', label: 'Fontes (letras) que a marca usa', type: 'text', placeholder: 'Ex.: Poppins e Playfair Display', showIf: HAS_ID },
-    { id: 'brand_rules', label: 'Regras de uso da marca, se houver', type: 'textarea', hint: 'Ex.: o logo nunca pode ficar sobre fundo colorido.', showIf: HAS_ID },
-    { id: 'colors_avoid', label: 'Cores que você NÃO quer usar nos conteúdos', type: 'text' },
-  ],
-};
-
+/** Identidade visual: só uma pergunta e um lugar para ANEXAR (logo, manual da marca, paleta, fontes). */
 const materiais: Section = {
   id: 'materiais',
-  title: 'Links e fotos',
+  title: 'Links, identidade visual e fotos',
   intro: 'Reúna aqui o que a gente vai precisar para criar os conteúdos. Pode voltar quantas vezes quiser e adicionar mais depois.',
-  files: ['team', 'space', 'work', 'refs', 'other'],
+  files: ['logo', 'team', 'space', 'work', 'refs', 'other'],
   questions: [
+    { id: 'visual_identity', label: 'Você já tem identidade visual (logo, cores e fontes)?', type: 'select', options: ['Sim, completa (logo, cores e fontes)', 'Só tenho o logo', 'Quero renovar a que tenho', NO_IDENTITY], hint: 'Se tiver, anexe os arquivos no campo “Identidade visual e logo”, logo abaixo.' },
     { id: 'links', label: 'Links importantes', type: 'links', hint: 'Instagram, site, WhatsApp, pasta com fotos e vídeos, manual da marca, Canva… Escolha o tipo, cole o link e toque em Adicionar.' },
   ],
 };
@@ -224,7 +208,6 @@ const CLINIC: Section[] = [
   perfil,
   gosto,
   voz([{ id: 'language', label: 'Qual o nível de linguagem técnica nos conteúdos?', type: 'select', options: ['Bem simples, para leigos', 'Equilibrada', 'Mais técnica, para quem já entende do assunto'] }]),
-  identidade,
   producao([{ id: 'patient_images', label: 'Você tem autorização (termo) para usar imagem e depoimento de pacientes?', type: 'select', options: ['Sim, sempre colho', 'Às vezes', 'Ainda não, preciso começar'] }]),
   materiais,
   final,
@@ -279,7 +262,6 @@ const BUSINESS: Section[] = [
   perfil,
   gosto,
   voz(),
-  identidade,
   producao(),
   materiais,
   final,
@@ -310,8 +292,11 @@ export const missingRequired = (a: Answers, kind: FormKind) => allQuestions(kind
 
 /** Perguntas que saíram do formulário mas que clientes já podem ter respondido: nada se perde. */
 export const LEGACY_QUESTIONS: Question[] = [
-  { id: 'colors', label: 'Cores que representam o negócio (e as que evita)', type: 'textarea' },
-  { id: 'brand_materials', label: 'Link da pasta com logo, fotos e vídeos', type: 'text' },
+  { id: 'brand_colors', label: 'Cores da marca (códigos)', type: 'colors' },
+  { id: 'brand_fonts', label: 'Fontes que a marca usa', type: 'text' },
+  { id: 'brand_rules', label: 'Regras de uso da marca', type: 'textarea' },
+  { id: 'colors_avoid', label: 'Cores que não quer usar', type: 'text' },
+  { id: 'visual_need', label: 'Quer que a Soltria crie a identidade visual?', type: 'select' },
 ];
 const UNION = new Map<string, Question>(LEGACY_QUESTIONS.map((q) => [q.id, q]));
 for (const q of [...sectionsFor('clinic'), ...sectionsFor('business')].flatMap((x) => x.questions)) UNION.set(q.id, q);
