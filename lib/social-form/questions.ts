@@ -6,7 +6,7 @@ export type QuestionType = 'text' | 'textarea' | 'select' | 'multi' | 'list' | '
 
 /** Grupos de arquivos que o cliente pode enviar (fotos, logo, referências…). */
 export const FILE_GROUPS = [
-  { id: 'logo', label: 'Logo e identidade visual', hint: 'Logo (de preferência PNG, SVG ou PDF), manual da marca, paleta, fontes.' },
+  { id: 'logo', label: 'Identidade visual e logo', hint: 'Logo (de preferência PNG, SVG ou PDF), manual da marca, paleta e fontes. Pode anexar vários arquivos.' },
   { id: 'team', label: 'Fotos suas e da equipe', hint: 'Fotos de rosto e de corpo inteiro, com boa luz.' },
   { id: 'space', label: 'Fotos do espaço', hint: 'Consultório, loja, fachada, recepção, ambiente de atendimento.' },
   { id: 'work', label: 'Fotos de trabalhos, produtos e resultados', hint: 'O que você faz e entrega. Só use fotos de clientes com autorização.' },
@@ -35,14 +35,18 @@ export interface Question {
   required?: boolean;
   /** type 'scale': rótulos das pontas (1 e 5). */
   scale?: [string, string];
+  /** só aparece depois que outra pergunta foi respondida (com uma destas opções, ou com qualquer uma menos `notIn`). */
+  showIf?: { id: string; in?: string[]; notIn?: string[] };
 }
 export interface Section {
   id: string;
   title: string;
   intro?: string;
   questions: Question[];
-  /** mostra a área de envio de arquivos (fotos, logo…) nesta seção. */
-  files?: boolean;
+  /** mostra a área de envio destes grupos de arquivos nesta seção. */
+  files?: FileGroup[];
+  /** condição para a área de arquivos aparecer. */
+  filesIf?: { id: string; in?: string[]; notIn?: string[] };
 }
 
 export type FormKind = 'clinic' | 'business';
@@ -100,16 +104,13 @@ const gosto: Section = {
 
 const voz = (extra: Question[] = []): Section => ({
   id: 'voz',
-  title: 'Tom de voz e identidade',
+  title: 'Tom de voz',
   questions: [
     { id: 'tone', label: 'Como você quer soar nas redes?', type: 'multi', options: TONES, hint: 'Escolha até 4.' },
     ...extra,
     { id: 'formality', label: 'Quão formal deve ser a comunicação?', type: 'scale', scale: ['Bem informal', 'Bem formal'] },
     { id: 'words_use', label: 'Palavras ou expressões que você usa e quer manter', type: 'textarea' },
     { id: 'words_avoid', label: 'Palavras, assuntos ou abordagens que você NÃO quer usar', type: 'textarea' },
-    { id: 'visual_identity', label: 'Você já tem identidade visual (logo, cores, fontes)?', type: 'select', options: ['Sim, completa', 'Só o logo', 'Não, vou criar', 'Quero renovar'] },
-    { id: 'colors', label: 'Cores que representam o seu negócio (e as que você evita)', type: 'textarea' },
-    { id: 'brand_materials', label: 'Link da pasta com logo, fotos e vídeos (Drive, Dropbox…)', type: 'text', placeholder: 'https://' },
   ],
 });
 
@@ -131,16 +132,33 @@ const producao = (extra: Question[] = []): Section => ({
   ],
 });
 
+const NO_IDENTITY = 'Não tenho ainda';
+const HAS_ID = { id: 'visual_identity', notIn: [NO_IDENTITY] };
+
+/** Uma etapa só para a identidade visual: pergunta se tem; se tiver, um único lugar para anexar tudo. */
+const identidade: Section = {
+  id: 'identidade',
+  title: 'Identidade visual',
+  intro: 'Logo, cores e fontes da sua marca, tudo num lugar só.',
+  files: ['logo'],
+  filesIf: HAS_ID,
+  questions: [
+    { id: 'visual_identity', label: 'Você já tem identidade visual (logo, cores e fontes)?', type: 'select', required: true, options: ['Sim, completa (logo, cores e fontes)', 'Só tenho o logo', 'Quero renovar a que tenho', NO_IDENTITY] },
+    { id: 'visual_need', label: 'Quer que a Soltria cuide da criação da sua identidade visual?', type: 'select', options: ['Sim, quero um orçamento', 'Talvez mais para frente', 'Não, vou providenciar'], showIf: { id: 'visual_identity', in: [NO_IDENTITY] } },
+    { id: 'brand_colors', label: 'Cores da sua marca', type: 'colors', hint: 'Escolha no seletor ou digite o código (ex.: #771430). Se estiver no arquivo anexo, pode pular.', showIf: HAS_ID },
+    { id: 'brand_fonts', label: 'Fontes (letras) que a marca usa', type: 'text', placeholder: 'Ex.: Poppins e Playfair Display', showIf: HAS_ID },
+    { id: 'brand_rules', label: 'Regras de uso da marca, se houver', type: 'textarea', hint: 'Ex.: o logo nunca pode ficar sobre fundo colorido.', showIf: HAS_ID },
+    { id: 'colors_avoid', label: 'Cores que você NÃO quer usar nos conteúdos', type: 'text' },
+  ],
+};
+
 const materiais: Section = {
   id: 'materiais',
-  title: 'Links, identidade visual e fotos',
-  intro: 'Reúna aqui tudo que a gente vai precisar para criar os conteúdos. Pode voltar quantas vezes quiser e adicionar mais depois.',
-  files: true,
+  title: 'Links e fotos',
+  intro: 'Reúna aqui o que a gente vai precisar para criar os conteúdos. Pode voltar quantas vezes quiser e adicionar mais depois.',
+  files: ['team', 'space', 'work', 'refs', 'other'],
   questions: [
     { id: 'links', label: 'Links importantes', type: 'links', hint: 'Instagram, site, WhatsApp, pasta com fotos e vídeos, manual da marca, Canva… Escolha o tipo, cole o link e toque em Adicionar.' },
-    { id: 'brand_colors', label: 'Cores da sua marca', type: 'colors', hint: 'Escolha no seletor ou digite o código (ex.: #771430). Se não tiver, pule.' },
-    { id: 'brand_fonts', label: 'Fontes (letras) que a marca usa', type: 'text', placeholder: 'Ex.: Poppins e Playfair Display' },
-    { id: 'brand_rules', label: 'Regras de uso da marca, se houver', type: 'textarea', hint: 'Ex.: o logo nunca pode ficar sobre fundo colorido.' },
   ],
 };
 
@@ -206,6 +224,7 @@ const CLINIC: Section[] = [
   perfil,
   gosto,
   voz([{ id: 'language', label: 'Qual o nível de linguagem técnica nos conteúdos?', type: 'select', options: ['Bem simples, para leigos', 'Equilibrada', 'Mais técnica, para quem já entende do assunto'] }]),
+  identidade,
   producao([{ id: 'patient_images', label: 'Você tem autorização (termo) para usar imagem e depoimento de pacientes?', type: 'select', options: ['Sim, sempre colho', 'Às vezes', 'Ainda não, preciso começar'] }]),
   materiais,
   final,
@@ -260,6 +279,7 @@ const BUSINESS: Section[] = [
   perfil,
   gosto,
   voz(),
+  identidade,
   producao(),
   materiais,
   final,
@@ -270,16 +290,30 @@ export const allQuestions = (kind: FormKind) => sectionsFor(kind).flatMap((s) =>
 
 export type Answers = Record<string, string | string[]>;
 
+type Cond = { id: string; in?: string[]; notIn?: string[] };
+export function condMet(c: Cond | undefined, a: Answers): boolean {
+  if (!c) return true;
+  const v = a[c.id];
+  const picked = Array.isArray(v) ? v : v ? [v] : [];
+  if (!picked.length) return false;
+  return c.in ? picked.some((x) => c.in!.includes(x)) : !picked.some((x) => c.notIn?.includes(x));
+}
+export const isVisible = (q: Question, a: Answers) => condMet(q.showIf, a);
 export const isAnswered = (v: string | string[] | undefined) => (Array.isArray(v) ? v.length > 0 : !!v?.trim());
 
 export function answeredCount(a: Answers, kind: FormKind) {
-  const list = allQuestions(kind);
+  const list = allQuestions(kind).filter((q) => isVisible(q, a));
   const answered = list.filter((q) => isAnswered(a[q.id])).length;
   return { answered, total: list.length, pct: list.length ? Math.round((answered / list.length) * 100) : 0 };
 }
-export const missingRequired = (a: Answers, kind: FormKind) => allQuestions(kind).filter((q) => q.required && !isAnswered(a[q.id]));
+export const missingRequired = (a: Answers, kind: FormKind) => allQuestions(kind).filter((q) => isVisible(q, a) && q.required && !isAnswered(a[q.id]));
 
-const UNION = new Map<string, Question>();
+/** Perguntas que saíram do formulário mas que clientes já podem ter respondido: nada se perde. */
+export const LEGACY_QUESTIONS: Question[] = [
+  { id: 'colors', label: 'Cores que representam o negócio (e as que evita)', type: 'textarea' },
+  { id: 'brand_materials', label: 'Link da pasta com logo, fotos e vídeos', type: 'text' },
+];
+const UNION = new Map<string, Question>(LEGACY_QUESTIONS.map((q) => [q.id, q]));
 for (const q of [...sectionsFor('clinic'), ...sectionsFor('business')].flatMap((x) => x.questions)) UNION.set(q.id, q);
 const HEX = /^#[0-9a-fA-F]{6}$/;
 const LINK_OK = new Set<string>(LINK_KINDS);
@@ -322,8 +356,8 @@ export function sanitizeAnswers(raw: unknown, _kind?: FormKind): Answers {
     } else if (q.type === 'scale') {
       if (typeof v === 'string' && /^[1-5]$/.test(v)) out[q.id] = v;
     } else if (typeof v === 'string') {
-      if (q.type === 'select' && v && !q.options?.includes(v)) continue;
-      out[q.id] = v.slice(0, 4000);
+      // escolha única: mantém também respostas antigas cujas opções mudaram (nada se perde)
+      out[q.id] = v.slice(0, q.type === 'select' ? 300 : 4000);
     }
   }
   return out;
@@ -358,9 +392,12 @@ export function answersToText(a: Answers, kind: FormKind, files: SocialFile[] = 
     return Array.isArray(v) ? v.join(', ') : String(v);
   };
   const out = sectionsFor(kind).map((s) => {
-    const lines = s.questions.filter((q) => isAnswered(a[q.id])).map((q) => `${q.label}\n${show(q)}`);
-    if (s.files && files.length) lines.push('Arquivos enviados\n' + FILE_GROUPS.map((g) => ({ g, list: files.filter((f) => f.group === g.id) })).filter((x) => x.list.length).map((x) => `- ${x.g.label}: ${x.list.map((f) => f.name).join(', ')}`).join('\n'));
+    const lines = s.questions.filter((q) => isVisible(q, a) && isAnswered(a[q.id])).map((q) => `${q.label}\n${show(q)}`);
+    if (s.files && files.length) lines.push('Arquivos enviados\n' + FILE_GROUPS.filter((g) => s.files!.includes(g.id)).map((g) => ({ g, list: files.filter((f) => f.group === g.id) })).filter((x) => x.list.length).map((x) => `- ${x.g.label}: ${x.list.map((f) => f.name).join(', ')}`).join('\n'));
+    if (s.files && s.files.length && !lines.some((l) => l.startsWith('Arquivos enviados'))) { /* sem arquivos */ }
     return lines.length ? `## ${s.title}\n\n${lines.join('\n\n')}` : '';
   });
+  const legacy = LEGACY_QUESTIONS.filter((q) => isAnswered(a[q.id])).map((q) => `${q.label}\n${a[q.id]}`);
+  if (legacy.length) out.push(`## Respostas anteriores\n\n${legacy.join('\n\n')}`);
   return out.filter(Boolean).join('\n\n');
 }
