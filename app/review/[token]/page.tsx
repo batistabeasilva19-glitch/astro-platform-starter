@@ -99,7 +99,7 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
           <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${socialForm.status === 'open' ? 'bg-white/15' : 'bg-blush'}`}><FileText className="size-5" /></span>
           <span className="min-w-0 flex-1">
             <span className={`label block ${socialForm.status === 'open' ? 'text-white/70' : 'text-wine/70'}`}>{socialForm.status === 'open' ? 'Precisamos de você' : 'Respondido'}</span>
-            <span className="text-xl font-medium tracking-tight">Formulário de perfil</span>
+            <span className="h-display text-2xl">Formulário de perfil</span>
             <span className={`block text-xs ${socialForm.status === 'open' ? 'text-white/75' : 'text-ink/55'}`}>{socialForm.status === 'open' ? 'Conte sobre o seu negócio, o seu público e os perfis de que você gosta.' : 'Suas respostas estão salvas. Toque para rever.'}</span>
           </span>
           <ArrowRight className="size-5 shrink-0" />
