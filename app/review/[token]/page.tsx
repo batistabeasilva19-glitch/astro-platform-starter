@@ -4,6 +4,7 @@ import { clientCards, clientFeed, resolveToken } from '@/lib/data/portal';
 import { listPublicStrategyDocs } from '@/lib/data/strategy';
 import { listReleasedReports } from '@/lib/data/perf';
 import { portalCounts, portalEvents } from '@/lib/data/extras';
+import { getSocialForm } from '@/lib/data/social-form';
 import { MiniAgenda } from '@/components/portal/MiniAgenda';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { AWAITING } from '@/lib/constants';
@@ -29,6 +30,7 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
   const strategyCount = (await listPublicStrategyDocs(createAdminClient(), client.id)).length;
   const resultsCount = (await listReleasedReports(createAdminClient(), client.id)).length;
   const extras = await portalCounts(createAdminClient(), client.id);
+  const socialForm = (await getSocialForm(createAdminClient(), client.id)).form;
   const agenda = (await portalEvents(createAdminClient(), client.id)).filter((e) => e.status !== 'cancelled');
   const awaiting = items.filter((i) => AWAITING.includes(i.status));
   const changes = items.filter((i) => i.status === 'changes_requested');
@@ -90,6 +92,18 @@ export default async function ReviewHome({ params, searchParams }: { params: Pro
           </p>
           <ApproveAll token={token} count={awaiting.length} />
         </section>
+      )}
+
+      {socialForm && (
+        <Link href={`${base}/formulario`} className={`mb-8 flex items-center gap-4 rounded-3xl p-5 shadow-sm transition ${socialForm.status === 'open' ? 'bg-wine text-white hover:bg-wine/90' : 'border border-wine/20 bg-white text-wine hover:bg-blush'}`}>
+          <span className={`flex size-12 shrink-0 items-center justify-center rounded-2xl ${socialForm.status === 'open' ? 'bg-white/15' : 'bg-blush'}`}><FileText className="size-5" /></span>
+          <span className="min-w-0 flex-1">
+            <span className={`label block ${socialForm.status === 'open' ? 'text-white/70' : 'text-wine/70'}`}>{socialForm.status === 'open' ? 'Precisamos de você' : 'Respondido'}</span>
+            <span className="h-display text-2xl">Formulário de perfil</span>
+            <span className={`block text-xs ${socialForm.status === 'open' ? 'text-white/75' : 'text-ink/55'}`}>{socialForm.status === 'open' ? 'Conte sobre o seu negócio, o seu público e os perfis de que você gosta.' : 'Suas respostas estão salvas. Toque para rever.'}</span>
+          </span>
+          <ArrowRight className="size-5 shrink-0" />
+        </Link>
       )}
 
       {(extras.stories > 0 || extras.scripts > 0 || extras.plans > 0) && (
