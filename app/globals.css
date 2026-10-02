@@ -3,15 +3,28 @@
 /* ─────────────────────────────────────────────────────────────
    Soltria · Design tokens (extraídos do PDF de identidade visual)
    Vinho #771430 · Grafite #282828 · Rosé #ffe7e5 · Branco #ffffff
-   Tipografia: Gemola (display) · Emitha (script) · Poppins Light
+   Tipografia: LT Afficher Neue (display) · Emitha (script) · Poppins Light
    ───────────────────────────────────────────────────────────── */
 
 /* Fontes da marca: coloque os arquivos licenciados em /public/fonts
    (against.woff2 e emitha.woff2). Enquanto não existirem, o sistema usa
    alternativas Google (Bodoni Moda / Mrs Saint Delafield). */
 @font-face {
-  font-family: 'Gemola';
-  src: local('Gemola'), url('/fonts/gemola.woff2') format('woff2');
+  font-family: 'Afficher Neue';
+  src: local('LT Afficher Neue Medium Subhead'), url('/fonts/afficher-medium.woff2') format('woff2');
+  font-weight: 400 500;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Afficher Neue';
+  src: local('LT Afficher Neue SemiBold Subhead'), url('/fonts/afficher-semibold.woff2') format('woff2');
+  font-weight: 600;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Afficher Neue';
+  src: local('LT Afficher Neue Bold Subhead'), url('/fonts/afficher-bold.woff2') format('woff2');
+  font-weight: 700 900;
   font-display: swap;
 }
 @font-face {
@@ -28,7 +41,7 @@
   --color-blush-soft: #fff6f5;
 
   --font-sans: 'Poppins', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Gemola', 'Bodoni Moda', 'Playfair Display', Georgia, serif;
+  --font-display: 'Afficher Neue', 'Bodoni Moda', 'Playfair Display', Georgia, serif;
   --font-script: 'Emitha', 'Mrs Saint Delafield', cursive;
 
   --radius-card: 1.5rem;
