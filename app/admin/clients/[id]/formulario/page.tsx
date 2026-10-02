@@ -31,8 +31,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <MissingNotice file="0016_formulario_social.sql" />
       ) : (
         <div className="space-y-8">
-          <SocialFormAdmin clientId={id} status={form?.status ?? null} kind={form?.kind ?? 'business'} answers={form?.answers ?? {}} submittedAt={form?.submitted_at ?? null} submittedBy={form?.submitted_by ?? null} />
-          {form && <SocialFormView answers={form.answers} kind={form.kind} />}
+          <SocialFormAdmin clientId={id} status={form?.status ?? null} kind={form?.kind ?? 'business'} files={form?.files ?? []} answers={form?.answers ?? {}} submittedAt={form?.submitted_at ?? null} submittedBy={form?.submitted_by ?? null} />
+          {form && <SocialFormView answers={form.answers} kind={form.kind} files={form.files} />}
         </div>
       )}
     </div>

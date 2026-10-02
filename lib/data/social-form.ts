@@ -1,6 +1,7 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { kindOf, sanitizeAnswers, type Answers, type FormKind, type FormStatus } from '@/lib/social-form/questions';
+import { signPaths } from '@/lib/storage';
+import { filesOf, kindOf, sanitizeAnswers, type Answers, type FormKind, type FormStatus, type SocialFile } from '@/lib/social-form/questions';
 
 export interface SocialFormRow {
   id: string;
@@ -11,6 +12,8 @@ export interface SocialFormRow {
   sent_at: string;
   submitted_at: string | null;
   submitted_by: string | null;
+  updated_at: string;
+  files: (SocialFile & { url: string | null })[];
 }
 
 /** Formulário do cliente (admin: via RLS; portal: via service role depois de validar o token). `missing` = falta a migration 0016. */
@@ -19,5 +22,7 @@ export async function getSocialForm(db: SupabaseClient, clientId: string): Promi
   if (error) return { form: null, missing: true };
   if (!data) return { form: null, missing: false };
   const kind = kindOf((data as { answers: unknown }).answers);
-  return { form: { ...(data as SocialFormRow), kind, answers: sanitizeAnswers((data as { answers: unknown }).answers, kind) }, missing: false };
+  const files = filesOf((data as { answers: unknown }).answers);
+  const urls = await signPaths(files.map((f) => f.path));
+  return { form: { ...(data as SocialFormRow), kind, files: files.map((f) => ({ ...f, url: urls[f.path] ?? null })), answers: sanitizeAnswers((data as { answers: unknown }).answers) }, missing: false };
 }
