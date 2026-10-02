@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, ArrowRight, Check, Lock, Send } from 'lucide-react';
 import { saveSocialAnswers, submitSocialForm } from '@/lib/actions/social-form';
-import { answeredCount, condMet, isAnswered, isVisible, missingRequired, sectionsFor, type Answers, type FormKind, type Question } from '@/lib/social-form/questions';
+import { answeredCount, isAnswered, isVisible, missingRequired, sectionsFor, type Answers, type FormKind, type Question } from '@/lib/social-form/questions';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import { Sparkle } from '@/components/brand/Brand';
@@ -204,11 +204,11 @@ export function SocialForm({ token, kind, initial, updatedAt, files, submitted, 
         {s.intro && <p className="mt-2 text-sm text-ink/60">{s.intro}</p>}
         <div className="mt-7 space-y-7">
           {s.questions.filter((q) => isVisible(q, answers)).map((q) => <SocialQuestion key={q.id} q={q} answers={answers} set={set} toggle={toggle} error={errors.includes(q.id)} />)}
-          {s.files && condMet(s.filesIf, answers) && (
+          {s.files && (
             <div className="space-y-2 border-t border-wine/10 pt-7">
-              <h4 className="text-[0.95rem] font-medium text-ink">{s.id === 'identidade' ? 'Anexe aqui a sua identidade visual e o logo' : 'Arquivos e fotos'}</h4>
-              <p className="text-xs text-ink/50">{s.id === 'identidade' ? 'Logo, manual da marca, paleta, fontes: tudo no mesmo lugar. Os arquivos são salvos na hora.' : 'Envie fotos e referências. Os arquivos são salvos na hora.'}</p>
-              <div className="pt-3"><FileArea token={token} files={files} groups={s.files} /></div>
+              <h4 className="text-[0.95rem] font-medium text-ink">Arquivos e fotos</h4>
+              <p className="text-xs text-ink/50">Envie a identidade visual e o logo, fotos e referências. Os arquivos são salvos na hora.</p>
+              <div className="pt-3"><FileArea token={token} files={files} groups={s.files.filter((g) => g !== 'logo' || (isAnswered(answers.visual_identity) && answers.visual_identity !== 'Não tenho ainda'))} /></div>
             </div>
           )}
         </div>

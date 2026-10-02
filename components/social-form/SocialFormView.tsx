@@ -74,7 +74,7 @@ export function SocialFormView({ answers, kind, files = [] }: { answers: Answers
           <h3 className="mb-3 text-xl font-medium tracking-tight text-wine">Respostas anteriores</h3>
           <dl className="divide-y divide-wine/10 rounded-2xl border border-wine/15 bg-white">
             {LEGACY_QUESTIONS.filter((q) => isAnswered(answers[q.id])).map((q) => (
-              <div key={q.id} className="px-4 py-3 sm:px-5"><dt className="text-xs text-ink/50">{q.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{answers[q.id]}</dd></div>
+              <div key={q.id} className="px-4 py-3 sm:px-5"><dt className="text-xs text-ink/50">{q.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{Array.isArray(answers[q.id]) ? (answers[q.id] as string[]).join(', ') : answers[q.id]}</dd></div>
             ))}
           </dl>
         </section>
