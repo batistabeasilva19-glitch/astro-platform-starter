@@ -1,5 +1,5 @@
 import { ExternalLink, FileText } from 'lucide-react';
-import { FILE_GROUPS, decodeLink, isAnswered, sectionsFor, type Answers, type FormKind, type Question } from '@/lib/social-form/questions';
+import { FILE_GROUPS, LEGACY_QUESTIONS, decodeLink, isAnswered, isVisible, sectionsFor, type Answers, type FormKind, type Question } from '@/lib/social-form/questions';
 import type { FileWithUrl } from './FileArea';
 
 const href = (u: string) => (/^https?:\/\//i.test(u) ? u : /^[\w.-]+\.[a-z]{2,}/i.test(u) ? `https://${u}` : null);
@@ -35,18 +35,18 @@ export function SocialFormView({ answers, kind, files = [] }: { answers: Answers
         <section key={s.id}>
           <h3 className="mb-3 text-xl font-medium tracking-tight text-wine">{s.title}</h3>
           <dl className="divide-y divide-wine/10 rounded-2xl border border-wine/15 bg-white">
-            {s.questions.map((q) => (
+            {s.questions.filter((q) => isVisible(q, answers)).map((q) => (
               <div key={q.id} className="px-4 py-3 sm:px-5">
                 <dt className="text-xs text-ink/50">{q.label}</dt>
                 <dd className="mt-1 whitespace-pre-wrap break-words text-sm text-ink"><Value q={q} v={answers[q.id]} /></dd>
               </div>
             ))}
-            {s.files && (
+            {s.files && files.some((f) => s.files!.includes(f.group)) && (
               <div className="px-4 py-3 sm:px-5">
                 <dt className="text-xs text-ink/50">Arquivos enviados</dt>
                 <dd className="mt-2 space-y-4">
-                  {files.length === 0 && <span className="text-sm text-ink/30">—</span>}
-                  {FILE_GROUPS.map((g) => ({ g, list: files.filter((f) => f.group === g.id) })).filter((x) => x.list.length).map(({ g, list }) => (
+                  {files.filter((f) => s.files!.includes(f.group)).length === 0 && <span className="text-sm text-ink/30">—</span>}
+                  {FILE_GROUPS.filter((g) => s.files!.includes(g.id)).map((g) => ({ g, list: files.filter((f) => f.group === g.id) })).filter((x) => x.list.length).map(({ g, list }) => (
                     <div key={g.id}>
                       <p className="mb-1.5 text-xs text-wine">{g.label} ({list.length})</p>
                       <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
@@ -69,6 +69,16 @@ export function SocialFormView({ answers, kind, files = [] }: { answers: Answers
           </dl>
         </section>
       ))}
+      {LEGACY_QUESTIONS.some((q) => isAnswered(answers[q.id])) && (
+        <section>
+          <h3 className="mb-3 text-xl font-medium tracking-tight text-wine">Respostas anteriores</h3>
+          <dl className="divide-y divide-wine/10 rounded-2xl border border-wine/15 bg-white">
+            {LEGACY_QUESTIONS.filter((q) => isAnswered(answers[q.id])).map((q) => (
+              <div key={q.id} className="px-4 py-3 sm:px-5"><dt className="text-xs text-ink/50">{q.label}</dt><dd className="mt-1 whitespace-pre-wrap break-words text-sm">{answers[q.id]}</dd></div>
+            ))}
+          </dl>
+        </section>
+      )}
     </div>
   );
 }

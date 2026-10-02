@@ -14,10 +14,10 @@ export type FileWithUrl = SocialFile & { url: string | null };
 const isImage = (f: { mime: string; name: string }) => f.mime.startsWith('image/') && !/svg/.test(f.mime);
 
 /** Área de envio de arquivos por grupo (logo, fotos, referências…). O arquivo vai direto do aparelho para o Storage. */
-export function FileArea({ token, files }: { token: string; files: FileWithUrl[] }) {
+export function FileArea({ token, files, groups }: { token: string; files: FileWithUrl[]; groups: readonly FileGroup[] }) {
   return (
     <div className="space-y-8">
-      {FILE_GROUPS.map((g) => (
+      {FILE_GROUPS.filter((g) => groups.includes(g.id)).map((g) => (
         <Group key={g.id} token={token} group={g.id} label={g.label} hint={g.hint} files={files.filter((f) => f.group === g.id)} />
       ))}
       <p className="text-xs text-ink/45">Imagens, PDF, ZIP, vídeo (MP4/MOV) ou documentos · até 25 MB cada. Arquivos maiores: coloque o link do Drive na lista de links.</p>
