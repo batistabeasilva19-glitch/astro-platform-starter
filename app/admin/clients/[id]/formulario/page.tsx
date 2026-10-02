@@ -23,7 +23,7 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <Avatar name={client.company_name} src={client.avatar_url} className="size-16 text-xl" />
         <div>
           <p className="label mb-1 text-wine/70">Redes sociais</p>
-          <h1 className="h-display text-3xl text-wine sm:text-4xl">Formulário de perfil</h1>
+          <h1 className="text-3xl font-medium tracking-tight text-wine sm:text-4xl">Formulário de perfil</h1>
           <p className="mt-1 text-sm text-ink/60">Perguntas para entender o negócio, o público e os perfis de que o cliente gosta.</p>
         </div>
       </header>
@@ -31,8 +31,8 @@ export default async function Page({ params }: { params: Promise<{ id: string }>
         <MissingNotice file="0016_formulario_social.sql" />
       ) : (
         <div className="space-y-8">
-          <SocialFormAdmin clientId={id} status={form?.status ?? null} answers={form?.answers ?? {}} submittedAt={form?.submitted_at ?? null} submittedBy={form?.submitted_by ?? null} />
-          {form && <SocialFormView answers={form.answers} />}
+          <SocialFormAdmin clientId={id} status={form?.status ?? null} kind={form?.kind ?? 'business'} answers={form?.answers ?? {}} submittedAt={form?.submitted_at ?? null} submittedBy={form?.submitted_by ?? null} />
+          {form && <SocialFormView answers={form.answers} kind={form.kind} />}
         </div>
       )}
     </div>
