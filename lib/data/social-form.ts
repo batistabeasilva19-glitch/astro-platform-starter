@@ -1,11 +1,12 @@
 import 'server-only';
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { sanitizeAnswers, type Answers, type FormStatus } from '@/lib/social-form/questions';
+import { kindOf, sanitizeAnswers, type Answers, type FormKind, type FormStatus } from '@/lib/social-form/questions';
 
 export interface SocialFormRow {
   id: string;
   client_id: string;
   status: FormStatus;
+  kind: FormKind;
   answers: Answers;
   sent_at: string;
   submitted_at: string | null;
@@ -17,5 +18,6 @@ export async function getSocialForm(db: SupabaseClient, clientId: string): Promi
   const { data, error } = await db.from('client_social_forms').select('*').eq('client_id', clientId).maybeSingle();
   if (error) return { form: null, missing: true };
   if (!data) return { form: null, missing: false };
-  return { form: { ...(data as SocialFormRow), answers: sanitizeAnswers((data as SocialFormRow).answers) }, missing: false };
+  const kind = kindOf((data as { answers: unknown }).answers);
+  return { form: { ...(data as SocialFormRow), kind, answers: sanitizeAnswers((data as { answers: unknown }).answers, kind) }, missing: false };
 }
