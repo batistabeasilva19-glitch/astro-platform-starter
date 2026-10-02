@@ -95,6 +95,7 @@ export default async function ClientWorkspacePage({
             <Link href={`/admin/clients/${id}`} className={buttonClass('primary', 'sm')}>Ver conteúdos <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/estrategia`} className={buttonClass('primary', 'sm')}>Estratégia de rede <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/cronograma`} className={buttonClass('primary', 'sm')}>Cronograma de entregas <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
+            <Link href={`/admin/clients/${id}/formulario`} className={buttonClass('primary', 'sm')}>Formulário de perfil <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/desempenho`} className={buttonClass('primary', 'sm')}>Desempenho <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
             <Link href={`/admin/clients/${id}/relatorios`} className={buttonClass('primary', 'sm')}>Relatórios <span aria-hidden className="size-1.5 rounded-full bg-white/80" /></Link>
           </div>
