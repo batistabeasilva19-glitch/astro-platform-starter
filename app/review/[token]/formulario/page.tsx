@@ -26,7 +26,7 @@ export default async function Page({ params }: { params: Promise<{ token: string
       {!form ? (
         <EmptyState title="O formulário ainda não está disponível">Assim que a Soltria enviar, ele aparece aqui. ♡</EmptyState>
       ) : (
-        <SocialForm token={token} kind={form.kind} initial={form.answers} submitted={form.status === 'submitted'} submittedBy={form.submitted_by} submittedAt={form.submitted_at} />
+        <SocialForm token={token} kind={form.kind} initial={form.answers} updatedAt={form.updated_at} files={form.files} submitted={form.status === 'submitted'} submittedBy={form.submitted_by} submittedAt={form.submitted_at} />
       )}
     </div>
   );

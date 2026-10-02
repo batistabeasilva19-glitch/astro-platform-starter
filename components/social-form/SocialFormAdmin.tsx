@@ -8,7 +8,7 @@ import { KIND_LABEL, answersToText, answeredCount, type Answers, type FormKind, 
 import { fmtStamp } from '@/lib/utils';
 
 /** Controles do formulário de perfil no admin: enviar, liberar edição, travar, copiar respostas e excluir. */
-export function SocialFormAdmin({ clientId, status, kind, answers, submittedAt, submittedBy }: { clientId: string; status: FormStatus | null; kind: FormKind; answers: Answers; submittedAt: string | null; submittedBy: string | null }) {
+export function SocialFormAdmin({ clientId, status, kind, files, answers, submittedAt, submittedBy }: { clientId: string; status: FormStatus | null; kind: FormKind; files: { name: string; group: import('@/lib/social-form/questions').FileGroup }[]; answers: Answers; submittedAt: string | null; submittedBy: string | null }) {
   const { act, pending, toast } = useAct();
   const prog = answeredCount(answers, kind);
 
@@ -42,7 +42,7 @@ export function SocialFormAdmin({ clientId, status, kind, answers, submittedAt, 
         </p>
         {status === 'submitted' && submittedAt && <p className="mt-1 text-xs text-ink/55">Enviado por {submittedBy} em {fmtStamp(submittedAt)}</p>}
       </div>
-      <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(answersToText(answers, kind)).then(() => toast('Respostas copiadas ♡'), () => toast('Não foi possível copiar.', 'error'))}><Copy className="size-3.5" /> Copiar respostas</Button>
+      <Button size="sm" variant="outline" onClick={() => navigator.clipboard.writeText(answersToText(answers, kind, files as never)).then(() => toast('Respostas copiadas ♡'), () => toast('Não foi possível copiar.', 'error'))}><Copy className="size-3.5" /> Copiar respostas</Button>
       {status === 'open' && (
         <Button size="sm" variant="ghost" loading={pending} onClick={() => act(() => setSocialFormKind(clientId, kind === 'clinic' ? 'business' : 'clinic'), 'Tipo alterado')}>Trocar para {kind === 'clinic' ? KIND_LABEL.business : KIND_LABEL.clinic}</Button>
       )}

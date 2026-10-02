@@ -5,7 +5,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { requireUser } from '@/lib/data/clients';
 import { resolveToken } from '@/lib/data/portal';
-import { kindOf, missingRequired, sanitizeAnswers, type FormKind } from '@/lib/social-form/questions';
+import { filesOf, kindOf, missingRequired, sanitizeAnswers, type FormKind } from '@/lib/social-form/questions';
+import { removeFiles } from '@/lib/storage';
 import { fail, logActivity, type ActionResult } from './shared';
 
 const MISSING = 'Não foi possível salvar. A migration 0016 foi aplicada no Supabase? (supabase/migrations/0016_formulario_social.sql)';
@@ -59,8 +60,10 @@ export async function lockSocialForm(clientId: string): Promise<ActionResult> {
 /** Remove o formulário (e as respostas) — some do link do cliente. */
 export async function deleteSocialForm(clientId: string): Promise<ActionResult> {
   const supabase = await ctx();
+  const { data: cur } = await supabase.from('client_social_forms').select('answers').eq('client_id', clientId).maybeSingle();
   const { error } = await supabase.from('client_social_forms').delete().eq('client_id', clientId);
   if (error) return fail('Não foi possível excluir.');
+  await removeFiles(filesOf(cur?.answers).map((f) => f.path));
   refresh();
   return { ok: true };
 }
@@ -79,7 +82,7 @@ export async function saveSocialAnswers(token: string, answers: unknown): Promis
   const c = await portalCtx(token);
   if (!c.ok) return fail(c.error);
   if (c.form.status !== 'open') return fail('O formulário já foi enviado e está travado. Fale com a Soltria para liberar a edição.');
-  const { error } = await c.db.from('client_social_forms').update({ answers: { ...sanitizeAnswers(answers, kindOf(c.form.answers)), __kind: kindOf(c.form.answers) } }).eq('id', c.form.id);
+  const { error } = await c.db.from('client_social_forms').update({ answers: { ...sanitizeAnswers(answers), __kind: kindOf(c.form.answers), __files: filesOf(c.form.answers) } }).eq('id', c.form.id);
   return error ? fail('Não foi possível salvar. Tente novamente.') : { ok: true };
 }
 
@@ -88,10 +91,10 @@ export async function submitSocialForm(token: string, answers: unknown): Promise
   if (!c.ok) return fail(c.error);
   if (c.form.status !== 'open') return fail('O formulário já foi enviado e está travado.');
   const kind = kindOf(c.form.answers);
-  const clean = sanitizeAnswers(answers, kind);
+  const clean = sanitizeAnswers(answers);
   const missing = missingRequired(clean, kind);
   if (missing.length) return fail(`Faltam respostas obrigatórias: ${missing.map((q) => q.label.replace(/\?$/, '')).join('; ')}.`);
-  const { error } = await c.db.from('client_social_forms').update({ answers: { ...clean, __kind: kind }, status: 'submitted', submitted_at: new Date().toISOString(), submitted_by: c.session.signerName }).eq('id', c.form.id);
+  const { error } = await c.db.from('client_social_forms').update({ answers: { ...clean, __kind: kind, __files: filesOf(c.form.answers) }, status: 'submitted', submitted_at: new Date().toISOString(), submitted_by: c.session.signerName }).eq('id', c.form.id);
   if (error) return fail('Não foi possível enviar. Tente novamente.');
   await logActivity(c.db, { clientId: c.session.client.id, actorType: 'client', actorName: c.session.signerName, action: 'comment', detail: 'Formulário de perfil respondido' });
   refresh();
