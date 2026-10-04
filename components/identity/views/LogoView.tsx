@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, GitCompareArrows, History, Star } from 'lucide-react';
@@ -89,7 +90,7 @@ function ProposalCard({ ctx, proposal: p, canAct, favOn, favEnabled, favBusy, on
         <div>
           <p className="label mb-2 text-wine/70">{p.is_chosen ? 'Proposta escolhida' : 'Proposta'}</p>
           <h3 className="h-display text-3xl text-wine">{p.label}</h3>
-          {p.description && <p className="mt-2 max-w-xl whitespace-pre-line text-sm leading-relaxed text-ink/70">{p.description}</p>}
+          {p.description && <RichText text={p.description} className="mt-2 max-w-xl text-sm leading-relaxed text-ink/70" />}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {p.is_chosen && <span className="inline-flex items-center gap-1.5 rounded-full bg-wine px-3 py-1 text-xs text-white"><Star className="size-3.5 fill-current" /> Escolhida</span>}

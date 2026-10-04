@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useMemo, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, Copy, Send } from 'lucide-react';
@@ -20,7 +21,7 @@ export function ColorsView({ ctx, content }: { ctx: ViewCtx; content: StageConte
 
   return (
     <div className="space-y-14">
-      {(content.description ?? '').trim() && <p className="max-w-2xl whitespace-pre-line text-[0.95rem] leading-relaxed text-ink/80">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="max-w-2xl text-[0.95rem] leading-relaxed text-ink/80" />}
 
       {palettes.map((p, pi) => (
         <section key={p.id} className="animate-rise" style={{ animationDelay: `${pi * 70}ms` }}>

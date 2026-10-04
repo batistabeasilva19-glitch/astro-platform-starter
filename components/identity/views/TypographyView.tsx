@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useEffect, useMemo, useState } from 'react';
 import { ExternalLink } from 'lucide-react';
 import { getFonts } from '@/lib/identity/color';
@@ -69,7 +70,7 @@ export function TypographyView({ ctx, content, images }: { ctx: ViewCtx; content
 
   return (
     <div className="space-y-14">
-      {(content.description ?? '').trim() && <p className="max-w-2xl whitespace-pre-line text-[0.95rem] leading-relaxed text-ink/80">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="max-w-2xl text-[0.95rem] leading-relaxed text-ink/80" />}
 
       {/* testar: o texto digitado aparece em todas as fontes */}
       {fonts.length > 0 && (
