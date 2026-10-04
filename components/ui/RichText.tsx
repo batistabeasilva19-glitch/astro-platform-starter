@@ -1,7 +1,7 @@
 'use client';
 
-import { useRef, type ReactNode, type TextareaHTMLAttributes } from 'react';
-import { Bold, Code, Italic, Link2, List, ListOrdered, Quote, Strikethrough, Underline } from 'lucide-react';
+import { useState, type ChangeEvent, type ReactNode } from 'react';
+import { RichEditor } from '@/components/ui/RichEditor';
 import { cn } from '@/lib/utils';
 
 /*
@@ -85,138 +85,28 @@ export function RichText({ text, className }: { text: string; className?: string
   return <div className={cn('whitespace-pre-wrap break-words', className)}>{out}</div>;
 }
 
-const BUTTONS = [
-  { id: 'bold', label: 'Negrito (Ctrl+B)', Icon: Bold },
-  { id: 'italic', label: 'Itálico (Ctrl+I)', Icon: Italic },
-  { id: 'underline', label: 'Sublinhado (Ctrl+U)', Icon: Underline },
-  { id: 'strike', label: 'Riscado', Icon: Strikethrough },
-  null,
-  { id: 'link', label: 'Link', Icon: Link2 },
-  { id: 'ol', label: 'Lista numerada', Icon: ListOrdered },
-  { id: 'ul', label: 'Lista', Icon: List },
-  null,
-  { id: 'quote', label: 'Citação', Icon: Quote },
-  { id: 'code', label: 'Código', Icon: Code },
-] as const;
-
-const BLOCK = 'p,div,h1,h2,h3,h4,h5,h6,li,blockquote,pre';
-
-/** HTML copiado (Docs, Word, site, chat) → texto com UMA linha em branco entre parágrafos e <br> como quebra simples. */
-function htmlToText(html: string): string | null {
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  const blocks = [...doc.body.querySelectorAll(BLOCK)].filter((el) => !el.querySelector(BLOCK));
-  if (blocks.length < 2) return null; // sem parágrafos reais: deixa o navegador colar normalmente
-  const text = (el: Element) => {
-    const clone = el.cloneNode(true) as Element;
-    clone.querySelectorAll('br').forEach((b) => b.replaceWith('\n'));
-    return (clone.textContent ?? '').replace(/\u00a0/g, ' ').replace(/[ \t]+\n/g, '\n').trim();
-  };
-  const out: string[] = [];
-  for (const el of blocks) {
-    const t = text(el);
-    if (!t) continue;
-    out.push(el.tagName === 'LI' ? `- ${t}` : t);
-  }
-  // itens de lista seguidos ficam juntos; o resto separado por linha em branco
-  return out.reduce((acc, cur, i) => (i === 0 ? cur : `${acc}${acc.startsWith('- ') || out[i - 1].startsWith('- ') ? (cur.startsWith('- ') && out[i - 1].startsWith('- ') ? '\n' : '\n\n') : '\n\n'}${cur}`), '');
-}
-
-const WRAP: Record<string, [string, string]> = { bold: ['**', '**'], italic: ['_', '_'], underline: ['++', '++'], strike: ['~~', '~~'], code: ['`', '`'] };
-
-/** Caixa de texto com barra de formatação (B / I / U / riscado / link / listas / citação / código). */
-export function RichTextarea({ className, ...p }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  const ref = useRef<HTMLTextAreaElement>(null);
-
-  function commit(el: HTMLTextAreaElement, start: number, end: number, selStart: number, selEnd: number, insert: string) {
-    el.focus();
-    el.setRangeText(insert, start, end, 'preserve');
-    el.setSelectionRange(selStart, selEnd);
-    el.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
-  function apply(id: string) {
-    const el = ref.current;
-    if (!el || el.disabled || el.readOnly) return;
-    const { selectionStart: s, selectionEnd: e, value } = el;
-    const sel = value.slice(s, e);
-
-    if (WRAP[id]) {
-      const [a, b] = WRAP[id];
-      // já formatado? remove a marcação
-      if (value.slice(s - a.length, s) === a && value.slice(e, e + b.length) === b) {
-        commit(el, s - a.length, e + b.length, s - a.length, e - a.length, sel);
-      } else {
-        commit(el, s, e, s + a.length, s + a.length + sel.length, a + sel + b);
-      }
-      return;
-    }
-    if (id === 'link') {
-      const url = window.prompt('Endereço do link (https://…)', 'https://');
-      if (!url || url === 'https://') return;
-      const text = sel || 'link';
-      commit(el, s, e, s + 1, s + 1 + text.length, `[${text}](${url})`);
-      return;
-    }
-    // listas e citação: prefixo em cada linha da seleção
-    const lineStart = value.lastIndexOf('\n', s - 1) + 1;
-    const nl = value.indexOf('\n', e);
-    const lineEnd = nl === -1 ? value.length : nl;
-    const lines = value.slice(lineStart, lineEnd).split('\n');
-    const strip = (l: string) => l.replace(/^\s*(?:- |\d+\. |>\s?)/, '');
-    const marker = id === 'ul' ? /^\s*- / : id === 'ol' ? /^\s*\d+\. / : /^>\s?/;
-    const allOn = lines.every((l) => marker.test(l));
-    const next = lines.map((l, i) => (allOn ? strip(l) : id === 'ul' ? `- ${strip(l)}` : id === 'ol' ? `${i + 1}. ${strip(l)}` : `> ${strip(l)}`)).join('\n');
-    commit(el, lineStart, lineEnd, lineStart, lineStart + next.length, next);
-  }
-
+/**
+ * Caixa de texto com formatação visível na hora (negrito, listas…) que cresce junto com o texto.
+ * Aceita as mesmas props de um textarea (name/defaultValue em formulários, ou value/onChange).
+ */
+export function RichTextarea({ name, value, defaultValue, onChange, rows = 4, placeholder, disabled, className, id }: { name?: string; value?: string; defaultValue?: string | null; onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void; rows?: number; placeholder?: string; disabled?: boolean; className?: string; id?: string }) {
+  const [inner, setInner] = useState(defaultValue ?? '');
+  const current = value ?? inner;
   return (
-    <div>
-      <div role="toolbar" aria-label="Formatação" className="flex flex-wrap items-center gap-0.5 rounded-t-2xl border border-b-0 border-wine/20 bg-blush/50 px-2 py-1.5">
-        {BUTTONS.map((b, i) =>
-          b ? (
-            <button
-              key={b.id}
-              type="button"
-              title={b.label}
-              aria-label={b.label}
-              disabled={p.disabled || p.readOnly}
-              onMouseDown={(e) => e.preventDefault()}
-              onClick={() => apply(b.id)}
-              className="rounded-lg p-2 text-wine transition hover:bg-wine/10 disabled:opacity-40"
-            >
-              <b.Icon className="size-4" />
-            </button>
-          ) : (
-            <span key={i} className="mx-1 h-5 w-px bg-wine/20" aria-hidden />
-          ),
-        )}
-      </div>
-      <textarea
-        {...p}
-        ref={ref}
-        onPaste={(e) => {
-          p.onPaste?.(e);
-          if (e.defaultPrevented || p.disabled || p.readOnly) return;
-          const html = e.clipboardData.getData('text/html');
-          const el = ref.current;
-          if (!html || !el) return;
-          const txt = htmlToText(html);
-          if (txt === null) return;
-          e.preventDefault();
-          commit(el, el.selectionStart, el.selectionEnd, el.selectionStart + txt.length, el.selectionStart + txt.length, txt);
+    <>
+      <RichEditor
+        id={id}
+        className={className}
+        value={current}
+        minRows={rows}
+        disabled={disabled}
+        placeholder={placeholder}
+        onChange={(v) => {
+          setInner(v);
+          onChange?.({ target: { value: v } } as ChangeEvent<HTMLTextAreaElement>);
         }}
-        onKeyDown={(e) => {
-          p.onKeyDown?.(e);
-          if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
-            const id = ({ b: 'bold', i: 'italic', u: 'underline' } as Record<string, string>)[e.key.toLowerCase()];
-            if (id) {
-              e.preventDefault();
-              apply(id);
-            }
-          }
-        }}
-        className={cn('field min-h-24 resize-y !rounded-t-none leading-relaxed', className)}
       />
-    </div>
+      {name && <input type="hidden" name={name} value={current} disabled={disabled} />}
+    </>
   );
 }

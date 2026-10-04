@@ -5,7 +5,7 @@ import { CornerUpLeft, Send, SmilePlus, X } from 'lucide-react';
 import type { ActivityLog, CommentRow, Reaction } from '@/lib/types';
 import { REACTION_EMOJIS, cleanReactions, toggleReaction } from '@/lib/reactions';
 import { Button } from '@/components/ui/Button';
-import { Textarea } from '@/components/ui/Fields';
+import { RichEditor } from '@/components/ui/RichEditor';
 import { useToast } from '@/components/ui/Toast';
 import { cn, fmtStamp } from '@/lib/utils';
 import { useRouter } from 'next/navigation';
@@ -190,10 +190,10 @@ export function CommentThread({
             {slideMode && <span className="text-ink/50">(deslize o carrossel para trocar de slide)</span>}
           </div>
         )}
-        <Textarea
+        <RichEditor
           value={text}
-          onChange={(e) => setText(e.target.value)}
-          rows={3}
+          onChange={setText}
+          minRows={3}
           placeholder={replyTo ? `Respondendo a ${replyTo.author_name}…` : slideMode ? `Comentário sobre o slide ${(slideIndex ?? 0) + 1}…` : viewer === 'client' ? 'Escreva um comentário…' : 'Responder ao cliente…'}
         />
         <div className="flex justify-end">
