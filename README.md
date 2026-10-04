@@ -31,6 +31,7 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
   0015_agenda_cliente.sql  # agenda: gravações e reuniões de alinhamento
   0016_formulario_social.sql  # formulário de perfil dos clientes de Social Mídia
   0017_telefone_cliente.sql   # WhatsApp do cliente (aviso pelo WhatsApp Web)
+  0018_comentarios_reacoes.sql  # reações com emoji e respostas a um comentário
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.

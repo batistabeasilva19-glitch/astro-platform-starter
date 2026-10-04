@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import type { ContentDetail } from '@/lib/types';
-import { addClientComment } from '@/lib/actions/portal';
+import { addClientComment, reactClientComment } from '@/lib/actions/portal';
 import { InstagramPost } from '@/components/content/InstagramPost';
 import { CommentThread, HistoryList } from '@/components/content/Thread';
 import { ApprovalActions } from './ApprovalActions';
@@ -75,7 +75,9 @@ export function ReviewContent({ token, content, client }: Props) {
           slideIndex={slide}
           onPickSlide={setSlide}
           versionNumbers={versionNumbers}
-          onSend={(m, s) => addClientComment(token, content.id, m, s)}
+          onSend={(m, s, r) => addClientComment(token, content.id, m, s, r)}
+          onReact={(id, e) => reactClientComment(token, content.id, id, e)}
+          canReply
         />
         <HistoryList history={content.history} />
       </div>

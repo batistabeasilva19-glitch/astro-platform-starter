@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { requireUser } from '@/lib/data/clients';
 import { removeFiles } from '@/lib/storage';
 import { notify } from '@/lib/notifications';
+import { REACTION_EMOJIS, cleanReactions, toggleReaction } from '@/lib/reactions';
 import { FORMATS, STATUSES } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
 import type { ContentFormat, ContentItem, ContentStatus, MediaKind } from '@/lib/types';
@@ -393,12 +394,17 @@ export async function addAdminComment(
   contentId: string,
   message: string,
   slideIndex?: number | null,
+  replyTo?: string | null,
 ): Promise<ActionResult> {
   const user = await requireUser();
   const { supabase, item } = await owned(contentId);
   if (!item) return fail('Conteúdo não encontrado.');
   const text = message.trim();
   if (!text) return fail('Escreva uma mensagem.');
+  if (replyTo) {
+    const { data: parent } = await supabase.from('comments').select('id').eq('id', replyTo).eq('content_id', contentId).maybeSingle();
+    if (!parent) replyTo = null;
+  }
   const { data: prof } = await supabase.from('users').select('name').eq('id', user.id).maybeSingle();
   const { data: version } = await supabase
     .from('content_versions')
@@ -413,8 +419,9 @@ export async function addAdminComment(
     author_name: prof?.name || 'Soltria',
     message: text,
     slide_index: slideIndex ?? null,
+    ...(replyTo ? { reply_to: replyTo } : {}),
   });
-  if (error) return fail('Não foi possível enviar o comentário.');
+  if (error) return fail(replyTo ? 'Não foi possível responder. A migration 0018 foi aplicada no Supabase?' : 'Não foi possível enviar o comentário.');
   await logActivity(supabase, {
     clientId: item.client_id,
     contentId,
@@ -441,3 +448,16 @@ export async function saveFeedLayout(clientId: string, order: string[]): Promise
   return { ok: true };
 }
 
+
+/** A administradora reage com emoji a um comentário (o cliente vê que ela leu). */
+export async function reactAdminComment(commentId: string, emoji: string): Promise<ActionResult> {
+  await requireUser();
+  const supabase = await createClient();
+  if (!(REACTION_EMOJIS as readonly string[]).includes(emoji)) return fail('Emoji inválido.');
+  const { data: c, error: e1 } = await supabase.from('comments').select('id, reactions').eq('id', commentId).maybeSingle();
+  if (e1 || !c) return fail(e1 ? 'Não foi possível reagir. A migration 0018 foi aplicada no Supabase?' : 'Comentário não encontrado.');
+  const { error } = await supabase.from('comments').update({ reactions: toggleReaction(cleanReactions(c.reactions), emoji, 'admin') }).eq('id', commentId);
+  if (error) return fail('Não foi possível reagir. A migration 0018 foi aplicada no Supabase?');
+  refresh();
+  return { ok: true };
+}

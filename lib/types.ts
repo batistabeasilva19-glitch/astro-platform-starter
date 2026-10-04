@@ -82,6 +82,12 @@ export interface ContentMedia {
   created_at: string;
 }
 
+/** Reação (emoji) a um comentário. */
+export interface Reaction {
+  emoji: string;
+  by: 'admin' | 'client';
+}
+
 export interface CommentRow {
   id: string;
   content_id: string;
@@ -92,6 +98,9 @@ export interface CommentRow {
   slide_index: number | null;
   is_change_request: boolean;
   created_at: string;
+  /** migration 0018 */
+  reactions?: Reaction[];
+  reply_to?: string | null;
 }
 
 export interface ApprovalRow {

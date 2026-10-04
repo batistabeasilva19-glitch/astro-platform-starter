@@ -7,6 +7,7 @@ import { resolveToken } from '@/lib/data/portal';
 import { AWAITING } from '@/lib/constants';
 import { getSiteUrl } from '@/lib/site-url';
 import { notify } from '@/lib/notifications';
+import { REACTION_EMOJIS, cleanReactions, toggleReaction } from '@/lib/reactions';
 import { syncTasksForContent } from '@/lib/data/production';
 import { fail, logActivity, type ActionResult } from './shared';
 import type { ContentItem } from '@/lib/types';
@@ -163,6 +164,7 @@ export async function addClientComment(
   contentId: string,
   message: string,
   slideIndex?: number | null,
+  replyTo?: string | null,
 ): Promise<ActionResult> {
   const text = message.trim();
   if (!text) return fail('Escreva uma mensagem antes de enviar.');
@@ -172,6 +174,10 @@ export async function addClientComment(
   if (!ctx.ok) return fail(ctx.error);
   const { session, db, item } = ctx;
   const version = await currentVersion(db, item);
+  if (replyTo) {
+    const { data: parent } = await db.from('comments').select('id').eq('id', replyTo).eq('content_id', item.id).maybeSingle();
+    if (!parent) replyTo = null;
+  }
 
   await db.from('comments').insert({
     content_id: item.id,
@@ -180,6 +186,7 @@ export async function addClientComment(
     author_name: session.signerName,
     message: text,
     slide_index: slideIndex && slideIndex > 0 ? slideIndex : null,
+    ...(replyTo ? { reply_to: replyTo } : {}),
   });
   await logActivity(db, {
     clientId: session.client.id,
@@ -249,4 +256,18 @@ export async function approveAll(token: string): Promise<ActionResult<{ count: n
   revalidatePath(`/review/${token}`, 'layout');
   revalidatePath('/admin', 'layout');
   return { ok: true, count };
+}
+
+/** O cliente reage com emoji a um comentário. */
+export async function reactClientComment(token: string, contentId: string, commentId: string, emoji: string): Promise<ActionResult> {
+  if (!(REACTION_EMOJIS as readonly string[]).includes(emoji)) return fail('Emoji inválido.');
+  const ctx = await context(token, contentId);
+  if (!ctx.ok) return fail(ctx.error);
+  const { db, item } = ctx;
+  const { data: c } = await db.from('comments').select('id, reactions').eq('id', commentId).eq('content_id', item.id).maybeSingle();
+  if (!c) return fail('Comentário não encontrado.');
+  const { error } = await db.from('comments').update({ reactions: toggleReaction(cleanReactions(c.reactions), emoji, 'client') }).eq('id', commentId);
+  if (error) return fail('Não foi possível reagir agora.');
+  revalidatePath(`/review/${token}`, 'layout');
+  return { ok: true };
 }
