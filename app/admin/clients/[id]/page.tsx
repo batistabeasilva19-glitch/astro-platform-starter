@@ -8,6 +8,7 @@ import { loadAllTasks } from '@/lib/data/production';
 import { productionStats } from '@/lib/production/stats';
 import { ProfileBefore } from '@/components/admin/ProfileBefore';
 import { EmailComposer } from '@/components/identity/EmailComposer';
+import { WhatsAppComposer } from '@/components/admin/WhatsAppComposer';
 import { PortalAccess } from '@/components/admin/PortalAccess';
 import { fetchCards, fetchFeed } from '@/lib/data/content';
 import { AWAITING } from '@/lib/constants';
@@ -67,6 +68,7 @@ export default async function ClientWorkspacePage({
         {project && (
           <div className="flex flex-wrap items-center gap-3">
             <LinkActions clientId={id} url={url} active={project.token_active} />
+            <WhatsAppComposer ctx={{ clientName: client.contact_name || client.company_name, phone: client.contact_phone ?? '', url }} item={{ title: 'os conteúdos do mês', start: 'awaiting' }} />
             <EmailComposer ctx={{ clientName: client.contact_name || client.company_name, clientEmail: client.contact_email ?? '', url }} item={{ thing: 'os conteúdos do mês', short: 'Conteúdos', plural: true }} />
           </div>
         )}
