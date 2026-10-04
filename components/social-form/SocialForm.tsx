@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, ArrowRight, Check, ClipboardCheck, Flag, FolderOpen, Heart, Lock, MessageCircle, Send, Smartphone, Stethoscope, Target, User, Users, Video, ShoppingBag, type LucideIcon } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, ClipboardCheck, Flag, FolderOpen, Heart, Lock, MessageCircle, Send, Smartphone, Stethoscope, Target, User, Users, Video, ShoppingBag, Sparkles, LayoutGrid, BarChart3, Handshake, type LucideIcon } from 'lucide-react';
 import { saveSocialAnswers, submitSocialForm } from '@/lib/actions/social-form';
 import { answeredCount, isAnswered, isVisible, missingRequired, sectionsFor, type Answers, type FormKind, type Question } from '@/lib/social-form/questions';
 import { Button } from '@/components/ui/Button';
@@ -165,7 +165,7 @@ export function SocialForm({ token, kind, initial, updatedAt, files, submitted, 
     );
   }
 
-  const ICON: Record<string, LucideIcon> = { sobre: User, procedimentos: Stethoscope, servicos: ShoppingBag, objetivos: Target, publico: Users, perfil: Smartphone, gosto: Heart, voz: MessageCircle, producao: Video, materiais: FolderOpen, final: Flag };
+  const ICON: Record<string, LucideIcon> = { sobre: User, procedimentos: Stethoscope, servicos: ShoppingBag, objetivos: Target, publico: Users, perfil: Smartphone, gosto: Heart, voz: MessageCircle, producao: Video, materiais: FolderOpen, final: Flag, marca: Sparkles, pilares: LayoutGrid, metas: BarChart3, aprovacao: Handshake };
   const visibleQs = (i: number) => sections[i].questions.filter((q) => isVisible(q, answers));
   const secStat = (i: number) => {
     const qs = visibleQs(i);
