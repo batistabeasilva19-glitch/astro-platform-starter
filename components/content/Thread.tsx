@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Send } from 'lucide-react';
-import type { ActivityLog, CommentRow } from '@/lib/types';
+import { CornerUpLeft, Send, SmilePlus, X } from 'lucide-react';
+import type { ActivityLog, CommentRow, Reaction } from '@/lib/types';
+import { REACTION_EMOJIS, cleanReactions, toggleReaction } from '@/lib/reactions';
 import { Button } from '@/components/ui/Button';
 import { Textarea } from '@/components/ui/Fields';
 import { useToast } from '@/components/ui/Toast';
@@ -26,10 +27,16 @@ export function CommentThread({
   slideIndex,
   onPickSlide,
   versionNumbers,
+  onReact,
+  canReply,
 }: {
   comments: CommentRow[];
   viewer: 'admin' | 'client';
-  onSend: (message: string, slide: number | null) => Promise<SubmitResult>;
+  onSend: (message: string, slide: number | null, replyTo?: string | null) => Promise<SubmitResult>;
+  /** reagir com emoji a um comentário (se omitido, as reações ficam escondidas). */
+  onReact?: (commentId: string, emoji: string) => Promise<SubmitResult>;
+  /** permite responder a um comentário específico. */
+  canReply?: boolean;
   slideCount?: number;
   /** slide ativo no carrossel (0-based) — usado para comentar em um slide específico. */
   slideIndex?: number;
@@ -41,14 +48,41 @@ export function CommentThread({
   const [pending, start] = useTransition();
   const toast = useToast();
   const router = useRouter();
+  const [replyTo, setReplyTo] = useState<CommentRow | null>(null);
+  const [picker, setPicker] = useState<string | null>(null);
+  const [local, setLocal] = useState<Record<string, Reaction[]>>({});
+  const [flash, setFlash] = useState<string | null>(null);
+  const byId = new Map(comments.map((c) => [c.id, c]));
+  const reactionsOf = (c: CommentRow) => local[c.id] ?? cleanReactions(c.reactions);
+
+  const react = (c: CommentRow, emoji: string) => {
+    if (!onReact) return;
+    const next = toggleReaction(reactionsOf(c), emoji, viewer);
+    setLocal((l) => ({ ...l, [c.id]: next }));
+    setPicker(null);
+    start(async () => {
+      const r = await onReact(c.id, emoji);
+      if (!r.ok) {
+        setLocal((l) => { const { [c.id]: _, ...rest } = l; void _; return rest; });
+        return toast(r.error ?? 'Não foi possível reagir.', 'error');
+      }
+      router.refresh();
+    });
+  };
+  const jump = (id: string) => {
+    document.getElementById(`c-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setFlash(id);
+    setTimeout(() => setFlash(null), 1600);
+  };
 
   const submit = () => {
     const message = text.trim();
     if (!message) return;
     start(async () => {
-      const res = await onSend(message, slideMode && slideIndex !== undefined ? slideIndex + 1 : null);
+      const res = await onSend(message, slideMode && slideIndex !== undefined ? slideIndex + 1 : null, replyTo?.id ?? null);
       if (!res.ok) return toast(res.error ?? 'Não foi possível enviar.', 'error');
       setText('');
+      setReplyTo(null);
       setSlideMode(false);
       toast(viewer === 'client' ? 'Comentário enviado ♡' : 'Mensagem enviada');
       router.refresh();
@@ -67,8 +101,11 @@ export function CommentThread({
         <ul className="mb-5 space-y-3">
           {comments.map((c) => {
             const mine = c.author_type === viewer;
+            const parent = c.reply_to ? byId.get(c.reply_to) : undefined;
+            const rx = reactionsOf(c);
+            const groups = REACTION_EMOJIS.map((e) => ({ e, n: rx.filter((r) => r.emoji === e).length, mine: rx.some((r) => r.emoji === e && r.by === viewer), who: rx.filter((r) => r.emoji === e).map((r) => (r.by === 'admin' ? 'Soltria' : 'Cliente')).join(', ') })).filter((g) => g.n > 0);
             return (
-              <li key={c.id} className={cn('flex flex-col', mine ? 'items-end' : 'items-start')}>
+              <li id={`c-${c.id}`} key={c.id} className={cn('flex flex-col rounded-3xl transition-colors duration-700', mine ? 'items-end' : 'items-start', flash === c.id && 'bg-wine/10')}>
                 <div
                   className={cn(
                     'max-w-[92%] rounded-3xl px-4 py-3 text-[0.9rem] leading-relaxed',
@@ -91,8 +128,36 @@ export function CommentThread({
                       <span className="normal-case tracking-normal text-ink/40">v{String(versionNumbers[c.version_id]).padStart(2, '0')}</span>
                     )}
                   </p>
+                  {parent && (
+                    <button type="button" onClick={() => jump(parent.id)} className="mb-2 block w-full rounded-2xl border-l-4 border-wine/50 bg-white/70 px-3 py-1.5 text-left text-xs text-ink/65 hover:bg-white">
+                      <span className="block text-[0.65rem] uppercase tracking-wider text-wine">Respondendo a {parent.author_name}</span>
+                      <span className="line-clamp-2">{parent.message}</span>
+                    </button>
+                  )}
                   <p className="whitespace-pre-line">{c.message}</p>
                 </div>
+                {(onReact || canReply) && (
+                  <div className={cn('relative mt-1 flex flex-wrap items-center gap-1 px-1', mine ? 'justify-end' : 'justify-start')}>
+                    {groups.map((g) => (
+                      <button key={g.e} type="button" disabled={!onReact} title={g.who} onClick={() => react(c, g.e)} className={cn('flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs transition', g.mine ? 'border-wine bg-blush' : 'border-wine/20 bg-white hover:bg-blush')}>
+                        <span>{g.e}</span>{g.n > 1 && <span className="tabular-nums text-ink/60">{g.n}</span>}
+                      </button>
+                    ))}
+                    {onReact && (
+                      <span className="relative">
+                        <button type="button" aria-label="Reagir com emoji" onClick={() => setPicker(picker === c.id ? null : c.id)} className="rounded-full p-1.5 text-wine/50 transition hover:bg-blush hover:text-wine"><SmilePlus className="size-4" /></button>
+                        {picker === c.id && (
+                          <span className={cn('absolute bottom-full z-10 mb-1 flex gap-0.5 rounded-full border border-wine/20 bg-white p-1 shadow-lg', mine ? 'right-0' : 'left-0')}>
+                            {REACTION_EMOJIS.map((e) => <button key={e} type="button" onClick={() => react(c, e)} className="rounded-full px-1.5 py-1 text-lg transition hover:scale-125 hover:bg-blush">{e}</button>)}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                    {canReply && (
+                      <button type="button" onClick={() => { setReplyTo(c); document.getElementById('thread-composer')?.scrollIntoView({ behavior: 'smooth', block: 'center' }); }} className="flex items-center gap-1 rounded-full px-2 py-1 text-xs text-wine/70 transition hover:bg-blush hover:text-wine"><CornerUpLeft className="size-3.5" /> Responder</button>
+                    )}
+                  </div>
+                )}
                 <span className="mt-1 px-2 text-[0.68rem] text-ink/45">{fmtStamp(c.created_at)}</span>
               </li>
             );
@@ -100,7 +165,14 @@ export function CommentThread({
         </ul>
       )}
 
-      <div className="space-y-3">
+      <div id="thread-composer" className="space-y-3">
+        {replyTo && (
+          <div className="flex items-start gap-2 rounded-2xl border-l-4 border-wine bg-blush/60 px-3 py-2 text-xs">
+            <CornerUpLeft className="mt-0.5 size-3.5 shrink-0 text-wine" />
+            <span className="min-w-0 flex-1"><span className="block text-wine">Respondendo a {replyTo.author_name}</span><span className="line-clamp-2 text-ink/65">{replyTo.message}</span></span>
+            <button type="button" aria-label="Cancelar resposta" onClick={() => setReplyTo(null)} className="rounded-full p-1 text-wine/60 hover:bg-white hover:text-wine"><X className="size-3.5" /></button>
+          </div>
+        )}
         {slideCount > 1 && (
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <button
@@ -122,7 +194,7 @@ export function CommentThread({
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={3}
-          placeholder={slideMode ? `Comentário sobre o slide ${(slideIndex ?? 0) + 1}…` : viewer === 'client' ? 'Escreva um comentário…' : 'Responder ao cliente…'}
+          placeholder={replyTo ? `Respondendo a ${replyTo.author_name}…` : slideMode ? `Comentário sobre o slide ${(slideIndex ?? 0) + 1}…` : viewer === 'client' ? 'Escreva um comentário…' : 'Responder ao cliente…'}
         />
         <div className="flex justify-end">
           <Button onClick={submit} loading={pending} disabled={!text.trim()} size="sm">

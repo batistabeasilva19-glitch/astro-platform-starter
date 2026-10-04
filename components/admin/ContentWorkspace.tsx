@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import { Check, History, Plus, Send, Trash2 } from 'lucide-react';
 import type { ContentDetail } from '@/lib/types';
-import { addAdminComment, changeStatus, createNewVersion, deleteContent, sendForApproval } from '@/lib/actions/content';
+import { addAdminComment, changeStatus, createNewVersion, deleteContent, reactAdminComment, sendForApproval } from '@/lib/actions/content';
 import { InstagramPost } from '@/components/content/InstagramPost';
 import { CommentThread, HistoryList } from '@/components/content/Thread';
 import { StatusBadge } from '@/components/content/Badges';
@@ -148,7 +148,9 @@ export function ContentWorkspace({ content, ownerId, client, form, email, whatsa
             slideIndex={slide}
             onPickSlide={(i) => setSlide(i)}
             versionNumbers={versionNumbers}
-            onSend={(m, s) => addAdminComment(content.id, m, s)}
+            onSend={(m, s, r) => addAdminComment(content.id, m, s, r)}
+            onReact={reactAdminComment}
+            canReply
           />
         </section>
       </div>
