@@ -3,7 +3,7 @@
 import { Sparkle } from '@/components/brand/Brand';
 import { cn } from '@/lib/utils';
 
-export const Label = ({ children, className }: { children: React.ReactNode; className?: string }) => <p className={cn('label mb-3 text-wine/70', className)}>{children}</p>;
+export const Label = ({ children, className }: { children: React.ReactNode; className?: string }) => <p className={cn('label mb-3 font-semibold text-wine/80', className)}>{children}</p>;
 
 export function Empty({ text }: { text: string }) {
   return (
