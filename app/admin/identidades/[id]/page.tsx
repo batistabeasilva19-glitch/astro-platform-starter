@@ -137,7 +137,7 @@ export default async function IdentityProjectPage({ params, searchParams }: { pa
       {activeStage && tab !== 'geral' && tab !== 'historico' && (
         <div>
           <p className="mb-5 text-sm text-ink/60">{STAGE_BY_KEY[activeStage.stage_key].hint}</p>
-          <StageWorkspace key={activeStage.id} stage={activeStage} detail={detail} email={{ clientName: client.contact_name || client.company_name, clientEmail: client.contact_email ?? '', url, stages }} ctx={{ ownerId: user.id, clientId: client.id, projectId: id }} />
+          <StageWorkspace key={activeStage.id} stage={activeStage} detail={detail} email={{ clientName: client.contact_name || client.company_name, clientEmail: client.contact_email ?? '', phone: client.contact_phone ?? '', url, stages }} ctx={{ ownerId: user.id, clientId: client.id, projectId: id }} />
         </div>
       )}
 

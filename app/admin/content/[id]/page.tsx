@@ -52,6 +52,7 @@ export default async function ContentPage({ params, searchParams }: { params: Pr
         content={content}
         ownerId={user.id}
         client={{ id: client.id, handle: client.instagram_handle, displayName: client.display_name || client.company_name, avatarUrl: client.avatar_url }}
+        whatsapp={{ clientName: client.contact_name || client.company_name, phone: client.contact_phone ?? '', url: client.project ? `${await getSiteUrl()}/review/${client.project.review_token}/c/${content.id}` : '' }}
         email={{ clientName: client.contact_name || client.company_name, clientEmail: client.contact_email ?? '', url: client.project ? `${await getSiteUrl()}/review/${client.project.review_token}` : '' }}
         form={<ContentForm clients={clients.map((c) => ({ id: c.id, company_name: c.company_name }))} clientId={client.id} content={content} version={current} />}
       />

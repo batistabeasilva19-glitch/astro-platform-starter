@@ -18,6 +18,7 @@ const clientSchema = z.object({
   bio: z.string().trim().max(600).default(''),
   contact_name: z.string().trim().min(1, 'Informe o nome do responsável.').max(120),
   contact_email: z.string().trim().email('E-mail inválido.').or(z.literal('')).optional(),
+  contact_phone: z.string().trim().max(30).optional(),
   notes: z.string().trim().max(3000).default(''),
   avatar_path: z.string().optional(),
 });
@@ -43,6 +44,8 @@ export async function saveClient(_prev: ActionResult | null, fd: FormData): Prom
     contact_name: v.contact_name,
     contact_email: v.contact_email || null,
     notes: v.notes,
+    // o telefone só entra se preenchido (assim tudo funciona mesmo antes da migration 0017)
+    ...(v.contact_phone ? { contact_phone: v.contact_phone } : {}),
     ...(v.avatar_path !== undefined ? { avatar_path: v.avatar_path || null } : {}),
   };
 
@@ -50,7 +53,8 @@ export async function saveClient(_prev: ActionResult | null, fd: FormData): Prom
   const editingId = String(fd.get('editing') || '');
   if (editingId) {
     const { error } = await supabase.from('clients').update(row).eq('id', editingId);
-    if (error) return fail('Não foi possível salvar as alterações.');
+    if (error) return fail(v.contact_phone ? 'Não foi possível salvar. A migration 0017 (WhatsApp do cliente) foi aplicada no Supabase?' : 'Não foi possível salvar as alterações.');
+    if (!v.contact_phone) await supabase.from('clients').update({ contact_phone: null }).eq('id', editingId); // limpar o campo (ignora erro se a coluna ainda não existe)
     revalidatePath('/admin', 'layout');
     const back = String(fd.get('next') || '');
     if (back.startsWith('/admin/identidades')) redirect(back);

@@ -71,6 +71,9 @@ export function ClientForm({ ownerId, newId, client, next }: { ownerId: string; 
         <Field label="E-mail do responsável" hint="Usado nos avisos por e-mail (quando ativados).">
           <Input name="contact_email" type="email" defaultValue={client?.contact_email ?? ''} placeholder="contato@empresa.com" />
         </Field>
+        <Field label="WhatsApp do responsável" hint="Com DDD. Usado para abrir a conversa no WhatsApp Web já com a mensagem pronta.">
+          <Input name="contact_phone" type="tel" inputMode="tel" defaultValue={client?.contact_phone ?? ''} placeholder="(11) 99999-9999" />
+        </Field>
         <Field label="Nome exibido no perfil do Instagram" className="sm:col-span-2">
           <Input name="display_name" defaultValue={client?.display_name ?? ''} placeholder="Como aparece acima da bio" />
         </Field>

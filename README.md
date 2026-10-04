@@ -30,6 +30,7 @@ Cada identidade visual tem projeto, etapas, versões, arquivos, comentários, ap
   0014_login_cliente.sql   # login (e-mail + senha) opcional no portal do cliente` (link da arte no calendário) no SQL Editor do Supabase. São só aditivas (criam tabelas/colunas novas) e não alteram nada do módulo de conteúdo.
   0015_agenda_cliente.sql  # agenda: gravações e reuniões de alinhamento
   0016_formulario_social.sql  # formulário de perfil dos clientes de Social Mídia
+  0017_telefone_cliente.sql   # WhatsApp do cliente (aviso pelo WhatsApp Web)
 
 **O que o módulo de Identidade Visual inclui**
 - **Logo:** várias propostas (A, B, C), cada uma com 9 variações de arquivo e **versões próprias** (V1, V2, V3… nunca substituídas), descrição das alterações, comparação **lado a lado / alternar no celular / slider antes↔depois** e, só para a administradora, **“Usar esta versão novamente”** (cria uma nova versão, sem apagar nada). O cliente **favorita** (não aprova), **escolhe** a proposta e, separadamente, **aprova o logo**.

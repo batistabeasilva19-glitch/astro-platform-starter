@@ -10,6 +10,7 @@ import { CommentThread, HistoryList } from '@/components/content/Thread';
 import { StatusBadge } from '@/components/content/Badges';
 import { MediaManager } from './MediaManager';
 import { EmailComposer, type EmailCtx } from '@/components/identity/EmailComposer';
+import { WhatsAppComposer, type WhatsAppCtx } from './WhatsAppComposer';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Textarea } from '@/components/ui/Fields';
@@ -24,9 +25,11 @@ interface Props {
   form: React.ReactNode;
   /** dados para o e-mail ao cliente (modelos editáveis). */
   email?: EmailCtx;
+  /** dados para avisar no WhatsApp. */
+  whatsapp?: WhatsAppCtx;
 }
 
-export function ContentWorkspace({ content, ownerId, client, form, email }: Props) {
+export function ContentWorkspace({ content, ownerId, client, form, email, whatsapp }: Props) {
   const current = content.versions.find((v) => v.version_number === content.current_version) ?? content.versions[content.versions.length - 1];
   const [selectedId, setSelectedId] = useState(current.id);
   const [slide, setSlide] = useState(0);
@@ -62,6 +65,7 @@ export function ContentWorkspace({ content, ownerId, client, form, email }: Prop
           <div className="flex flex-wrap items-center justify-between gap-3">
             <StatusBadge status={content.status} />
             <div className="flex flex-wrap gap-2">
+              {whatsapp && <WhatsAppComposer key={`wa-${content.id}-${content.status}`} ctx={whatsapp} item={{ title: content.title, start: content.current_version > 1 && ['pending_approval', 'revised_pending'].includes(content.status) ? 'done' : ['approved', 'scheduled', 'published'].includes(content.status) ? 'approved' : 'awaiting' }} />}
               {email && <EmailComposer key={content.id + content.status} ctx={email} item={{ thing: `a postagem “${content.title}”`, short: content.title, approved: ['approved', 'scheduled', 'published'].includes(content.status) }} />}
               {canSend && (
                 <Button size="sm" loading={pending} onClick={() => run(() => sendForApproval(content.id), 'Enviado para aprovação ♡')}>

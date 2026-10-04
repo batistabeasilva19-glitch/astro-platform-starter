@@ -22,6 +22,8 @@ export interface Client {
   bio: string;
   contact_name: string;
   contact_email: string | null;
+  /** WhatsApp do responsável (migration 0017). */
+  contact_phone?: string | null;
   avatar_path: string | null;
   notes: string;
   created_at: string;
