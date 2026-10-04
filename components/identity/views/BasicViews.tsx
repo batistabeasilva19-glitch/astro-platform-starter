@@ -22,7 +22,7 @@ export function ConceptView({ ctx, content, images }: { ctx: ViewCtx; content: S
   if (!filled.length && !images.length) return <Empty text="O conceito ainda está sendo escrito." />;
   return (
     <div className="space-y-14">
-      {(content.description ?? '').trim() && <RichText text={content.description!} className="h-display max-w-3xl text-2xl leading-snug text-wine sm:text-4xl" />}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="max-w-3xl text-xl font-medium leading-snug text-wine sm:text-2xl" />}
       <div className="grid gap-x-14 gap-y-10 sm:grid-cols-2">
         {rest.map(([k, label]) => (
           <section key={k} className="animate-rise">
@@ -45,7 +45,7 @@ export function ConceptView({ ctx, content, images }: { ctx: ViewCtx; content: S
         <section className="relative overflow-hidden rounded-[2rem] bg-wine px-7 py-14 text-center text-white sm:px-16">
           <Sparkle className="mx-auto mb-5 size-5 text-blush" animate />
           <Label className="text-white/70">Manifesto</Label>
-          <RichText text={manifesto} className="h-display mx-auto max-w-2xl text-2xl leading-snug sm:text-4xl" />
+          <RichText text={manifesto} className="mx-auto max-w-2xl text-xl font-medium leading-snug sm:text-2xl" />
         </section>
       )}
       {images.length > 0 && <Photos ctx={ctx} images={images} />}
@@ -60,7 +60,7 @@ export function MoodboardView({ ctx, content, images }: { ctx: ViewCtx; content:
   if (!images.length) return <Empty text="O moodboard ainda está sendo montado." />;
   return (
     <div>
-      {(content.title ?? '').trim() && <h3 className="h-display mb-3 text-4xl text-wine sm:text-5xl">{content.title}</h3>}
+      {(content.title ?? '').trim() && <h3 className="mb-3 text-2xl font-medium tracking-tight text-wine sm:text-3xl">{content.title}</h3>}
       {(content.description ?? '').trim() && <RichText text={content.description!} className="mb-10 max-w-2xl text-[0.97rem] leading-relaxed text-ink/80" />}
       {/* composição em colunas, na ordem definida pela administradora */}
       <div className="columns-2 gap-3 sm:columns-3 sm:gap-4">
@@ -187,7 +187,7 @@ function FileRow({ f }: { f: SignedAsset }) {
 // ─── 08 Aprovação final ────────────────────────────────────────────────────
 export function FinalMessage({ content }: { content: StageContent }) {
   if (!(content.message ?? '').trim()) return null;
-  return <RichText text={content.message ?? ''} className="h-display max-w-3xl text-2xl leading-snug text-wine sm:text-4xl" />;
+  return <RichText text={content.message ?? ''} className="max-w-3xl text-xl font-medium leading-snug text-wine sm:text-2xl" />;
 }
 
 /** Resumo: logo, paleta, tipografia, elementos e aplicações + etapas. */

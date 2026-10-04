@@ -26,7 +26,7 @@ export default async function IdentityStagePage({ params }: { params: Promise<{ 
 
       <header className="mb-10">
         <p className="label mb-3 text-wine/70">Etapa {meta.number}</p>
-        <h1 className="h-display text-5xl text-wine sm:text-6xl">{etapa === 'files' ? 'Arquivos da sua marca' : meta.label}</h1>
+        <h1 className="font-sans text-3xl font-medium leading-tight tracking-tight text-wine sm:text-4xl">{etapa === 'files' ? 'Arquivos da sua marca' : meta.label}</h1>
         {!isFiles && (
           <div className="mt-4">
             <StageStatusBadge status={stage.status} audience="client" version={stage.current_version} stageKey={etapa} />
