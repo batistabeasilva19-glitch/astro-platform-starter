@@ -1,5 +1,6 @@
 'use client';
 
+import { RichText } from '@/components/ui/RichText';
 import { useMemo, useState } from 'react';
 import { Download, FileText, Lock } from 'lucide-react';
 import { allColors, getFonts, getPalettes } from '@/lib/identity/color';
@@ -21,12 +22,12 @@ export function ConceptView({ ctx, content, images }: { ctx: ViewCtx; content: S
   if (!filled.length && !images.length) return <Empty text="O conceito ainda está sendo escrito." />;
   return (
     <div className="space-y-14">
-      {(content.description ?? '').trim() && <p className="h-display max-w-3xl whitespace-pre-line text-2xl leading-snug text-wine sm:text-4xl">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="h-display max-w-3xl text-2xl leading-snug text-wine sm:text-4xl" />}
       <div className="grid gap-x-14 gap-y-10 sm:grid-cols-2">
         {rest.map(([k, label]) => (
           <section key={k} className="animate-rise">
             <Label>{label}</Label>
-            <p className="whitespace-pre-line text-[0.97rem] leading-relaxed text-ink/85">{content[k]}</p>
+            <RichText text={content[k]!} className="text-[0.97rem] leading-relaxed text-ink/85" />
           </section>
         ))}
       </div>
@@ -44,7 +45,7 @@ export function ConceptView({ ctx, content, images }: { ctx: ViewCtx; content: S
         <section className="relative overflow-hidden rounded-[2rem] bg-wine px-7 py-14 text-center text-white sm:px-16">
           <Sparkle className="mx-auto mb-5 size-5 text-blush" animate />
           <Label className="text-white/70">Manifesto</Label>
-          <p className="h-display mx-auto max-w-2xl whitespace-pre-line text-2xl leading-snug sm:text-4xl">{manifesto}</p>
+          <RichText text={manifesto} className="h-display mx-auto max-w-2xl text-2xl leading-snug sm:text-4xl" />
         </section>
       )}
       {images.length > 0 && <Photos ctx={ctx} images={images} />}
@@ -60,7 +61,7 @@ export function MoodboardView({ ctx, content, images }: { ctx: ViewCtx; content:
   return (
     <div>
       {(content.title ?? '').trim() && <h3 className="h-display mb-3 text-4xl text-wine sm:text-5xl">{content.title}</h3>}
-      {(content.description ?? '').trim() && <p className="mb-10 max-w-2xl whitespace-pre-line text-[0.97rem] leading-relaxed text-ink/80">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="mb-10 max-w-2xl text-[0.97rem] leading-relaxed text-ink/80" />}
       {/* composição em colunas, na ordem definida pela administradora */}
       <div className="columns-2 gap-3 sm:columns-3 sm:gap-4">
         {images.map((img) => (
@@ -94,7 +95,7 @@ export function GalleryView({ ctx, content, images, kind }: { ctx: ViewCtx; cont
 
   return (
     <div>
-      {(content.description ?? '').trim() && <p className="mb-8 max-w-2xl whitespace-pre-line text-[0.97rem] leading-relaxed text-ink/80">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="mb-8 max-w-2xl text-[0.97rem] leading-relaxed text-ink/80" />}
       {cats.length > 1 && (
         <div className="no-scrollbar -mx-1 mb-6 flex gap-2 overflow-x-auto px-1 pb-1">
           {['Todos', ...cats].map((c) => (
@@ -142,7 +143,7 @@ export function FilesView({ ctx, content, files }: { ctx: ViewCtx; content: Stag
   }));
   return (
     <div className="space-y-10">
-      {(content.description ?? '').trim() && <p className="max-w-2xl whitespace-pre-line text-[0.97rem] leading-relaxed text-ink/80">{content.description}</p>}
+      {(content.description ?? '').trim() && <RichText text={content.description!} className="max-w-2xl text-[0.97rem] leading-relaxed text-ink/80" />}
       {groups.filter((g) => g.items.length).map((g) => (
         <section key={g.key || 'outros'}>
           <Label>{g.label}</Label>
@@ -186,7 +187,7 @@ function FileRow({ f }: { f: SignedAsset }) {
 // ─── 08 Aprovação final ────────────────────────────────────────────────────
 export function FinalMessage({ content }: { content: StageContent }) {
   if (!(content.message ?? '').trim()) return null;
-  return <p className="h-display max-w-3xl whitespace-pre-line text-2xl leading-snug text-wine sm:text-4xl">{content.message}</p>;
+  return <RichText text={content.message ?? ''} className="h-display max-w-3xl text-2xl leading-snug text-wine sm:text-4xl" />;
 }
 
 /** Resumo: logo, paleta, tipografia, elementos e aplicações + etapas. */

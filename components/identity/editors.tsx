@@ -43,6 +43,7 @@ import {
   type VersionData,
 } from '@/lib/identity/types';
 import { uploadToStorage, validateFile } from '@/lib/upload';
+import { RichEditor } from '@/components/ui/RichEditor';
 import { Button, buttonClass } from '@/components/ui/Button';
 import { Field, Input, Select, Textarea } from '@/components/ui/Fields';
 import { Modal } from '@/components/ui/Modal';
@@ -163,7 +164,7 @@ export function ConceptEditor({ stage, version, ctx, editable }: EditorProps) {
       <div className="grid gap-5 sm:grid-cols-2">
         {CONCEPT_FIELDS.map(([k, label]) => (
           <Field key={k} label={label} className={k === 'description' || k === 'manifesto' ? 'sm:col-span-2' : ''}>
-            <Textarea rows={k === 'keywords' ? 2 : 4} value={s.content[k] ?? ''} disabled={!editable} onChange={(e) => s.set({ [k]: e.target.value })} placeholder={k === 'keywords' ? 'Separe por vírgula: elegância, ousadia, afeto' : undefined} />
+            <RichEditor minRows={k === 'keywords' ? 2 : 4} value={s.content[k] ?? ''} disabled={!editable} onChange={(v) => s.set({ [k]: v })} placeholder={k === 'keywords' ? 'Separe por vírgula: elegância, ousadia, afeto' : undefined} />
           </Field>
         ))}
       </div>
@@ -186,7 +187,7 @@ export function MoodboardEditor({ stage, version, ctx, editable }: EditorProps) 
           <Input value={s.content.title ?? ''} disabled={!editable} onChange={(e) => s.set({ title: e.target.value })} placeholder="Ex.: Delicadeza com presença" />
         </Field>
         <Field label="Descrição">
-          <Textarea rows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(e) => s.set({ description: e.target.value })} />
+          <RichEditor minRows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(v) => s.set({ description: v })} />
         </Field>
       </div>
       {editable && <SaveBar dirty={s.dirty} saving={s.saving} onSave={s.save} />}
@@ -206,7 +207,7 @@ export function GalleryEditor({ stage, version, ctx, editable, downloads, mode }
   return (
     <div>
       <Field label="Descrição">
-        <Textarea rows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(e) => s.set({ description: e.target.value })} placeholder={mode === 'files' ? 'Ex.: Os arquivos finais da sua marca.' : undefined} />
+        <RichEditor minRows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(v) => s.set({ description: v })} placeholder={mode === 'files' ? 'Ex.: Os arquivos finais da sua marca.' : undefined} />
       </Field>
       {editable && <SaveBar dirty={s.dirty} saving={s.saving} onSave={s.save} />}
       {mode === 'files' && <p className="mt-6 rounded-2xl bg-blush px-4 py-3 text-sm text-wine">Os arquivos só aparecem para o cliente depois que o projeto for <strong className="font-normal">aprovado</strong> e se estiverem com <strong className="font-normal">“Disponibilizar para cliente”</strong> ligado. Arquivos de trabalho ficam bloqueados por padrão.</p>}
@@ -224,7 +225,7 @@ export function FinalEditor({ stage, version, editable }: EditorProps) {
   return (
     <div>
       <Field label="Mensagem para o cliente" hint="Aparece no topo da aprovação final. O resumo (logo escolhido, paleta, fontes, elementos e aplicações) é montado automaticamente.">
-        <Textarea rows={4} value={s.content.message ?? ''} disabled={!editable} onChange={(e) => s.set({ message: e.target.value })} placeholder="Chegamos ao fim da construção da sua identidade. ♡" />
+        <RichEditor minRows={4} value={s.content.message ?? ''} disabled={!editable} onChange={(v) => s.set({ message: v })} placeholder="Chegamos ao fim da construção da sua identidade. ♡" />
       </Field>
       {editable && <SaveBar dirty={s.dirty} saving={s.saving} onSave={s.save} />}
       <p className="mt-6 rounded-2xl bg-blush px-4 py-3 text-sm text-wine">A aprovação final é liberada <strong className="font-normal">automaticamente</strong> para o cliente quando todas as outras etapas ativas estiverem aprovadas.</p>
@@ -243,7 +244,7 @@ export function ColorsEditor({ stage, version, editable }: EditorProps) {
   return (
     <div>
       <Field label="Descrição geral das cores">
-        <Textarea rows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(e) => s.set({ description: e.target.value })} />
+        <RichEditor minRows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(v) => s.set({ description: v })} />
       </Field>
 
       <div className="mt-6 space-y-6">
@@ -334,7 +335,7 @@ export function TypographyEditor({ stage, version, ctx, editable }: EditorProps)
   return (
     <div>
       <Field label="Descrição">
-        <Textarea rows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(e) => s.set({ description: e.target.value })} />
+        <RichEditor minRows={3} value={s.content.description ?? ''} disabled={!editable} onChange={(v) => s.set({ description: v })} />
       </Field>
       <p className="mb-2 mt-6 text-xs text-ink/55">Dica: use o nome exato de uma fonte do Google Fonts (ex.: DM Serif Display) para o cliente ver o texto na fonte real. Para fontes licenciadas, envie o arquivo (.ttf, .otf, .woff).</p>
       <div className="space-y-3">
