@@ -6,12 +6,15 @@ import { signOut } from '@/lib/actions/auth';
 import { Logo } from '@/components/brand/Brand';
 import { NavLinks } from '@/components/admin/NavLinks';
 import { QuickTask } from '@/components/production/QuickTask';
+import { NotificationWatcher } from '@/components/admin/NotificationWatcher';
+import { unreadCount } from '@/lib/data/notifications';
+import { createClient } from '@/lib/supabase/server';
 
 export const dynamic = 'force-dynamic';
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const user = await requireUser();
-  const profile = await getProfile();
+  const [profile, unread] = await Promise.all([getProfile(), createClient().then(unreadCount).catch(() => 0)]);
   return (
     <div className="min-h-dvh lg:grid lg:grid-cols-[17rem_1fr]">
       {/* Desktop: barra lateral vinho, como o fundo da identidade */}
@@ -20,7 +23,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <Logo tone="light" withTagline className="w-full" />
         </Link>
         <div className="mt-10">
-          <NavLinks orientation="vertical" />
+          <NavLinks orientation="vertical" unread={unread} />
         </div>
         <div className="relative mt-auto pt-10">
           <div className="mb-4 flex items-center gap-3">
@@ -50,11 +53,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </button>
           </form>
         </div>
-        <NavLinks orientation="horizontal" />
+        <NavLinks orientation="horizontal" unread={unread} />
       </header>
 
       <main className="min-w-0 px-4 py-8 sm:px-8 lg:px-12 lg:py-12">{children}</main>
       <QuickTask />
+      <NotificationWatcher initial={unread} />
     </div>
   );
 }
