@@ -56,6 +56,91 @@ const FORMATS = ['Reels (vídeos curtos)', 'Carrosséis', 'Posts de uma imagem',
 const CONTENT_KINDS = ['Educativo (dicas e explicações)', 'Bastidores do dia a dia', 'Antes e depois / resultados', 'Depoimentos e provas sociais', 'Humor e trends', 'Inspiração / frases', 'Promoções e ofertas', 'Quebra de objeções / dúvidas', 'Histórias pessoais', 'Notícias e novidades da área'];
 const TONES = ['Elegante', 'Acolhedora', 'Divertida', 'Direta e objetiva', 'Técnica e didática', 'Inspiradora', 'Sofisticada', 'Próxima e informal', 'Ousada', 'Séria e institucional'];
 
+
+const PERSONALIDADE = ['Elegante', 'Acolhedora', 'Ousada', 'Minimalista', 'Divertida', 'Sofisticada', 'Natural', 'Moderna', 'Clássica', 'Delicada', 'Forte', 'Acessível', 'Premium', 'Criativa', 'Séria', 'Jovem', 'Artesanal', 'Tecnológica', 'Romântica', 'Atemporal', 'Confiável', 'Humana', 'Inovadora', 'Autêntica'];
+const PILARES = ['Educativo (ensina e explica)', 'Autoridade (mostra expertise)', 'Bastidores e rotina', 'Prova social (depoimentos e resultados)', 'Venda direta (ofertas e serviços)', 'Entretenimento e trends', 'Estilo de vida e inspiração', 'Institucional (história e valores)', 'Quebra de objeções e mitos', 'Novidades e lançamentos'];
+const CTAS = ['Chamar no WhatsApp', 'Link na bio', 'Comentar uma palavra', 'Mandar mensagem no direct', 'Agendar horário', 'Visitar a loja / clínica', 'Salvar e compartilhar', 'Seguir o perfil', 'Entrar na lista de espera', 'Acessar o site'];
+const METRICS = ['Seguidores', 'Alcance', 'Engajamento (curtidas, comentários)', 'Compartilhamentos e salvamentos', 'Visitas ao perfil', 'Cliques no link', 'Mensagens recebidas', 'Agendamentos', 'Vendas', 'Custo por contato'];
+
+/** Marca e personalidade — como a marca fala e quem ela é. */
+const marca: Section = {
+  id: 'marca',
+  title: 'Marca e personalidade',
+  intro: 'Quem é a sua marca por trás dos posts. Isso define a voz de todos os conteúdos.',
+  questions: [
+    { id: 'name_meaning', label: 'Existe uma história ou significado por trás do nome da marca?', type: 'textarea' },
+    { id: 'tagline', label: 'A marca tem slogan ou uma frase que a represente?', type: 'text', placeholder: 'Se ainda não tem, deixe em branco' },
+    { id: 'stage', label: 'Em que fase a marca está?', type: 'select', options: ['Ainda vai começar', 'Começando (menos de 1 ano)', 'Já estabelecida', 'Quer se reposicionar / renovar'] },
+    { id: 'why', label: 'Por que a marca existe? Qual é o propósito dela?', type: 'textarea' },
+    { id: 'promise', label: 'Qual é a promessa da marca para quem a escolhe?', type: 'textarea' },
+    { id: 'values', label: 'Quais valores não se negociam?', type: 'textarea', placeholder: 'Ex.: cuidado, transparência, excelência' },
+    { id: 'adjectives', label: 'Quais palavras descrevem a personalidade da marca?', type: 'multi', options: PERSONALIDADE, hint: 'Escolha até 5.' },
+    { id: 'adjectives_no', label: 'E quais palavras NÃO combinam com a marca?', type: 'multi', options: PERSONALIDADE },
+    { id: 'person', label: 'Se a marca fosse uma pessoa, como ela seria?', type: 'textarea', hint: 'Como se veste, como fala, o que gosta.' },
+    { id: 'not_us', label: 'O que a marca NÃO é e não quer parecer?', type: 'textarea' },
+    { id: 'future', label: 'Onde você quer ver a marca daqui a 3 anos?', type: 'textarea' },
+  ],
+};
+
+/** Mais perguntas sobre o público (escolhas rápidas, iguais ao nível do formulário da marca). */
+const publicoExtra = (): Question[] => [
+  { id: 'lifestyle', label: 'Como é o estilo de vida desse público?', type: 'multi', options: ['Vida corrida', 'Empreendedor(a)', 'Profissional liberal', 'Estudante', 'Família / casa', 'Aventureiro(a)', 'Bem-estar e saúde', 'Fashion e tendências', 'Tecnologia', 'Tradicional', 'Sustentável / consciente', 'Luxo e exclusividade'] },
+  { id: 'buy_moment', label: 'O que leva essa pessoa a procurar você?', type: 'multi', options: ['Necessidade do dia a dia', 'Autocuidado / se presentear', 'Presentear alguém', 'Ocasião especial', 'Resolver um problema', 'Status e exclusividade', 'Indicação de alguém', 'Curiosidade / novidade', 'Recomendação profissional'] },
+  { id: 'where_area', label: 'Onde esse público está?', type: 'multi', options: ['Bairro / região específica', 'Minha cidade', 'Meu estado', 'Brasil todo', 'Internacional', 'Só online'] },
+  { id: 'channels', label: 'Onde esse público passa o tempo?', type: 'multi', options: ['Instagram', 'TikTok', 'WhatsApp', 'Google', 'Pinterest', 'YouTube', 'LinkedIn', 'Facebook', 'Eventos e presencial', 'Indicação / boca a boca'] },
+  { id: 'values_audience', label: 'O que esse público mais valoriza?', type: 'multi', options: ['Qualidade', 'Preço justo', 'Atendimento acolhedor', 'Exclusividade', 'Praticidade', 'Estética / beleza', 'Confiança', 'Inovação', 'Sustentabilidade', 'Tradição', 'Resultado rápido', 'Personalização'] },
+  { id: 'feel', label: 'Como a marca quer que as pessoas se sintam ao ver os conteúdos?', type: 'multi', options: ['Acolhidas', 'Seguras', 'Especiais', 'Inspiradas', 'Bonitas', 'Confiantes', 'Relaxadas', 'Animadas', 'Pertencentes', 'Empoderadas', 'Informadas'] },
+];
+
+/** Linha editorial: sobre o que falar, quadros fixos, chamadas para ação. */
+const pilaresSection = (extra: Question[] = []): Section => ({
+  id: 'pilares',
+  title: 'Linha editorial',
+  intro: 'Sobre o que vamos falar, e como. Escolha o que combina e acrescente as suas ideias.',
+  questions: [
+    { id: 'content_pillars', label: 'Quais tipos de conteúdo você quer ver no seu perfil?', type: 'multi', required: true, options: PILARES, hint: 'Marque todos que fazem sentido. Vamos equilibrar entre eles.' },
+    { id: 'topics_want', label: 'Assuntos que você quer abordar', type: 'list', placeholder: 'Ex.: cuidados no verão', hint: 'Um por vez, toque em Adicionar.' },
+    { id: 'topics_avoid', label: 'Assuntos que você NÃO quer abordar', type: 'list', placeholder: 'Ex.: política, preço' },
+    { id: 'faqs', label: 'Perguntas que os clientes mais fazem', type: 'list', placeholder: 'Ex.: quanto tempo dura o resultado?', hint: 'Elas viram conteúdo.' },
+    ...extra,
+    { id: 'series', label: 'Você gostaria de quadros fixos (séries que se repetem)?', type: 'textarea', placeholder: 'Ex.: “Dica de terça”, “Bastidores de sexta”' },
+    { id: 'cta_pref', label: 'Qual ação você quer que o público faça?', type: 'multi', options: CTAS },
+    { id: 'post_length', label: 'Qual o tamanho ideal das legendas?', type: 'select', options: ['Curtas e diretas', 'Médias', 'Longas e explicativas', 'Varia conforme o post'] },
+    { id: 'emoji_use', label: 'Como você se sente sobre emojis nas legendas?', type: 'select', options: ['Adoro, bastante', 'Poucos', 'Prefiro nenhum'] },
+    { id: 'hashtags_pref', label: 'Hashtags que você usa ou quer usar', type: 'list', placeholder: '#minhamarca' },
+    { id: 'language_style', label: 'Como é a linguagem com o seu público?', type: 'select', options: ['Formal', 'Cuidadosa e acolhedora', 'Descontraída, com gírias', 'Técnica, com termos da área'] },
+  ],
+});
+
+/** Metas e métricas: como medir o sucesso. */
+const metas: Section = {
+  id: 'metas',
+  title: 'Metas e resultados',
+  intro: 'Para sabermos o que acompanhar e como mostrar os resultados.',
+  questions: [
+    { id: 'followers_now', label: 'Quantos seguidores você tem hoje (aproximadamente)?', type: 'text' },
+    { id: 'followers_goal', label: 'E quantos gostaria de ter nos próximos 6 meses?', type: 'text' },
+    { id: 'metrics_care', label: 'Quais números mais importam para você?', type: 'multi', options: METRICS, hint: 'Vamos priorizar esses nos relatórios.' },
+    { id: 'monthly_goal', label: 'Qual meta mensal você gostaria de bater?', type: 'textarea', placeholder: 'Ex.: 30 mensagens e 15 agendamentos por mês' },
+    { id: 'report_freq', label: 'Com que frequência quer receber o relatório de resultados?', type: 'select', options: ['Toda semana', 'A cada 15 dias', 'Todo mês', 'Só quando eu pedir'] },
+    { id: 'report_format', label: 'Como prefere receber os resultados?', type: 'multi', options: ['Pelo portal', 'PDF', 'WhatsApp', 'Reunião rápida'] },
+  ],
+};
+
+/** Aprovação e rotina de trabalho com a Soltria. */
+const aprovacaoSection: Section = {
+  id: 'aprovacao',
+  title: 'Aprovação e rotina',
+  intro: 'Para o trabalho fluir sem atrasos.',
+  questions: [
+    { id: 'approval_channel', label: 'Por onde prefere ser avisado(a) quando houver conteúdo para aprovar?', type: 'select', options: ['E-mail', 'WhatsApp', 'Pelo portal mesmo', 'Mais de um canal'] },
+    { id: 'approval_days', label: 'Em quantos dias costuma conseguir aprovar?', type: 'select', options: ['No mesmo dia', 'Em até 2 dias', 'Em até 1 semana', 'Depende da semana'] },
+    { id: 'blackout', label: 'Existem períodos em que NÃO se deve postar?', type: 'textarea', placeholder: 'Ex.: férias de 10 a 25 de janeiro' },
+    { id: 'sensitive', label: 'Há algum tema sensível, regra interna ou cuidado legal que devemos conhecer?', type: 'textarea' },
+    { id: 'how_found', label: 'Como você conheceu a Soltria?', type: 'select', options: ['Indicação', 'Instagram', 'Google', 'Evento', 'Outro'] },
+  ],
+};
+
 const objetivos = (extra: Question[] = []): Section => ({
   id: 'objetivos',
   title: 'Objetivos nas redes',
@@ -190,6 +275,7 @@ const CLINIC: Section[] = [
       { id: 'best_sellers', label: 'Quais atendimentos trazem mais resultado financeiro?', type: 'textarea' },
     ],
   },
+  marca,
   objetivos([{ id: 'agenda', label: 'Como está a sua agenda hoje?', type: 'select', options: ['Lotada', 'Tem horários vagos', 'Muitos horários vagos', 'Quero encher horários específicos'] }]),
   {
     id: 'publico',
@@ -203,13 +289,17 @@ const CLINIC: Section[] = [
       { id: 'objections', label: 'Que objeções você escuta com frequência?', type: 'textarea', placeholder: 'Ex.: “dói?”, “é caro?”, “tenho medo”' },
       { id: 'arrive', label: 'Como os pacientes chegam até você hoje?', type: 'multi', options: ['Indicação de pacientes', 'Indicação de colegas', 'Instagram', 'Google', 'Convênio', 'Anúncios', 'Passa em frente'] },
       { id: 'income', label: 'Perfil de poder aquisitivo', type: 'select', options: ['Popular / acessível', 'Médio', 'Médio-alto', 'Alto / premium', 'Varia bastante'] },
+      ...publicoExtra(),
     ],
   },
+  pilaresSection([{ id: 'myths', label: 'Mitos ou crenças erradas da sua área que você gostaria de desfazer', type: 'list', placeholder: 'Ex.: “botox deixa o rosto sem expressão”' }, { id: 'care_tips', label: 'Quais cuidados e orientações os pacientes mais precisam ouvir?', type: 'list', placeholder: 'Ex.: protetor solar todos os dias' }]),
   perfil,
   gosto,
   voz([{ id: 'language', label: 'Qual o nível de linguagem técnica nos conteúdos?', type: 'select', options: ['Bem simples, para leigos', 'Equilibrada', 'Mais técnica, para quem já entende do assunto'] }]),
   producao([{ id: 'patient_images', label: 'Você tem autorização (termo) para usar imagem e depoimento de pacientes?', type: 'select', options: ['Sim, sempre colho', 'Às vezes', 'Ainda não, preciso começar'] }]),
+  metas,
   materiais,
+  aprovacaoSection,
   final,
 ];
 
@@ -243,6 +333,7 @@ const BUSINESS: Section[] = [
       { id: 'guarantees', label: 'Tem garantias, prazos, formas de pagamento ou entrega que valem destacar?', type: 'textarea' },
     ],
   },
+  marca,
   objetivos(),
   {
     id: 'publico',
@@ -257,13 +348,17 @@ const BUSINESS: Section[] = [
       { id: 'desires', label: 'O que o seu cliente mais deseja alcançar?', type: 'textarea' },
       { id: 'objections', label: 'Que objeções você escuta com frequência?', type: 'textarea', placeholder: 'Ex.: “é caro”, “não tenho tempo”' },
       { id: 'income', label: 'Poder aquisitivo do público', type: 'select', options: ['Popular / acessível', 'Médio', 'Médio-alto', 'Alto / premium', 'Varia bastante'] },
+      ...publicoExtra(),
     ],
   },
+  pilaresSection([{ id: 'offers', label: 'Promoções, combos ou ofertas que costuma fazer', type: 'list', placeholder: 'Ex.: 2ª unidade com 30% off' }, { id: 'customer_stories', label: 'Histórias de clientes que valem virar conteúdo', type: 'list', placeholder: 'Ex.: a cliente que fechou contrato em 2 dias' }]),
   perfil,
   gosto,
   voz(),
   producao(),
+  metas,
   materiais,
+  aprovacaoSection,
   final,
 ];
 
